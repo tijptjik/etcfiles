@@ -15,9 +15,9 @@ sudo dnf install -y kitty fish git chezmoi
 
 # CHEZETC
 
-if [ ! -d "$TOOLS/chezetc" ]; then
+if [ ! -d "$HOME/.tools/chezetc" ]; then
     echo "Installing Chezetc"
-    git clone https://github.com/SilverRainZ/chezetc.git $TOOLS/chezetc
+    git clone https://github.com/SilverRainZ/chezetc.git $HOME/.tools/chezetc
 else
     echo "Chezetc already installed."
 fi

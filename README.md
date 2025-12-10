@@ -18,7 +18,7 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
 
 ## Setup
 
-This script will (1) install required dependencies, (2) clone the `chezetc` repo to `$TOOLS/chezetc`, (3) install the configuration to `$HOME/.config/chezetc/chezetc.toml`.
+This script will (1) install required dependencies, (2) clone the `chezetc` repo to `$HOME/.tools/chezetc`, (3) install the configuration to `$HOME/.config/chezetc/chezetc.toml`.
 
 ```sh
 git clone git@github.com:tijptjik/etcfiles.git $HOME/.local/share/chezetc
@@ -28,5 +28,7 @@ $HOME/.local/share/chezetc/setup.sh
 Now you can manage your `/etc` files with `chezetc`.
 
 ```sh
-chezetc apply
+# chezetc is added to the path in the dotfiles, so it is not 
+# available before you've set them up with chezmoi.
+$HOME/.tools/chezetc/chezetc apply
 ```
