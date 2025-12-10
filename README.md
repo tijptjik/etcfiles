@@ -1,21 +1,32 @@
-# Chezetc Setup
+# Managed /etc with chezetc
 
-This repository contains the configuration for `chezetc`.
+Setup the system environment before running the [dotfiles](https://github.com/tijptjik/dotfiles) setup with chezmoi.
 
-## Setup Process
+## Manages
 
-1.  **Run the setup script:**
+- DNF Repositories
+- Packages
+  - RPM
+  - Flatpak
+- `fstab`
 
-    This script will clone the `chezetc` repository to the `$TOOLS/chezetc` directory.
+## Supported Hosts
 
-    ```sh
-    ./setup.sh
-    ```
+- `fi` : Desktop
+- `li` : Laptop
+- `si` : Server
 
-2.  **Install the configuration:**
+## Setup
 
-    This will generate the `chezetc.toml` file from the template and copy it to `$HOME/.config/chezetc/chezetc.toml`.
+This script will (1) install required dependencies, (2) clone the `chezetc` repo to `$TOOLS/chezetc`, (3) install the configuration to `$HOME/.config/chezetc/chezetc.toml`.
 
-    ```sh
-    ./etc/.helpers/install-chezetc-config.sh
-    ```
+```sh
+git clone git@github.com:tijptjik/etcfiles.git $HOME/.local/share/chezetc
+$HOME/.local/share/chezetc/setup.sh
+```
+
+Now you can manage your `/etc` files with `chezetc`.
+
+```sh
+chezetc apply
+```
