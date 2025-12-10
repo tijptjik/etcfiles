@@ -1,0 +1,59 @@
+repositories:
+  common:
+    # RPM Fusion repositories (common for all systems)
+    # Note: These use dynamic versioning with rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+    rpmfusion-free:
+      name: "RPM Fusion - Free"
+      url: "dynamic"  # Will be handled specially in the script
+      gpg_key: "https://download1.rpmfusion.org/free/fedora/RPM-GPG-KEY-rpmfusion-free-fedora"
+
+    rpmfusion-nonfree:
+      name: "RPM Fusion - Nonfree"
+      url: "dynamic"  # Will be handled specially in the script
+      gpg_key: "https://download1.rpmfusion.org/nonfree/fedora/RPM-GPG-KEY-rpmfusion-nonfree-fedora"
+
+    # Sublime Text
+    sublime-text:
+      name: "Sublime Text"
+      url: "https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo"
+      gpg_key: "https://download.sublimetext.com/sublimehq-rpm-pub.gpg"
+
+    # Flathub (system-wide)
+    flathub:
+      name: "Flathub"
+      url: "https://flathub.org/repo/flathub.repo"
+      gpg_key: "https://flathub.org/repo/flathub.gpg"
+
+  client:
+    # Docker (useful on client systems for containers)
+    docker:
+      name: "Docker CE"
+      url: "https://download.docker.com/linux/fedora/docker-ce.repo"
+      gpg_key: "https://download.docker.com/linux/fedora/gpg"
+
+    # Beekeeper Studio
+    beekeeper:
+      name: "Beekeeper Studio"
+      url: "https://rpm.beekeeperstudio.io/beekeeper-studio.repo"
+      gpg_key: "https://rpm.beekeeperstudio.io/beekeeper.key"
+      # Note: This requires dnf-plugins-core
+
+    # Brave Browser
+    brave-browser:
+      name: "Brave Browser"
+      url: "https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
+      # Note: Brave's GPG key is included in the repo file
+
+    # Mullvad VPN
+    mullvad:
+      name: "Mullvad VPN"
+      url: "https://repository.mullvad.net/rpm/stable/mullvad.repo"
+      # Note: Mullvad's GPG key is included in the repo file
+
+  server:
+    # Server-specific repositories would go here
+    # Example:
+    # postgresql:
+    #   name: "PostgreSQL"
+    #   url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    #   gpg_key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"

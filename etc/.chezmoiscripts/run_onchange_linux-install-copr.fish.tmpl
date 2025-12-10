@@ -1,0 +1,83 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env fish
+
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+
+# Set up logging based on whether we're running interactively
+if status is-interactive
+    # Interactive mode - just print to stdout
+    function log
+        echo $argv
+    end
+else
+    # Non-interactive mode (cron) - pipe to systemd-cat
+    function log
+        echo $argv | systemd-cat -t linux-install-copr
+    end
+end
+
+# Check if COPR repository is already enabled
+function is_copr_enabled
+    set copr_repo $argv[1]
+    # dnf copr list returns repos in format: copr.fedorainfracloud.org/user/repo
+    # Convert our format (user/repo) to match
+    set full_repo "copr.fedorainfracloud.org/$copr_repo"
+    dnf copr list 2>/dev/null | grep -q "^$full_repo\$"
+end
+
+# Enable COPR repository
+function enable_copr
+    set copr_repo $argv[1]
+    if is_copr_enabled $copr_repo
+        log "COPR repository already enabled: $copr_repo"
+        return 0
+    end
+
+    log "Enabling COPR repository: $copr_repo"
+    if sudo dnf copr enable -y $copr_repo
+        log "Successfully enabled COPR: $copr_repo"
+    else
+        log "Failed to enable COPR: $copr_repo"
+    end
+end
+
+# Initialize package arrays
+set common_copr_packages
+set client_copr_packages
+
+# Add common COPR repositories
+{{ range .packages.common.copr -}}
+set -a common_copr_packages '{{ . }}'
+{{ end }}
+
+# Add client-specific COPR repositories
+{{ if .isClient -}}
+{{ range .packages.client.copr -}}
+set -a client_copr_packages '{{ . }}'
+{{ end }}
+{{ end }}
+
+# Enable common COPR repositories
+if test (count $common_copr_packages) -gt 0
+    log "Processing common COPR repositories..."
+
+    # Enable each COPR repository
+    for repo in $common_copr_packages
+        enable_copr $repo
+    end
+end
+
+# Enable client-specific COPR repositories
+{{ if .isClient -}}
+if test (count $client_copr_packages) -gt 0
+    log "Processing client-specific COPR repositories..."
+
+    # Enable each COPR repository
+    for repo in $client_copr_packages
+        enable_copr $repo
+    end
+end
+{{ end }}
+
+log "All COPR packages installed successfully!"
+{{ end }}

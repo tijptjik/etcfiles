@@ -1,0 +1,99 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env fish
+
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+
+# Set up logging based on whether we're running interactively
+if status is-interactive
+    # Interactive mode - just print to stdout
+    function log
+        echo $argv
+    end
+else
+    # Non-interactive mode (cron) - pipe to systemd-cat
+    function log
+        echo $argv | systemd-cat -t linux-install-packages
+    end
+end
+
+# Install RPM packages with dnf
+function install_dnf_packages
+    set packages $argv
+    if test (count $argv) -gt 0
+        log "Installing RPM packages: $argv"
+        if not sudo dnf install -y $argv
+            log "Warning: Some RPM packages failed to install"
+        end
+    end
+end
+
+# Install Flatpak packages
+function install_flatpak_packages
+    set remote $argv[1]
+    set packages $argv[2..]
+
+    if test (count $packages) -gt 0
+        log "Installing Flatpak packages from $remote: $packages"
+        sudo flatpak install $remote --noninteractive --assumeyes --or-update $packages 2>&1 || true
+    end
+end
+
+# Initialize package arrays
+set rpm_packages
+set fedora_flatpak_packages
+set flathub_flatpak_packages
+
+# Add common packages
+{{ range .packages.common.rpm -}}
+set -a rpm_packages '{{ . }}'
+{{ end }}
+
+{{ range .packages.common.flatpak.fedora -}}
+set -a fedora_flatpak_packages '{{ . }}'
+{{ end }}
+
+{{ range .packages.common.flatpak.flathub -}}
+set -a flathub_flatpak_packages '{{ . }}'
+{{ end }}
+
+# Add role-specific packages
+{{ if .isClient -}}
+{{ range .packages.client.rpm -}}
+set -a rpm_packages '{{ . }}'
+{{ end }}
+
+{{ range .packages.client.flatpak.fedora -}}
+set -a fedora_flatpak_packages '{{ . }}'
+{{ end }}
+
+{{ range .packages.client.flatpak.flathub -}}
+set -a flathub_flatpak_packages '{{ . }}'
+{{ end }}
+{{ else if .isServer -}}
+{{ range .packages.server.rpm -}}
+set -a rpm_packages '{{ . }}'
+{{ end }}
+
+{{ range .packages.server.flatpak.fedora -}}
+set -a fedora_flatpak_packages '{{ . }}'
+{{ end }}
+
+{{ range .packages.server.flatpak.flathub -}}
+set -a flathub_flatpak_packages '{{ . }}'
+{{ end }}
+{{ end }}
+
+# Install all packages
+install_dnf_packages $rpm_packages
+
+# Install flatpak packages directly from their respective remotes
+if test (count $fedora_flatpak_packages) -gt 0
+    install_flatpak_packages fedora $fedora_flatpak_packages
+end
+
+if test (count $flathub_flatpak_packages) -gt 0
+    install_flatpak_packages flathub $flathub_flatpak_packages
+end
+
+log "All packages installed successfully!"
+{{ end }}

@@ -1,0 +1,9 @@
+{{- $hostname := .chezmoi.hostname -}}
+{{- $isClient := or (eq $hostname "fi") (eq $hostname "li") -}}
+
+[data]
+    hostname = "{{ $hostname }}"
+    isClient = {{ $isClient }}
+    isDesktop = {{ eq $hostname "fi" }}
+    isLaptop = {{ eq $hostname "li" }}
+    isServer = {{ eq $hostname "si" }}
