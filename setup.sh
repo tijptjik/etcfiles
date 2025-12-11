@@ -11,7 +11,7 @@ sudo dnf update -y
 
 # Install essential packages
 echo "Installing essential RPMs..."
-sudo dnf install -y kitty fish git chezmoi
+sudo dnf install -y kitty fish git chezmoi age
 
 # CHEZETC
 

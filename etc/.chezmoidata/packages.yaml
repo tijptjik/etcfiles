@@ -17,6 +17,7 @@ packages:
     - 'NetworkManager-ssh-gnome'
     - 'NetworkManager-vpnc-gnome'
     - 'abrt-cli'
+    - 'age'
     - 'abrt-desktop'
     - 'baobab'
     - 'bat'
