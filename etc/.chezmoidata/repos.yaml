@@ -36,7 +36,6 @@ repositories:
       name: "Beekeeper Studio"
       url: "https://rpm.beekeeperstudio.io/beekeeper-studio.repo"
       gpg_key: "https://rpm.beekeeperstudio.io/beekeeper.key"
-      # Note: This requires dnf-plugins-core
 
     # Brave Browser
     brave-browser:
@@ -51,9 +50,3 @@ repositories:
       # Note: Mullvad's GPG key is included in the repo file
 
   server:
-    # Server-specific repositories would go here
-    # Example:
-    # postgresql:
-    #   name: "PostgreSQL"
-    #   url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
-    #   gpg_key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"

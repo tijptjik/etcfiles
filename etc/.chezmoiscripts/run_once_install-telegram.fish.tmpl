@@ -1,0 +1,71 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env fish
+
+# run_once_install-telegram.fish.tmpl
+
+# Check if Telegram is already installed
+if test -x "/opt/Telegram/Telegram"
+    echo "Telegram is already installed at /opt/Telegram/Telegram, skipping installation."
+    exit 0
+end
+
+echo "Installing Telegram..."
+
+# Create temporary directory
+set tmpdir (mktemp -d)
+if not test -d "$tmpdir"
+    echo "Failed to create temporary directory."
+    exit 1
+end
+
+# Download Telegram
+echo "Downloading Telegram to $tmpdir..."
+if not curl -L -o "$tmpdir/telegram.tar.xz" "https://telegram.org/dl/desktop/linux"
+    echo "Failed to download Telegram."
+    rm -rf "$tmpdir"
+    exit 1
+end
+
+# Create installation directory's parent
+sudo mkdir -p /opt
+
+# Untar Telegram
+echo "Extracting Telegram to /opt/..."
+if not sudo tar -xJf "$tmpdir/telegram.tar.xz" -C /opt/
+    echo "Failed to extract Telegram."
+    # Cleanup
+    rm -rf "$tmpdir"
+    # Try to clean up opt if something went wrong
+    if test -d "/opt/Telegram"
+        sudo rm -rf /opt/Telegram
+    end
+    exit 1
+end
+
+# Check if executable exists after extraction
+if not test -x "/opt/Telegram/Telegram"
+    echo "Telegram executable not found at /opt/Telegram/Telegram after extraction."
+    # Clean up.
+    if test -d "/opt/Telegram"
+        sudo rm -rf /opt/Telegram
+    end
+    rm -rf "$tmpdir"
+    exit 1
+end
+
+# Clean up temporary file
+rm -rf "$tmpdir"
+
+echo "Telegram installed successfully."
+
+# Start Telegram in the background
+echo "Starting Telegram in the background..."
+/opt/Telegram/Telegram &
+
+# Inform user for login
+echo ""
+echo "ACTION REQUIRED: Please log in to Telegram."
+echo "Scan QR code with mobile telegram; then use Cloud Password stored in Bitwarden to login"
+echo ""
+
+{{ end -}}

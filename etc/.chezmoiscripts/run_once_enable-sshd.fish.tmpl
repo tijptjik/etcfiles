@@ -1,0 +1,20 @@
+{{ if .isServer -}}
+#!/usr/bin/env fish
+
+# Check if sshd is already enabled
+if systemctl is-enabled sshd >/dev/null 2>&1
+    echo "sshd is already enabled."
+else
+    echo "Enabling sshd..."
+    sudo systemctl enable sshd
+end
+
+# Check if sshd is already active
+if systemctl is-active sshd >/dev/null 2>&1
+    echo "sshd is already active."
+else
+    echo "Starting sshd..."
+    sudo systemctl start sshd
+end
+
+{{ end -}}
