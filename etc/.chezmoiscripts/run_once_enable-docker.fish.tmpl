@@ -4,7 +4,7 @@
 if [ "$USER" != "root" ]
     echo "Adding user to docker group..."
     sudo usermod -aG docker $USER
-fi
+end
 
 # Check if docker is already enabled
 if systemctl is-enabled docker >/dev/null 2>&1
@@ -21,5 +21,3 @@ else
     echo "Starting docker..."
     sudo systemctl start docker
 end
-
-
