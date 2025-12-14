@@ -1,0 +1,25 @@
+#!/usr/bin/env fish
+
+# Add user to docker group
+if [ "$USER" != "root" ]
+    echo "Adding user to docker group..."
+    sudo usermod -aG docker $USER
+fi
+
+# Check if docker is already enabled
+if systemctl is-enabled docker >/dev/null 2>&1
+    echo "docker is already enabled."
+else
+    echo "Enabling docker..."
+    sudo systemctl enable docker
+end
+
+# Check if docker is already active
+if systemctl is-active docker >/dev/null 2>&1
+    echo "docker is already active."
+else
+    echo "Starting docker..."
+    sudo systemctl start docker
+end
+
+

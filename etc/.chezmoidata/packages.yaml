@@ -202,9 +202,12 @@ packages:
       - 'org.videolan.VLC'
   server:
     rpm:
-    - 'x265-libs'
+    - 'docker-buildx-plugin'
+    - 'docker-ce-cli'
+    - 'docker-compose-plugin'
     - 'libde26'
     - 'waypipe'
+    - 'x265-libs'
     flatpak:
       fedora: []
       flathub:

@@ -95,5 +95,8 @@ if test (count $flathub_flatpak_packages) -gt 0
     install_flatpak_packages flathub $flathub_flatpak_packages
 end
 
+# Remove unused flatpak packages
+flatpak remove --unused -y
+
 log "All packages installed successfully!"
 {{ end }}
