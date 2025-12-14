@@ -200,6 +200,8 @@ packages:
       - 'org.pulseaudio.pavucontrol'
       - 'org.signal.Signal'
       - 'org.videolan.VLC'
+      - 'org.yuzu_emu.yuzu'
+      - 'org.azahar_emu.Azahar'
   server:
     rpm:
     - 'docker-buildx-plugin'
