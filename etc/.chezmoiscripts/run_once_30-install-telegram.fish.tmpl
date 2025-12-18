@@ -1,8 +1,6 @@
 {{ if eq .chezmoi.os "linux" -}}
 #!/usr/bin/env fish
 
-# run_once_install-telegram.fish.tmpl
-
 # Check if Telegram is already installed
 if test -x "/opt/Telegram/Telegram"
     echo "Telegram is already installed at /opt/Telegram/Telegram, skipping installation."

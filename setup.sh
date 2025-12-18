@@ -6,9 +6,6 @@ set -euo pipefail
 
 echo "Installing essential packages for /etc management..."
 
-# Update package manager
-sudo dnf update -y
-
 # Install essential packages
 echo "Installing essential RPMs..."
 sudo dnf install -y kitty fish git chezmoi age

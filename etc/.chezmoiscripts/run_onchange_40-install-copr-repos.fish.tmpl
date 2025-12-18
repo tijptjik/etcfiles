@@ -42,38 +42,38 @@ function enable_copr
 end
 
 # Initialize package arrays
-set common_copr_packages
-set client_copr_packages
+set common_copr_repos
+set client_copr_repos
 
 # Add common COPR repositories
 {{ range .packages.common.copr -}}
-set -a common_copr_packages '{{ . }}'
+set -a common_copr_repos '{{ . }}'
 {{ end }}
 
 # Add client-specific COPR repositories
 {{ if .isClient -}}
 {{ range .packages.client.copr -}}
-set -a client_copr_packages '{{ . }}'
+set -a client_copr_repos '{{ . }}'
 {{ end }}
 {{ end }}
 
 # Enable common COPR repositories
-if test (count $common_copr_packages) -gt 0
+if test (count $common_copr_repos) -gt 0
     log "Processing common COPR repositories..."
 
     # Enable each COPR repository
-    for repo in $common_copr_packages
+    for repo in $common_copr_repos
         enable_copr $repo
     end
 end
 
 # Enable client-specific COPR repositories
 {{ if .isClient -}}
-if test (count $client_copr_packages) -gt 0
+if test (count $client_copr_repos) -gt 0
     log "Processing client-specific COPR repositories..."
 
     # Enable each COPR repository
-    for repo in $client_copr_packages
+    for repo in $client_copr_repos
         enable_copr $repo
     end
 end
