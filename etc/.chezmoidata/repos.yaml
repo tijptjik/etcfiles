@@ -25,12 +25,6 @@ repos:
       gpg_key: "https://flathub.org/repo/flathub.gpg"
 
   client:
-    # Docker (useful on client systems for containers)
-    docker:
-      name: "Docker CE"
-      url: "https://download.docker.com/linux/fedora/docker-ce.repo"
-      gpg_key: "https://download.docker.com/linux/fedora/gpg"
-
     # Beekeeper Studio
     beekeeper:
       name: "Beekeeper Studio"
@@ -42,6 +36,12 @@ repos:
       name: "Brave Browser"
       url: "https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
       # Note: Brave's GPG key is included in the repo file
+
+    # Docker (useful on client systems for containers)
+    docker:
+      name: "Docker CE"
+      url: "https://download.docker.com/linux/fedora/docker-ce.repo"
+      gpg_key: "https://download.docker.com/linux/fedora/gpg"
 
     # Mullvad VPN
     mullvad:
