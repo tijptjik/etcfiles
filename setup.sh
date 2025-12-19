@@ -29,6 +29,6 @@ ETC_CFG="$CONFIG_DEST_DIR/chezetc.toml"
 
 echo "[CREATE] chezetc.toml from template..."
 mkdir -p "$CONFIG_DEST_DIR"
-$HOME/.tools/chezetc/chezetc execute-template < "$PROJECT_ROOT/chezetc.toml" > $ETC_CFG
+chezmoi execute-template < "$PROJECT_ROOT/chezetc.toml" > $ETC_CFG
 
 echo "[SUCCESS] Installed chezetc.toml to $CONFIG_DEST_DIR"
