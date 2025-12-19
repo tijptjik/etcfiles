@@ -39,7 +39,6 @@ packages:
     - 'docker-compose-plugin'
     - 'efibootmgr'
     - 'evince'
-    - 'faience-icon-theme'
     - 'fastfetch'
     - 'fedora-bookmarks'
     - 'fedora-chromium-config'
@@ -117,7 +116,6 @@ packages:
     - 'rpmfusion-free-appstream-data'
     - 'rpmfusion-free-release'
     - 'rpmfusion-nonfree-appstream-data'
-    - 'rpmfusion-nonfree-release'
     - 'samba-client'
     - 'shim-ia32'
     - 'shim-x64'
@@ -220,7 +218,6 @@ packages:
     - 'docker-buildx-plugin'
     - 'docker-ce-cli'
     - 'docker-compose-plugin'
-    - 'libde26'
     - 'waypipe'
     - 'x265-libs'
     flatpak:
