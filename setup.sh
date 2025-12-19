@@ -4,20 +4,18 @@
 
 set -euo pipefail
 
-echo "Installing essential packages for /etc management..."
-
 # Install essential packages
-echo "Installing essential RPMs..."
+echo "[INSTALL] Essential packages for /etc management..."
 sudo dnf install -y kitty fish git chezmoi age python-tomli python-tomli-w
 
 # CHEZETC
 
 if [ ! -d "$HOME/.tools/chezetc" ]; then
-    echo "Installing Chezetc"
+    echo "[INSTALL] Chezetc"
     git clone https://github.com/SilverRainZ/chezetc.git $HOME/.tools/chezetc
     chmod +x $HOME/.tools/chezetc/chezetc
 else
-    echo "Chezetc already installed."
+    echo "[SKIP] Chezetc is already installed."
 fi
 
 # CHEZETC CONFIG
@@ -29,10 +27,10 @@ ETC_SRC="$HOME/.local/share/chezetc"
 ETC_DST="/etc"
 ETC_CFG="$HOME/.config/chezetc/chezetc.toml"
 
-echo "Generating chezetc.toml from template..."
+echo "[CREATE] chezetc.toml from template..."
 echo $PROJECT_ROOT
-echo $ETC_CFG  
+echo $ETC_CFG
 mkdir -p "$CONFIG_DEST_DIR"
 $HOME/.tools/chezetc/chezetc execute-template < "$PROJECT_ROOT/chezetc.toml" > $ETC_CFG
 
-echo "Successfully installed chezetc.toml to $CONFIG_DEST_DIR"
+echo "[SUCCESS] Installed chezetc.toml to $CONFIG_DEST_DIR"
