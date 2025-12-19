@@ -1,4 +1,4 @@
-repositories:
+repos:
   common:
     # RPM Fusion repositories (common for all systems)
     # Note: These use dynamic versioning with rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm

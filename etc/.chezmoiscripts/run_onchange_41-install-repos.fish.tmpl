@@ -1,0 +1,127 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env fish
+
+set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
+
+# repos.yaml hash: {{ include ".chezmoidata/repos.yaml" | sha256sum }}
+
+# Set up logging based on whether we're running interactively
+if status is-interactive
+    # Interactive mode - just print to stdout
+    function log
+        echo $argv
+    end
+else
+    # Non-interactive mode (cron) - pipe to systemd-cat
+    function log
+        echo $argv | systemd-cat -t linux-install-repos
+    end
+end
+
+# --- RPM Fusion Handling ---
+function handle_rpmfusion
+    if ! rpm -q rpmfusion-free-release >/dev/null 2>&1
+        log "Installing RPM Fusion Free repository..."
+        if sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+            log "RPM Fusion Free repository installed successfully."
+        else
+            log "Failed to install RPM Fusion Free repository."
+        end
+    else
+        log "RPM Fusion Free repository already installed."
+    end
+
+    if ! rpm -q rpmfusion-nonfree-release >/dev/null 2>&1
+        log "Installing RPM Fusion Non-Free repository..."
+        if sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+            log "RPM Fusion Non-Free repository installed successfully."
+        else
+            log "Failed to install RPM Fusion Non-Free repository."
+        end
+    else
+        log "RPM Fusion Non-Free repository already installed."
+    end
+end
+
+# --- Generic Repo Handling ---
+function add_repo
+    set repo_name $argv[1]
+    set repo_url $argv[2]
+    set gpg_key $argv[3]
+
+    log "Processing repository: $repo_name"
+
+    # Import GPG key if provided
+    if test -n "$gpg_key"
+        log "Importing GPG key for $repo_name from $gpg_key"
+        # Use curl to download the key and pipe to rpm --import
+        if curl -sSL "$gpg_key" | sudo rpm --import -
+            log "Successfully imported GPG key for $repo_name"
+        else
+            log "Failed to import GPG key for $repo_name"
+        end
+    end
+
+    # Add the repository
+    log "Adding repository for $repo_name from $repo_url"
+    if sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
+        log "Successfully added repository: $repo_name"
+    else
+        log "Failed to add repository: $repo_name"
+    end
+end
+
+# --- Prerequisite Check ---
+function ensure_dnf_plugins_core
+    if ! rpm -q dnf-plugins-core >/dev/null 2>&1
+        log "Installing dnf-plugins-core..."
+        if sudo dnf install -y dnf-plugins-core
+            log "dnf-plugins-core installed successfully."
+        else
+            log "Failed to install dnf-plugins-core. Aborting."
+            exit 1
+        end
+    else
+        log "dnf-plugins-core is already installed."
+    end
+end
+
+
+# --- Main Logic ---
+
+# Ensure dnf-plugins-core is installed
+ensure_dnf_plugins_core
+
+# Handle RPM Fusion separately as it's a package install
+handle_rpmfusion
+
+# Process common repositories
+log "Processing common repositories from repos.yaml..."
+{{ range $name, $repo := .repos.common  }}
+{{ if and (ne $name "flathub") (ne $repo.url "dynamic") -}}
+{{ $gpg_key := "" -}}
+{{ if hasKey $repo "gpg_key" -}}
+{{ $gpg_key = $repo.gpg_key -}}
+{{ end -}}
+sudo rpm --import '{{ $gpg_key }}'
+add_repo '{{ $repo.name }}' '{{ $repo.url }}'
+{{ end -}}
+{{ end }}
+
+# Process client-specific repositories if applicable
+{{ if .isClient }}
+log "Processing client-specific repositories from repos.yaml..."
+{{ range $name, $repo := .repos.client }}
+{{ if and (ne $name "flathub") (ne $repo.url "dynamic") -}}
+{{ $gpg_key := "" -}}
+{{ if hasKey $repo "gpg_key" -}}
+{{ $gpg_key = $repo.gpg_key -}}
+{{ end -}}
+add_repo '{{ $repo.name }}' '{{ $repo.url }}' '{{ $gpg_key }}'
+{{ end -}}
+{{ end }}
+{{ end }}
+
+log "All DNF repositories processed."
+
+{{ end -}}
