@@ -4,6 +4,7 @@ packages:
     - 'atim/bottom'
     - 'atim/lazygit'
     - 'atim/starship'
+    - 'lionheartp/Hyprland'
     - 'sneexy/zen-browser'
     rpm:
     - '7zip'
@@ -15,7 +16,6 @@ packages:
     - 'bc'
     - 'bind-utils'
     - 'biosdevname'
-    - 'bitwarden'
     - 'bluez-cups'
     - 'bluez-tools'
     - 'bottom'
@@ -25,6 +25,7 @@ packages:
     - 'cliphist'
     - 'cmake'
     - 'compsize'
+    - 'containerd.io'
     - 'coreutils'
     - 'cronie'
     - 'crontab'
@@ -32,7 +33,10 @@ packages:
     - 'diff-so-fancy'
     - 'direnv'
     - 'dnf-plugins-core'
+    - 'docker-buildx-plugin'
     - 'docker-ce'
+    - 'docker-ce-cli'
+    - 'docker-compose-plugin'
     - 'efibootmgr'
     - 'evince'
     - 'faience-icon-theme'
@@ -143,7 +147,6 @@ packages:
     copr:
     - 'errornointernet/quickshell'
     - 'iucar/duckdb'
-    - 'lionheartp/Hyprland'
     - 'rafatosta/zapzap'
     - 'zeno/scrcpy'
     rpm:
