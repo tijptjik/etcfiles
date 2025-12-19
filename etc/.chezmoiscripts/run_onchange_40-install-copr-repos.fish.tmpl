@@ -1,6 +1,8 @@
 {{ if eq .chezmoi.os "linux" -}}
 #!/usr/bin/env fish
 
+set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
+
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 
 # Set up logging based on whether we're running interactively
