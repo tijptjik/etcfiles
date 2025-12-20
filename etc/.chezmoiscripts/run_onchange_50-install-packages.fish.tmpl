@@ -9,6 +9,8 @@ set -x SUDO_ASKPASS ""
 set -x FLATPAK_CLI 1
 # keep GTK quiet
 set -x NO_AT_BRIDGE 1
+# Unset DISPLAY to prevent X11 connection errors
+set -e DISPLAY
 
 # Set up logging based on whether we're running interactively
 if status is-interactive
