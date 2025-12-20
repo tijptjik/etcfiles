@@ -3,6 +3,13 @@
 
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 
+# force sudo to stay on the terminal
+set -x SUDO_ASKPASS ""
+# tell Flatpak to skip any GUI
+set -x FLATPAK_CLI 1
+# keep GTK quiet
+set -x NO_AT_BRIDGE 1
+
 # Set up logging based on whether we're running interactively
 if status is-interactive
     # Interactive mode - just print to stdout

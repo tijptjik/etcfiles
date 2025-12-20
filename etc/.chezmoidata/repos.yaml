@@ -16,13 +16,6 @@ repos:
     sublime-text:
       name: "Sublime Text"
       url: "https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo"
-      gpg_key: "https://download.sublimetext.com/sublimehq-rpm-pub.gpg"
-
-    # Flathub (system-wide)
-    flathub:
-      name: "Flathub"
-      url: "https://flathub.org/repo/flathub.repo"
-      gpg_key: "https://flathub.org/repo/flathub.gpg"
 
   client:
     # Beekeeper Studio
@@ -35,18 +28,15 @@ repos:
     brave-browser:
       name: "Brave Browser"
       url: "https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
-      # Note: Brave's GPG key is included in the repo file
 
     # Docker (useful on client systems for containers)
     docker:
       name: "Docker CE"
       url: "https://download.docker.com/linux/fedora/docker-ce.repo"
-      gpg_key: "https://download.docker.com/linux/fedora/gpg"
 
     # Mullvad VPN
     mullvad:
       name: "Mullvad VPN"
       url: "https://repository.mullvad.net/rpm/stable/mullvad.repo"
-      # Note: Mullvad's GPG key is included in the repo file
 
   server:
