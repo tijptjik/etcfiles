@@ -9,8 +9,6 @@ set -x SUDO_ASKPASS ""
 set -x FLATPAK_CLI 1
 # keep GTK quiet
 set -x NO_AT_BRIDGE 1
-# Unset DISPLAY to prevent X11 connection errors
-set -e DISPLAY
 
 # Set up logging based on whether we're running interactively
 if status is-interactive
@@ -43,7 +41,7 @@ function install_flatpak_packages
 
     if test (count $packages) -gt 0
         log "Installing Flatpak packages from $remote: $packages"
-        sudo flatpak install $remote --noninteractive --assumeyes --or-update $packages 2>&1 || true
+        sudo dbus-run-session flatpak install $remote --noninteractive --assumeyes --or-update $packages 2>&1 || true
     end
 end
 
@@ -105,7 +103,7 @@ if test (count $flathub_flatpak_packages) -gt 0
 end
 
 # Remove unused flatpak packages
-sudo flatpak remove --unused -y || true
+sudo dbus-run-session flatpak remove --unused -y || true
 
 log "All packages installed successfully!"
 {{ end }}
