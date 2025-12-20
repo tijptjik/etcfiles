@@ -122,7 +122,7 @@ packages:
     - 'sqlite3pp-devel'
     - 'sssd-kcm'
     - 'starship'
-    - 'sublime-text'
+    # - 'sublime-text'
     - 'sudo'
     - 'symlinks'
     - 'texinfo'

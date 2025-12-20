@@ -32,3 +32,6 @@ Now you can manage your `/etc` files with `chezetc`.
 # available before you've set them up with chezmoi.
 $HOME/.tools/chezetc/chezetc apply
 ```
+## Todo
+
+- Reenable Sublime Text, once the [GPG key digest issue is fixed](https://discussion.fedoraproject.org/t/sublime-text-not-able-to-install-in-fedora-43/170396/8)
