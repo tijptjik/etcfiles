@@ -41,7 +41,7 @@ function install_flatpak_packages
 
     if test (count $packages) -gt 0
         log "Installing Flatpak packages from $remote: $packages"
-        sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install $remote --noninteractive --assumeyes --or-update $packages 2>&1 || true
+        sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages 2>&1 || true
     end
 end
 
@@ -103,7 +103,7 @@ if test (count $flathub_flatpak_packages) -gt 0
 end
 
 # Remove unused flatpak packages
-sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --unused -y || true
+sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y || true
 
 log "All packages installed successfully!"
 {{ end }}
