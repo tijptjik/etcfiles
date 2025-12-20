@@ -1,3 +1,4 @@
+{{- if .isServer }}
 # SnapRAID configuration file
 
 # Parity location(s)
@@ -11,16 +12,15 @@
 # content /var/snapraid.content
 content /mnt/data/disk12/.snapraid.content
 content /mnt/data/disk22/.snapraid.content
-content /mnt/data/disk3/.snapraid.content
+content /mnt/data/disk32/.snapraid.content
 content /mnt/data/disk4/.snapraid.content
 content /mnt/data/disk5/.snapraid.content
 
 # Data disks
 # data d1 /mnt/data/disk1
 data d1 /mnt/data/disk12
-# data d2 /mnt/data/disk2
 data d2 /mnt/data/disk22
-data d3 /mnt/data/disk3
+data d3 /mnt/data/disk32
 data d4 /mnt/data/disk4
 data d5 /mnt/data/disk5
 
@@ -67,3 +67,4 @@ exclude /snapraid.log
 #smartctl d2 -d usbjmicron %s
 #smartctl parity -d areca,1/1 /dev/sg0
 #smartctl 2-parity -d areca,2/1 /dev/sg0
+{{ end -}}
