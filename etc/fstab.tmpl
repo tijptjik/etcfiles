@@ -1,0 +1,45 @@
+{{ if .isDesktop }}
+#
+# /etc/fstab
+# Created by anaconda on Sun Mar 16 14:07:24 2025
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk/'.
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info.
+#
+# After editing this file, run 'systemctl daemon-reload' to update systemd
+# units generated from this file.
+#
+UUID=37da9d32-ff8e-4ecb-89dd-8e61881f44e7   /           btrfs   subvol=root,compress=zstd:1 0 0
+UUID=38a23ef4-8d84-4dc1-bcbc-4906b5aef59d   /boot       ext4    defaults 1 2
+UUID=1B03-C18E                              /boot/efi   vfat    umask=0077,shortname=winnt 0 2
+UUID=37da9d32-ff8e-4ecb-89dd-8e61881f44e7   /home       btrfs   subvol=home,compress=zstd:1 0 0
+{{ else if .isLaptop -}}
+{{ else if .isServer -}}
+#
+# /etc/fstab
+# Created by anaconda on Sun Jul 5 03:07:53 2015
+# Modified by tijptjik on Sun Jul 23 17:27:53 2016
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+# OS
+/dev/mapper/fedora_si-root 					/        				ext4    defaults       1 1
+/dev/mapper/fedora_si-home					/home    				ext4    defaults       1 2
+UUID=075c7b39-fab4-40c0-88df-6630f8d04cf7 	/boot    				ext4    defaults       1 2
+
+# Data - run sud blkid to map UUID to /dev
+UUID=f28eba22-c264-4021-84b9-37e85420b3a3	/mnt/data/disk12		ext4    defaults,x-gvfx-name=disk1,x-gvfs-hide,nofail 0 0
+UUID=de5f6189-ffcf-4998-9eb6-f5c96455d35d	/mnt/data/disk22        ext4    defaults,x-gvfx-name=disk2,x-gvfs-hide,nofail 0 0
+#UUID=097dab97-531f-40d2-9d44-cd2995cc7a9d	/mnt/data/disk3     	ext4    defaults,x-gvfx-name=disk3,x-gvfs-hide,nofail 0 0
+UUID=eb5d5636-dcc2-441b-a7b7-8c12297b4568	/mnt/disk/disk32		ext4    defaults,x-gvfx-name=disk3,x-gvfs-hide,nofail 0 0
+UUID=d32d6659-f024-44cf-afe3-8d4bdd1755b4	/mnt/data/disk4			ext4    defaults,x-gvfx-name=disk4,x-gvfs-hide,nofail 0 0
+UUID=a6adc4a9-6f78-487a-92f4-8f1eb339343f	/mnt/data/disk5     	ext4    defaults,x-gvfx-name=disk5,x-gvfs-hide,nofail 0 0
+
+# Parity
+UUID=724ebf54-194f-43a9-8c2d-ba0efcc3fe86	/mnt/parity/disk1		ext4    defaults,x-gvfs-hide,nofail 0 0
+UUID=9e06445b-3dce-4a86-960c-006f1b91d11e	/mnt/parity/disk22		ext4    defaults,x-gvfs-hide,nofail 0 0
+
+# Pool
+/mnt/data/disk*								/mnt/storage			fuse.mergerfs   defaults,dropcacheonclose=true,allow_other,minfreespace=1M,moveonenospc=true,use_ino,cache.files=partial,dropcacheonclose=true,category.create=mfs,fsname=mergerfs,x-gvfx-name=STORAGE 0 0
+{{ end -}}
