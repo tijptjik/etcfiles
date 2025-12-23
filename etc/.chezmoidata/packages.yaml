@@ -189,6 +189,7 @@ packages:
     - 'vlc-cli'
     - 'vlc-plugins-freeworld'
     - 'waybar'
+    - 'waypipe'
     - 'wf-recorder'
     - 'wireplumber-devel'
     - 'wl-clipboard'
@@ -215,10 +216,6 @@ packages:
       - 'org.yuzu_emu.yuzu'
   server:
     rpm:
-    - 'docker-buildx-plugin'
-    - 'docker-ce-cli'
-    - 'docker-compose-plugin'
-    - 'waypipe'
     - 'x265-libs'
     flatpak:
       fedora: []
