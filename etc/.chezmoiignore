@@ -1,4 +1,5 @@
 {{ if .isClient -}}
+pki
 ssh/sshd_config
 ssh/sshd_config.d
 ssh/ssh_host*
