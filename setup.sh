@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Install essential packages
 echo "[INSTALL] Essential packages for /etc management..."
-sudo dnf install -y kitty fish git chezmoi age python-tomli python-tomli-w
+sudo dnf install -y kitty fish git chezmoi age uv
 
 # CHEZETC
 
@@ -14,6 +14,8 @@ if [ ! -d "$HOME/.tools/chezetc" ]; then
     echo "[INSTALL] Chezetc"
     git clone https://github.com/SilverRainZ/chezetc.git $HOME/.tools/chezetc
     chmod +x $HOME/.tools/chezetc/chezetc
+    echo "[INSTALL] TOML Extensions"
+    uv pip install tomli tomli_w
 else
     echo "[SKIP] Chezetc is already installed."
 fi
