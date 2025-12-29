@@ -1,0 +1,7 @@
+{{ if .isClient -}}
+ssh/sshd_config
+ssh/sshd_config.d
+ssh/ssh_host*
+{{ end -}}
+{{ if .isServer -}}
+{{ end -}}
