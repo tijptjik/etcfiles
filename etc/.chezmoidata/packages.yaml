@@ -20,6 +20,7 @@ packages:
     - 'bluez-tools'
     - 'bottom'
     - 'cairo-devel'
+    - 'cargo'
     - 'chezmoi'
     - 'cifs-utils'
     - 'cliphist'
