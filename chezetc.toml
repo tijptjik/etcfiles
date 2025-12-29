@@ -2,7 +2,7 @@
 {{- $isClient := or (eq $hostname "fi") (eq $hostname "li") -}}
 encryption = "age"
 [age]
-    identity = "~/.keys/chezmoi.txt"
+    identity = "/home/{{ .chezmoi.username }}/.keys/chezmoi.txt"
     recipient = "age10cpp7avz2zzlqea22d5c3l83ew36rxfjxl2gcxm79atjkcp7494s3lpvjx"
 
 [data]
