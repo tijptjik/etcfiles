@@ -1,0 +1,382 @@
+# SI hosted version of Hugo site from tijptjik.gitlab.io
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf; # Cloudflare Certs
+
+    server_name  _ type.hk www.type.hk;
+    root   /var/www/html/type.hk/public;
+    index  index.html;
+
+    client_max_body_size 100M;
+    autoindex off;
+
+    include /etc/nginx/snippets/cors_simple_type.hk.conf;
+
+    # Mix Panel Proxy
+
+    location /mxpnl/lib.min.js {
+        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
+        proxy_pass https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js;
+    }
+
+    location /mxpnl/lib.js {
+        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
+        proxy_pass https://cdn.mxpnl.com/libs/mixpanel-2-latest.js;
+    }
+
+    location /mxpnl/decide {
+        
+        # CORS Config
+        if ($request_method = 'OPTIONS') {
+            include /etc/nginx/snippets/cors_options_type.hk.conf;
+            return 204;
+        }
+
+        if ($request_method ~* "(GET|POST)") {
+     #       include /etc/nginx/snippets/cors_simple_type.hk.conf;
+        }
+
+        proxy_set_header Host decide.mixpanel.com;
+        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
+        proxy_pass https://decide.mixpanel.com/decide;
+    }
+
+    location /mxpnl/ {
+
+    # CORS Config
+
+        if ($request_method = 'OPTIONS') {
+            include /etc/nginx/snippets/cors_options_type.hk.conf;
+            return 204;
+        }
+
+        if ($request_method ~* "(GET|POST)") {
+   #         include /etc/nginx/snippets/cors_simple_type.hk.conf;
+        }
+
+        proxy_set_header Host api.mixpanel.com;
+        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
+        proxy_pass https://api.mixpanel.com/;
+    }
+
+    # Hugo
+
+    location / {
+    
+        # CORS Config
+
+        if ($request_method = 'OPTIONS') {
+            include /etc/nginx/snippets/cors_options_type.hk.conf;
+            return 204;
+        }
+
+        if ($request_method ~* "(GET|POST)") {
+    #        include /etc/nginx/snippets/cors_simple_type.hk.conf;
+        }
+        
+        try_files $uri $uri/ /index.html?$args;
+    }
+}
+
+# SONARR - addshows.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name addshows.type.hk;
+
+    proxy_temp_path /tmp;
+
+    location / {
+        proxy_pass http://localhost:9090;
+        proxy_redirect     off;
+        proxy_set_header   Host             $host;
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade          $http_upgrade;
+        proxy_set_header   Connection       $http_connection;
+
+    }
+}
+
+# RADARR - addmovies.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name addmovies.type.hk;
+
+    proxy_temp_path /tmp;
+
+    location / {
+        proxy_pass http://localhost:7878;
+        proxy_redirect     off;
+        proxy_set_header   Host             $host;
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade          $http_upgrade;
+        proxy_set_header   Connection       $http_connection;
+
+    }
+}
+
+
+# JACKETT - sources.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name sources.type.hk;
+
+    proxy_temp_path /tmp;
+
+    location / {
+        proxy_pass http://localhost:9117;
+        proxy_redirect     off;
+        proxy_set_header   Host             $host;
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade          $http_upgrade;
+        proxy_set_header   Connection       $http_connection;
+
+    }
+}
+
+# TAUTULLI - tautulli.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name tautulli.type.hk;
+
+    proxy_temp_path /tmp;
+
+    location / {
+        proxy_pass http://localhost:8181;
+        proxy_redirect     off;
+        proxy_set_header   Host             $host;
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+    }
+}
+
+
+# CALIBRE - book.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name book.type.hk;
+
+    proxy_temp_path /tmp;
+
+    # location / {
+    #    proxy_pass http://localhost:5498;
+    #	 proxy_redirect     off;
+    #    proxy_set_header   Host             $host;
+    #    proxy_set_header   X-Real-IP        $remote_addr;
+    #    proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+    #}
+
+    location / {
+        proxy_pass http://localhost:8083;
+        proxy_redirect     off;
+        proxy_set_header   Host             $host;
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+    }
+
+}
+
+# TRANSMISSION - torrent.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  torrent.type.hk;
+
+    proxy_temp_path /tmp;
+
+    location / {
+        proxy_pass http://localhost:9091;
+        proxy_redirect     off;
+        proxy_set_header   Host             $host;
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+    }
+}
+
+###
+# URL REDIRECTIONS
+###
+
+# PLEX - flix.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  flix.type.hk;
+
+    proxy_temp_path /tmp;
+
+    location / {
+	return 301 https://app.plex.tv/desktop/;
+    }
+}
+
+
+# EMAIL - email.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  email.type.hk;
+
+    location / {
+        return 301 mailto:m@type.hk;
+    }
+}
+
+
+# GITHUB - github.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  github.type.hk;
+
+    location / {
+        return 301 https://github.com/tijptjik/;
+    }
+}
+
+
+# GITLAB - gitlab.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  gitlab.type.hk;
+
+    location / {
+        return 301 https://gitlab.com/tijptjik/;
+    }
+}
+
+
+# KEYBASE - keybase.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  keybase.type.hk;
+
+    location / {
+        return 301 https://keybase.io/tijptjik;
+    }
+}
+
+
+# LINKEDIN  - linkedin.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  linkedin.type.hk;
+
+    location / {
+        return 301 https://www.linkedin.com/in/tijptjik/;
+    }
+}
+
+# REDDIT - reddit.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  reddit.type.hk;
+
+    location / {
+        return 301 https://www.reddit.com/user/tijptjik;
+    }
+}
+
+
+# TELEGRAM - telegram.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  telegram.type.hk tg.type.hk;
+
+    location / {
+        return 301 https://t.me/tijptjik;
+    }
+}
+
+
+# SIGNAL - {sgnl,signal}.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  signal.type.hk sgnl.type.hk;
+
+    location / {
+        return 301 https://signal.me/#p/+85291491764;
+    }
+}
+
+# TWITTER - {tw,twitter}.type.hk 
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  twitter.type.hk tw.type.hk;
+
+    location / {
+        return 301 https://twitter.com/tijptjik;
+    }
+}
+
+# WHATSAPP - {wa,whatsapp}.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  whatsapp.type.hk wa.type.hk;
+
+    location / {
+        return 301 https://api.whatsapp.com/send/?phone=%2B85291491764;
+    }
+}
+
+
+# YOUTUBE - {yt,youtube}.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  youtube.type.hk yt.type.hk;
+
+    location / {
+        return 301 https://www.youtube.com/channel/UCiPwDLLTjHAwucZ_R8AW10g;
+    }
+}
+
+
+# DIGITAL HUMANITIES - dh.type.hk
+server {
+    listen 443 ssl http2;
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
+
+    server_name  dh.type.hk;
+
+    location / {
+        return 301 https://www.youtube.com/channel/UC0t8EjpJFGrElJp1NFAfAiw;
+    }
+}
+
