@@ -159,6 +159,7 @@ packages:
     - 'dunst'
     - 'fd-find'
     - 'firefoxpwa'
+    - 'gamescope'
     - 'gimp'
     - 'gthumb'
     - 'gutenprint-cups'
