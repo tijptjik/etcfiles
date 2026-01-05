@@ -57,6 +57,7 @@ packages:
     - 'fuse-libs'
     - 'fzf'
     - 'gcc'
+    - 'glow'
     - 'gnome-disk-utility'
     - 'gnome-font-viewer'
     - 'gnome-logs'
