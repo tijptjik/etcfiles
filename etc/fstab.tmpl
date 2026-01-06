@@ -14,6 +14,20 @@ UUID=38a23ef4-8d84-4dc1-bcbc-4906b5aef59d   /boot       ext4    defaults 1 2
 UUID=1B03-C18E                              /boot/efi   vfat    umask=0077,shortname=winnt 0 2
 UUID=37da9d32-ff8e-4ecb-89dd-8e61881f44e7   /home       btrfs   subvol=home,compress=zstd:1 0 0
 {{ else if .isLaptop -}}
+#
+# /etc/fstab
+# Created by anaconda on Sun Jul 16 23:40:42 2023
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk/'.
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info.
+#
+# After editing this file, run 'systemctl daemon-reload' to update systemd
+# units generated from this file.
+#
+UUID=6eff2c29-fe2e-41e9-ac4f-3a2319f85443   /                       btrfs   subvol=root,compress=zstd:1 0 0
+UUID=1b5a9e2b-2a67-48bb-b442-bda8d188c54a   /boot                   ext4    defaults        1 2
+UUID=7859-8D4F                              /boot/efi               vfat    umask=0077,shortname=winnt 0 2
+UUID=6eff2c29-fe2e-41e9-ac4f-3a2319f85443   /home                   btrfs   subvol=home,compress=zstd:1 0 0
 {{ else if .isServer -}}
 #
 # /etc/fstab
