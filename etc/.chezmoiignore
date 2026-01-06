@@ -3,6 +3,9 @@ pki
 ssh/sshd_config
 ssh/sshd_config.d
 ssh/ssh_host*
+nginx
+systemd/system/dockers.service
+systemd/system/plexmediaserver.service.d
 {{ end -}}
 {{ if .isServer -}}
 {{ end -}}
