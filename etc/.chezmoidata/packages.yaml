@@ -88,6 +88,7 @@ packages:
     - 'lsd'
     - 'maven'
     - 'maven-openjdk21'
+    - 'mediainfo'
     - 'micro'
     - 'most'
     - 'mplayer'
