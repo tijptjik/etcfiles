@@ -1,6 +1,7 @@
 # SI hosted version of Hugo site from tijptjik.gitlab.io
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf; # Cloudflare Certs
 
     server_name  _ type.hk www.type.hk;
@@ -80,7 +81,8 @@ server {
 
 # SONARR - addshows.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name addshows.type.hk;
@@ -102,7 +104,8 @@ server {
 
 # RADARR - addmovies.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name addmovies.type.hk;
@@ -124,7 +127,8 @@ server {
 
 # BOOKLORE - library.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name library.type.hk;
@@ -146,7 +150,8 @@ server {
 
 # JACKETT - sources.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name sources.type.hk;
@@ -168,7 +173,8 @@ server {
 
 # TAUTULLI - tautulli.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name tautulli.type.hk;
@@ -187,20 +193,13 @@ server {
 
 # CALIBRE - book.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name book.type.hk;
 
     proxy_temp_path /tmp;
-
-    # location / {
-    #    proxy_pass http://localhost:5498;
-    #	 proxy_redirect     off;
-    #    proxy_set_header   Host             $host;
-    #    proxy_set_header   X-Real-IP        $remote_addr;
-    #    proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-    #}
 
     location / {
         proxy_pass http://localhost:8083;
@@ -214,7 +213,8 @@ server {
 
 # TRANSMISSION - torrent.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  torrent.type.hk;
@@ -236,7 +236,8 @@ server {
 
 # PLEX - flix.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  flix.type.hk;
@@ -251,7 +252,8 @@ server {
 
 # EMAIL - email.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  email.type.hk;
@@ -264,7 +266,8 @@ server {
 
 # GITHUB - github.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  github.type.hk;
@@ -277,7 +280,8 @@ server {
 
 # GITLAB - gitlab.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  gitlab.type.hk;
@@ -287,23 +291,10 @@ server {
     }
 }
 
-
-# KEYBASE - keybase.type.hk
-server {
-    listen 443 ssl http2;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
-    server_name  keybase.type.hk;
-
-    location / {
-        return 301 https://keybase.io/tijptjik;
-    }
-}
-
-
 # LINKEDIN  - linkedin.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  linkedin.type.hk;
@@ -315,7 +306,8 @@ server {
 
 # REDDIT - reddit.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  reddit.type.hk;
@@ -326,9 +318,10 @@ server {
 }
 
 
-# TELEGRAM - telegram.type.hk
+# TELEGRAM - {tg,telegram}.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  telegram.type.hk tg.type.hk;
@@ -353,7 +346,8 @@ server {
 
 # TWITTER - {tw,twitter}.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  twitter.type.hk tw.type.hk;
@@ -365,7 +359,8 @@ server {
 
 # WHATSAPP - {wa,whatsapp}.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  whatsapp.type.hk wa.type.hk;
@@ -378,7 +373,8 @@ server {
 
 # YOUTUBE - {yt,youtube}.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  youtube.type.hk yt.type.hk;
@@ -391,7 +387,8 @@ server {
 
 # DIGITAL HUMANITIES - dh.type.hk
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  dh.type.hk;
