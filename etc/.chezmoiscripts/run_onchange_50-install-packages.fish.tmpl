@@ -1,5 +1,5 @@
-{{ if eq .chezmoi.os "linux" -}}
 #!/usr/bin/env fish
+{{ if eq .chezmoi.os "linux" -}}
 
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 
