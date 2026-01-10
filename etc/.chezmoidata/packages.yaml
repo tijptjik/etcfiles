@@ -221,6 +221,7 @@ packages:
   server:
     rpm:
     - 'x265-libs'
+    - 'nginx-mod-stream'
     flatpak:
       fedora: []
       flathub:
