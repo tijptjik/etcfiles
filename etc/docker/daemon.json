@@ -1,0 +1,11 @@
+{
+  "data-root": "/mnt/storage/meta/appData/docker",
+  "storage-driver": "fuse-overlayfs",
+  "registry-mirrors": [
+    "https://docker.1ms.run",
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com"
+  ],
+  "max-concurrent-downloads": 10,
+  "max-concurrent-uploads": 5
+}
