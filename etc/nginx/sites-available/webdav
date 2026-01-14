@@ -22,9 +22,6 @@ server {
         # Permissions for new files/folders
         dav_access user:rw group:rw all:r;
 
-        # Enable WebDAV for this location
-        dav_access user:rw group:rw all:r;
-
         # **CRITICAL: Add authentication **
         auth_basic "WebDAV Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd;
