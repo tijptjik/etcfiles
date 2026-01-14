@@ -108,6 +108,13 @@ add_repo '{{ $repo.name }}' '{{ $repo.url }}'
 {{ end -}}
 {{ end }}
 
+# TODO Clean up
+# Install DNF installed repo for server
+{{ if .isServer }}
+sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
+{{ end }}
+
+
 # Process client-specific repositories if applicable
 {{ if .isClient }}
 log "Processing client-specific repositories from repos.yaml..."
