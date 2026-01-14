@@ -3,7 +3,7 @@ server {
     http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf; # Cloudflare Certs
 
-    server_name sync.type.hk;
+    server_name sync.type.hk dav.type.hk;
 
     # WebDAV root directory
     root /mnt/storage/meta/appData/webdav;
