@@ -218,6 +218,7 @@ packages:
       - 'org.signal.Signal'
       - 'org.videolan.VLC'
       - 'org.yuzu_emu.yuzu'
+      - 'rocks.koreader.KOReader'
   server:
     rpm:
     - 'x265-libs'
