@@ -1,0 +1,35 @@
+server {
+    listen 8443 ssl;
+    http2 on;
+    include /etc/nginx/conf.d/ssl_type.hk.conf; # Cloudflare Certs
+
+    server_name sync.type.hk;
+
+    # WebDAV root directory
+    root /mnt/storage/meta/appData/webdav;
+
+    # Enable WebDAV methods
+    location / {
+        # Basic WebDAV methods
+        dav_methods PUT DELETE MKCOL COPY MOVE;
+
+        # Extended methods (if you have nginx-dav-ext-module)
+        dav_ext_methods PROPFIND OPTIONS LOCK UNLOCK;
+
+        # Create intermediate directories
+        create_full_put_path on;
+
+        # Permissions for new files/folders
+        dav_access user:rw group:rw all:r;
+
+        # Enable WebDAV for this location
+        dav_access user:rw group:rw all:r;
+
+        # **CRITICAL: Add authentication **
+        auth_basic "WebDAV Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
+        # Disable nginx autoindex (optional)
+        autoindex off;
+    }
+}
