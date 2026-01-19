@@ -177,7 +177,6 @@ server {
     }
 }
 
-
 ####################################
 ###  BOOKS / MAGAZINES / COMICS  ###
 ####################################
@@ -258,10 +257,25 @@ server {
 
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name dance.type.hk;
+    server_name dj.type.hk;
 
     location / {
         proxy_pass http://localhost:4533;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+#######################
+###  FEISHIN        ###
+###  dance.type.hk  ###
+#######################
+#
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name dance.type.hk;
+
+    location / {
+        proxy_pass http://localhost:9180;
         include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
