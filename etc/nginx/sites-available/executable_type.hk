@@ -1,4 +1,3 @@
-# SI hosted version of Hugo site from tijptjik.gitlab.io
 server {
     listen 8443 ssl;
     http2 on;
@@ -11,56 +10,7 @@ server {
     client_max_body_size 100M;
     autoindex off;
 
-    include /etc/nginx/snippets/cors_simple_type.hk.conf;
-
-    # Mix Panel Proxy
-
-    location /mxpnl/lib.min.js {
-        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
-        proxy_pass https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js;
-    }
-
-    location /mxpnl/lib.js {
-        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
-        proxy_pass https://cdn.mxpnl.com/libs/mixpanel-2-latest.js;
-    }
-
-    location /mxpnl/decide {
-
-        # CORS Config
-        if ($request_method = 'OPTIONS') {
-            include /etc/nginx/snippets/cors_options_type.hk.conf;
-            return 204;
-        }
-
-        if ($request_method ~* "(GET|POST)") {
-     #       include /etc/nginx/snippets/cors_simple_type.hk.conf;
-        }
-
-        proxy_set_header Host decide.mixpanel.com;
-        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
-        proxy_pass https://decide.mixpanel.com/decide;
-    }
-
-    location /mxpnl/ {
-
-    # CORS Config
-
-        if ($request_method = 'OPTIONS') {
-            include /etc/nginx/snippets/cors_options_type.hk.conf;
-            return 204;
-        }
-
-        if ($request_method ~* "(GET|POST)") {
-   #         include /etc/nginx/snippets/cors_simple_type.hk.conf;
-        }
-
-        proxy_set_header Host api.mixpanel.com;
-        include /etc/nginx/snippets/mxpnl_proxy_pass.conf;
-        proxy_pass https://api.mixpanel.com/;
-    }
-
-    # Hugo
+    # SI hosted version of Hugo site from tijptjik.gitlab.io
 
     location / {
 
@@ -70,341 +20,173 @@ server {
             include /etc/nginx/snippets/cors_options_type.hk.conf;
             return 204;
         }
-
-        if ($request_method ~* "(GET|POST)") {
-    #        include /etc/nginx/snippets/cors_simple_type.hk.conf;
-        }
-
         try_files $uri $uri/ /index.html?$args;
     }
 }
 
 # SONARR - shows.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name shows.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8989;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
-
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # RADARR - movies.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name movies.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:7878;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
-
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # READARR - books.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name books.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8787;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
-
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # BOOKLORE - {read,library}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name read.type.hk library.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:6060;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # BOOKLORE - opds.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name opds.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:6060/api/v1/opds;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # AUDIOBOOKSHELF - listen.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name listen.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:13378;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # LAZYLIBRARIAN - llibrary.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name llibrary.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:5299;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # EPHEMERA - anna.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name anna.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8286;
-        proxy_redirect     off;
-        proxy_set_header   Host                 $host;
-        proxy_set_header   X-Real-IP            $remote_addr;
-        proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host     $host;
-        proxy_set_header   X-Forwarded-Proto    $scheme;
-        proxy_set_header   Upgrade              $http_upgrade;
-        proxy_set_header   Connection           $http_connection;
-        proxy_http_version 1.1;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # SHELFMARK - mark.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name mark.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8084;
-        proxy_redirect     off;
-        proxy_set_header   Host                 $host;
-        proxy_set_header   X-Real-IP            $remote_addr;
-        proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host     $host;
-        proxy_set_header   X-Forwarded-Proto    $scheme;
-        proxy_set_header   Upgrade              $http_upgrade;
-        proxy_set_header   Connection           $http_connection;
-        proxy_http_version 1.1;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # PROWLARR - indexer.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name indexer.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:9696;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
-
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # BYPARR - solver.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name solver.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8191;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade          $http_upgrade;
-        proxy_set_header   Connection       $http_connection;
-
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # TAUTULLI - monitor.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name monitor.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8181;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # PLEX REWIND - wrapped.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name wrapped.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8383;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
 # CALIBRE - book.type.hk
 # TODO -- Remove
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name book.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:8083;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
-
 }
 
 # TRANSMISSION - torrent.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  torrent.type.hk;
-
-    proxy_temp_path /tmp;
 
     location / {
         proxy_pass http://localhost:9091;
-        proxy_redirect     off;
-        proxy_set_header   Host             $host;
-        proxy_set_header   X-Real-IP        $remote_addr;
-        proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
@@ -414,26 +196,17 @@ server {
 
 # PLEX - {watch, flix}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  watch.type.hk flix.type.hk;
 
-    proxy_temp_path /tmp;
-
     location / {
-	return 301 https://app.plex.tv/desktop/;
+        return 301 https://app.plex.tv/desktop/;
     }
 }
 
-
 # EMAIL - email.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  email.type.hk;
 
     location / {
@@ -441,13 +214,9 @@ server {
     }
 }
 
-
 # GITHUB - github.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  github.type.hk;
 
     location / {
@@ -455,13 +224,9 @@ server {
     }
 }
 
-
 # GITLAB - gitlab.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  gitlab.type.hk;
 
     location / {
@@ -471,10 +236,7 @@ server {
 
 # LINKEDIN  - linkedin.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  linkedin.type.hk;
 
     location / {
@@ -484,10 +246,7 @@ server {
 
 # REDDIT - reddit.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  reddit.type.hk;
 
     location / {
@@ -495,13 +254,9 @@ server {
     }
 }
 
-
 # TELEGRAM - {tg,telegram}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  telegram.type.hk tg.type.hk;
 
     location / {
@@ -509,13 +264,9 @@ server {
     }
 }
 
-
 # SIGNAL - {sgnl,signal}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  signal.type.hk sgnl.type.hk;
 
     location / {
@@ -525,10 +276,7 @@ server {
 
 # TWITTER - {tw,twitter}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  twitter.type.hk tw.type.hk;
 
     location / {
@@ -538,10 +286,7 @@ server {
 
 # WHATSAPP - {wa,whatsapp}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  whatsapp.type.hk wa.type.hk;
 
     location / {
@@ -549,13 +294,9 @@ server {
     }
 }
 
-
 # YOUTUBE - {yt,youtube}.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  youtube.type.hk yt.type.hk;
 
     location / {
@@ -563,13 +304,9 @@ server {
     }
 }
 
-
 # DIGITAL HUMANITIES - dh.type.hk
 server {
-    listen 8443 ssl;
-    http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf;
-
+    include /etc/nginx/snippets/server_template.conf;
     server_name  dh.type.hk;
 
     location / {
