@@ -127,7 +127,6 @@ packages:
     - 'starship'
     - 'sudo'
     - 'symlinks'
-    - 'texinfo'
     - 'transmission'
     - 'tree'
     - 'unzip'
