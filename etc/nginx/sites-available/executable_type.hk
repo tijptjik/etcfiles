@@ -71,7 +71,7 @@ server {
 ####################################
 
 #######################
-###  READARR        ###
+###  BOOKSHELF      ###
 ###  books.type.hk  ###
 #######################
 
@@ -255,6 +255,16 @@ server {
 ###  NAVIDROME      ###
 ###  dance.type.hk  ###
 #######################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name dance.type.hk;
+
+    location / {
+        proxy_pass http://localhost:4533;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
 
 ####################
 ###  AA - TOOLS  ###
