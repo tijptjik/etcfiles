@@ -1,7 +1,11 @@
+################################
+###  TYPE.HK - NGINX CONFIG  ###
+################################
+
 server {
     listen 8443 ssl;
     http2 on;
-    include /etc/nginx/conf.d/ssl_type.hk.conf; # Cloudflare Certs
+    include /etc/nginx/conf.d/ssl_type.hk.conf;
 
     server_name  _ type.hk www.type.hk;
     root   /var/www/html/type.hk/public;
@@ -10,12 +14,12 @@ server {
     client_max_body_size 100M;
     autoindex off;
 
-    # SI hosted version of Hugo site from tijptjik.gitlab.io
+    #################
+    ###  HUGO     ###
+    ###  type.hk  ###
+    #################
 
     location / {
-
-        # CORS Config
-
         if ($request_method = 'OPTIONS') {
             include /etc/nginx/snippets/cors_options_type.hk.conf;
             return 204;
@@ -24,18 +28,19 @@ server {
     }
 }
 
-# SONARR - shows.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name shows.type.hk;
+##################################
+###  AA - ACQUISTION SERVICES  ###
+##################################
 
-    location / {
-        proxy_pass http://localhost:8989;
-        include /etc/nginx/snippets/reverse_proxy.conf;
-    }
-}
+########################
+###  MOVIES / SHOWS  ###
+########################
 
-# RADARR - movies.type.hk
+########################
+###  RADARR          ###
+###  movies.type.hk  ###
+########################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name movies.type.hk;
@@ -46,7 +51,30 @@ server {
     }
 }
 
-# READARR - books.type.hk
+#######################
+###  SONARR         ###
+###  shows.type.hk  ###
+#######################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name shows.type.hk;
+
+    location / {
+        proxy_pass http://localhost:8989;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+####################################
+###  BOOKS / MAGAZINES / COMICS  ###
+####################################
+
+#######################
+###  READARR        ###
+###  books.type.hk  ###
+#######################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name books.type.hk;
@@ -57,51 +85,11 @@ server {
     }
 }
 
-# BOOKLORE - {read,library}.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name read.type.hk library.type.hk;
+######################
+###  EPHEMERA      ###
+###  anna.type.hk  ###
+######################
 
-    location / {
-        proxy_pass http://localhost:6060;
-        include /etc/nginx/snippets/reverse_proxy.conf;
-    }
-}
-
-# BOOKLORE - opds.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name opds.type.hk;
-
-    location / {
-        proxy_pass http://localhost:6060/api/v1/opds;
-        include /etc/nginx/snippets/reverse_proxy.conf;
-    }
-}
-
-# AUDIOBOOKSHELF - listen.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name listen.type.hk;
-
-    location / {
-        proxy_pass http://localhost:13378;
-        include /etc/nginx/snippets/reverse_proxy.conf;
-    }
-}
-
-# LAZYLIBRARIAN - llibrary.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name llibrary.type.hk;
-
-    location / {
-        proxy_pass http://localhost:5299;
-        include /etc/nginx/snippets/reverse_proxy.conf;
-    }
-}
-
-# EPHEMERA - anna.type.hk
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name anna.type.hk;
@@ -112,7 +100,11 @@ server {
     }
 }
 
-# SHELFMARK - mark.type.hk
+######################
+###  SHELFMARK     ###
+###  mark.type.hk  ###
+######################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name mark.type.hk;
@@ -123,52 +115,109 @@ server {
     }
 }
 
-# PROWLARR - indexer.type.hk
+########################
+###  LAZY LIBRARIAN  ###
+###  liz.type.hk     ###
+########################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name indexer.type.hk;
+    server_name llibrary.type.hk;
 
     location / {
-        proxy_pass http://localhost:9696;
+        proxy_pass http://localhost:5299;
         include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
-# BYPARR - solver.type.hk
+###############################
+###  AUDIOBOOKS / PODCASTS  ###
+###############################
+
+#######################
+###  READARR        ###
+###  books.type.hk  ###
+###  see "BOOKS"    ###
+#######################
+
+###############
+###  MUSIC  ###
+###############
+
+#######################
+###  LIDARR         ###
+###  music.type.hk  ###
+#######################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name solver.type.hk;
+    server_name music.type.hk;
 
     location / {
-        proxy_pass http://localhost:8191;
+        proxy_pass http://localhost:8686;
         include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
-# TAUTULLI - monitor.type.hk
+##################################
+###  AA - STREAMING SERVICES   ###
+##################################
+
+#######################
+###  PLEX           ###
+###  watch.type.hk  ###
+#######################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name monitor.type.hk;
+    server_name  watch.type.hk;
 
     location / {
-        proxy_pass http://localhost:8181;
+        return 301 https://app.plex.tv/desktop/;
+    }
+}
+
+
+####################################
+###  BOOKS / MAGAZINES / COMICS  ###
+####################################
+
+######################
+###  BOOKLORE      ###
+###  read.type.hk  ###
+######################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name read.type.hk library.type.hk;
+
+    location / {
+        proxy_pass http://localhost:6060;
         include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
-# PLEX REWIND - wrapped.type.hk
+#########################
+###  BOOKLORE : OPDS  ###
+###  opds.type.hk     ###
+#########################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name wrapped.type.hk;
+    server_name opds.type.hk;
 
     location / {
-        proxy_pass http://localhost:8383;
+        proxy_pass http://localhost:6060/api/v1/opds;
         include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
-# CALIBRE - book.type.hk
-# TODO -- Remove
+######################
+# DEPRECATED       ###
+###  CALIBRE       ###
+###  book.type.hk  ###
+######################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name book.type.hk;
@@ -179,7 +228,100 @@ server {
     }
 }
 
-# TRANSMISSION - torrent.type.hk
+##############################
+###  AUDIOBOOKS / PODCASTS ###
+##############################
+
+########################
+###  AUDIOBOOKSHELF  ###
+###  listen.type.hk  ###
+########################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name listen.type.hk;
+
+    location / {
+        proxy_pass http://localhost:13378;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+###############
+###  MUSIC  ###
+###############
+
+#######################
+###  NAVIDROME      ###
+###  dance.type.hk  ###
+#######################
+
+####################
+###  AA - TOOLS  ###
+####################
+
+#################################
+###  MONITORING / DASHBOARDS  ###
+#################################
+
+#########################
+###  TAUTULLI         ###
+###  monitor.type.hk  ###
+#########################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name monitor.type.hk;
+
+    location / {
+        proxy_pass http://localhost:8181;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+#########################
+###  PLEX REWIND      ###
+###  wrapped.type.hk  ###
+#########################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name wrapped.type.hk;
+
+    location / {
+        proxy_pass http://localhost:8383;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+##################
+###  INDEXERS  ###
+##################
+
+#########################
+###  PROWLARR         ###
+###  indexer.type.hk  ###
+#########################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name indexer.type.hk;
+
+    location / {
+        proxy_pass http://localhost:9696;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+#####################
+###  DOWNLOADERS  ###
+#####################
+
+#########################
+###  TRANSMISSION     ###
+###  torrent.type.hk  ###
+#########################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name  torrent.type.hk;
@@ -190,71 +332,40 @@ server {
     }
 }
 
-###
-# URL REDIRECTIONS
-###
+#########################
+###  CAPTCHA SOLVERS  ###
+#########################
 
-# PLEX - {watch, flix}.type.hk
+########################
+###  BYPARR          ###
+###  solver.type.hk  ###
+########################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name  watch.type.hk flix.type.hk;
+    server_name solver.type.hk;
 
     location / {
-        return 301 https://app.plex.tv/desktop/;
+        proxy_pass http://localhost:8191;
+        include /etc/nginx/snippets/reverse_proxy.conf;
     }
 }
 
-# EMAIL - email.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name  email.type.hk;
+###############################
+###  FLARESOLVER            ###
+###  http://localhost:8192  ###
+###############################
 
-    location / {
-        return 301 mailto:m@type.hk;
-    }
-}
 
-# GITHUB - github.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name  github.type.hk;
+############################
+###  TIJPTJIK - CONTACT  ###
+############################
 
-    location / {
-        return 301 https://github.com/tijptjik/;
-    }
-}
+###############################
+###  TELEGRAM               ###
+###  {tg,telegram}.type.hk  ###
+###############################
 
-# GITLAB - gitlab.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name  gitlab.type.hk;
-
-    location / {
-        return 301 https://gitlab.com/tijptjik/;
-    }
-}
-
-# LINKEDIN  - linkedin.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name  linkedin.type.hk;
-
-    location / {
-        return 301 https://www.linkedin.com/in/tijptjik/;
-    }
-}
-
-# REDDIT - reddit.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name  reddit.type.hk;
-
-    location / {
-        return 301 https://www.reddit.com/user/tijptjik;
-    }
-}
-
-# TELEGRAM - {tg,telegram}.type.hk
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name  telegram.type.hk tg.type.hk;
@@ -264,7 +375,11 @@ server {
     }
 }
 
-# SIGNAL - {sgnl,signal}.type.hk
+###############################
+###  SIGNAL                 ###
+###  {sgnl,signal}.type.hk  ###
+###############################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name  signal.type.hk sgnl.type.hk;
@@ -274,17 +389,11 @@ server {
     }
 }
 
-# TWITTER - {tw,twitter}.type.hk
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name  twitter.type.hk tw.type.hk;
+###############################
+###  WHATSAPP               ###
+###  {wa,whatsapp}.type.hk  ###
+###############################
 
-    location / {
-        return 301 https://twitter.com/tijptjik;
-    }
-}
-
-# WHATSAPP - {wa,whatsapp}.type.hk
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name  whatsapp.type.hk wa.type.hk;
@@ -294,17 +403,75 @@ server {
     }
 }
 
-# YOUTUBE - {yt,youtube}.type.hk
+#######################
+###  EMAIL          ###
+###  email.type.hk  ###
+#######################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name  youtube.type.hk yt.type.hk;
+    server_name  email.type.hk;
 
     location / {
-        return 301 https://www.youtube.com/channel/UCiPwDLLTjHAwucZ_R8AW10g;
+        return 301 mailto:m@type.hk;
     }
 }
 
-# DIGITAL HUMANITIES - dh.type.hk
+#########################
+###  TIJPTJIK - CODE  ###
+#########################
+
+#######################
+###  GITHUB         ###
+###  github.type.hk ###
+#######################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name  github.type.hk;
+
+    location / {
+        return 301 https://github.com/tijptjik/;
+    }
+}
+
+#################################
+###  TIJPTJIK - SOCIAL MEDIA  ###
+#################################
+
+########################
+###  REDDIT          ###
+###  reddit.type.hk  ###
+########################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name  reddit.type.hk;
+
+    location / {
+        return 301 https://www.reddit.com/user/tijptjik;
+    }
+}
+
+##########################
+###  LINKEDIN          ###
+###  linkedin.type.hk  ###
+##########################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name  linkedin.type.hk;
+
+    location / {
+        return 301 https://www.linkedin.com/in/tijptjik/;
+    }
+}
+
+####################
+###  DH          ###
+###  dh.type.hk  ###
+####################
+
 server {
     include /etc/nginx/snippets/server_template.conf;
     server_name  dh.type.hk;
