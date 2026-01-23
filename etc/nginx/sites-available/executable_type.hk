@@ -159,6 +159,22 @@ server {
     }
 }
 
+
+#######################
+###  OCTO-FIESTARR  ###
+###  lp.type.hk     ###
+#######################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name lp.type.hk;
+
+    location / {
+        proxy_pass http://localhost:5274;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
 ##################################
 ###  AA - STREAMING SERVICES   ###
 ##################################
@@ -252,7 +268,7 @@ server {
 
 #######################
 ###  NAVIDROME      ###
-###  dance.type.hk  ###
+###  dj.type.hk  ###
 #######################
 
 server {
