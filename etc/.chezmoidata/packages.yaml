@@ -5,6 +5,7 @@ packages:
     - 'atim/lazygit'
     - 'atim/starship'
     - 'lionheartp/Hyprland'
+    - 'skoved/vivid'
     - 'sneexy/zen-browser'
     rpm:
     - '7zip'
@@ -132,6 +133,7 @@ packages:
     - 'unzip'
     - 'uv'
     - 'vim'
+    - 'vivid'
     - 'wdiff'
     - 'whois'
     - 'xprop'
