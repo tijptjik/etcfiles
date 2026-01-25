@@ -122,7 +122,7 @@ server {
 
 server {
     include /etc/nginx/snippets/server_template.conf;
-    server_name llibrary.type.hk;
+    server_name liz.type.hk;
 
     location / {
         proxy_pass http://localhost:5299;
