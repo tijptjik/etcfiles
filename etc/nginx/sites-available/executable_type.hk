@@ -493,6 +493,20 @@ server {
     }
 }
 
+####################
+###  INSTAGRAM   ###
+###  ig.type.hk  ###
+####################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name  ig.type.hk;
+
+    location / {
+        return 301 https://www.instagram.com/7ijp7jik/;
+    }
+}
+
 ##########################
 ###  LINKEDIN          ###
 ###  linkedin.type.hk  ###
