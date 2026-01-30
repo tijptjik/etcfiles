@@ -144,6 +144,7 @@ packages:
       - 'com.github.tchx84.Flatseal'
       flathub:
       - 'org.gnome.seahorse.Application'
+      - 'io.github.realmazharhussain.GdmSettings'
   client:
     copr:
     - 'errornointernet/quickshell'
