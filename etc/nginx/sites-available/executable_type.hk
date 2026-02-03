@@ -227,22 +227,6 @@ server {
     }
 }
 
-######################
-# DEPRECATED       ###
-###  CALIBRE       ###
-###  book.type.hk  ###
-######################
-
-server {
-    include /etc/nginx/snippets/server_template.conf;
-    server_name book.type.hk;
-
-    location / {
-        proxy_pass http://localhost:8083;
-        include /etc/nginx/snippets/reverse_proxy.conf;
-    }
-}
-
 ##############################
 ###  AUDIOBOOKS / PODCASTS ###
 ##############################

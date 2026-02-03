@@ -1,4 +1,5 @@
 # PAM configuration file for hyprlock
 # the 'system-auth' configuration file (see /etc/pam.d/system-auth)
 
-auth  include     system-auth
+# auth  include     system-auth
+auth    sufficient  pam_permit.so
