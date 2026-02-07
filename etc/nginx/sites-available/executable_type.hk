@@ -156,6 +156,8 @@ server {
     location / {
         proxy_pass http://localhost:8686;
         include /etc/nginx/snippets/reverse_proxy.conf;
+        proxy_read_timeout 300s;  # Increase from default 60s
+        proxy_connect_timeout 300s;
     }
 }
 
