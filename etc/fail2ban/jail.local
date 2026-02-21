@@ -1,6 +1,6 @@
 [DEFAULT]
-# Ban for 1 hour, max 3 retries in 10 minutes
-bantime = 3600
+# Ban for 25 hours, max 3 retries in 10 minutes
+bantime = 60000
 findtime = 600
 maxretry = 3
 backend = systemd
@@ -14,6 +14,7 @@ port = ssh
 filter = sshd
 logpath = /var/log/secure
 maxretry = 3
+banaction = nftables-multiport
 
 # Optional: Aggressive mode - also bans after multiple "Invalid user" attempts
 mode = aggressive
