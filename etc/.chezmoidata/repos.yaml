@@ -40,3 +40,8 @@ repos:
       url: "https://repository.mullvad.net/rpm/stable/mullvad.repo"
 
   server:
+    # Plex Media Server
+    plex:
+      name: "PlexTV"
+      url: "https://repo.plex.tv/rpm/"
+      gpg_key: "https://downloads.plex.tv/plex-keys/PlexSign.v2.key"
