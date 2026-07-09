@@ -49,28 +49,23 @@ end
 function enable_copr
     set copr_repo $argv[1]
     if is_copr_enabled $copr_repo
-        log "COPR repository already enabled: $copr_repo"
+        step_skip "COPR $copr_repo already enabled"
         return 0
     end
 
-    log "Enabling COPR repository: $copr_repo"
-    if sudo dnf copr enable -y $copr_repo
-        log "Successfully enabled COPR: $copr_repo"
+    if step_run "Enable COPR $copr_repo" sudo dnf copr enable -y $copr_repo
+        return 0
     else
         set fallback_chroot (copr_fallback_chroot $copr_repo)
 
         if test -z "$fallback_chroot"
-            log "Failed to enable COPR: $copr_repo"
+            step_fail "Enable COPR $copr_repo"
             return 1
         end
 
-        log "COPR $copr_repo > Current Fedora chroot unavailable; retrying with $fallback_chroot."
-        if sudo dnf copr enable -y $copr_repo $fallback_chroot
-            log "Successfully enabled COPR: $copr_repo ($fallback_chroot)"
-        else
-            log "Failed to enable COPR: $copr_repo ($fallback_chroot)"
-            return 1
-        end
+        step_note "COPR $copr_repo current Fedora chroot unavailable; trying $fallback_chroot"
+        step_run "Enable COPR $copr_repo ($fallback_chroot)" sudo dnf copr enable -y $copr_repo $fallback_chroot
+        or return 1
     end
 end
 
@@ -92,7 +87,7 @@ set -a client_copr_repos '{{ . }}'
 
 # Enable common COPR repositories
 if test (count $common_copr_repos) -gt 0
-    log "Processing common COPR repositories..."
+    step_header "Common COPR repositories"
 
     # Enable each COPR repository
     for repo in $common_copr_repos
@@ -104,7 +99,7 @@ end
 # Enable client-specific COPR repositories
 {{ if .isClient -}}
 if test (count $client_copr_repos) -gt 0
-    log "Processing client-specific COPR repositories..."
+    step_header "Client COPR repositories"
 
     # Enable each COPR repository
     for repo in $client_copr_repos
@@ -114,5 +109,5 @@ if test (count $client_copr_repos) -gt 0
 end
 {{ end }}
 
-log "All COPR repositories processed successfully!"
+step_ok "COPR repositories processed"
 {{ end }}

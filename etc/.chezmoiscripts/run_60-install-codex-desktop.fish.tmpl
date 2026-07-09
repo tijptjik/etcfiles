@@ -19,7 +19,7 @@ function ensure_codex_desktop_source
     or return 1
 
     if not test -d "$codex_desktop_dir"
-        git clone https://github.com/ilysenko/codex-desktop-linux.git "$codex_desktop_dir"
+        step_run "Codex Desktop source" git clone https://github.com/ilysenko/codex-desktop-linux.git "$codex_desktop_dir"
         or return 1
     end
 end
@@ -45,7 +45,7 @@ function ensure_codex_desktop_features
     set tmp_features (mktemp)
 
     if not test -f "$tmp_features"
-        log "Failed to create a temporary Codex Desktop feature file."
+        step_fail "Codex features"
         return 1
     end
 
@@ -53,18 +53,18 @@ function ensure_codex_desktop_features
 
     if test -f "$features_file"; and cmp -s "$tmp_features" "$features_file"
         rm -f "$tmp_features"
-        log "Codex Desktop Linux features are already configured."
         return 0
     end
 
-    log "Configuring Codex Desktop Linux features: $codex_desktop_features"
     mkdir -p (dirname "$features_file")
     or begin
         rm -f "$tmp_features"
+        step_fail "Codex features"
         return 1
     end
 
     mv "$tmp_features" "$features_file"
+    step_ok "Codex features"
     return 2
 end
 
@@ -104,27 +104,25 @@ if test $features_status -eq 1
 end
 
 if codex_desktop_is_available; and test $features_status -eq 0; and codex_desktop_installed_features_match
-    log "Codex Desktop is already available with the desired Linux features, skipping installation."
+    step_skip "Codex Desktop"
     exit 0
 end
 
-sudo dnf install -y python3 7zip curl unzip rpm-build make gcc-c++ @development-tools
+step_run "Codex build dependencies" sudo dnf install -y python3 7zip curl unzip rpm-build make gcc-c++ @development-tools
 or exit 1
 
 if codex_desktop_is_available
-    log "Rebuilding Codex Desktop with updated Linux features..."
-    make -C "$codex_desktop_dir" install-native
+    step_run "Rebuild Codex Desktop" make -C "$codex_desktop_dir" install-native
     or exit 1
 else
-    log "Installing Codex Desktop for Linux..."
-    make -C "$codex_desktop_dir" bootstrap-native
+    step_run "Install Codex Desktop" make -C "$codex_desktop_dir" bootstrap-native
     or exit 1
 end
 
 if codex_desktop_is_available
-    log "Codex Desktop installed successfully."
+    step_ok "Codex Desktop installed"
 else
-    log "Codex Desktop installation finished, but the app is still unavailable."
+    step_fail "Verify Codex Desktop installation"
     exit 1
 end
 

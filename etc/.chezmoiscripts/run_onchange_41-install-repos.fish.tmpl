@@ -11,27 +11,17 @@ setup_logging linux-install-repos
 # --- RPM Fusion Handling ---
 function handle_rpmfusion
     if ! rpm -q rpmfusion-free-release >/dev/null 2>&1
-        log "Installing RPM Fusion Free repository..."
-        if sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
-            log "RPM Fusion Free repository installed successfully."
-        else
-            log "Failed to install RPM Fusion Free repository."
-            return 1
-        end
+        step_run "Install RPM Fusion Free repository" sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+        or return 1
     else
-        log "RPM Fusion Free repository already installed."
+        step_skip "RPM Fusion Free repository already installed"
     end
 
     if ! rpm -q rpmfusion-nonfree-release >/dev/null 2>&1
-        log "Installing RPM Fusion Non-Free repository..."
-        if sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
-            log "RPM Fusion Non-Free repository installed successfully."
-        else
-            log "Failed to install RPM Fusion Non-Free repository."
-            return 1
-        end
+        step_run "Install RPM Fusion Non-Free repository" sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+        or return 1
     else
-        log "RPM Fusion Non-Free repository already installed."
+        step_skip "RPM Fusion Non-Free repository already installed"
     end
 end
 
@@ -41,42 +31,25 @@ function add_repo
     set repo_url $argv[2]
     set gpg_key $argv[3]
 
-    log "Processing repository: $repo_name"
-
     # Import GPG key if provided
     if test -n "$gpg_key"
-        log "Importing GPG key for $repo_name from $gpg_key"
         # Use curl to download the key and pipe to rpm --import
-        if curl -sSL "$gpg_key" | sudo rpm --import -
-            log "Successfully imported GPG key for $repo_name"
-        else
-            log "Failed to import GPG key for $repo_name"
-            return 1
-        end
+        step_run "Import GPG key for $repo_name" fish -c "curl -sSL '$gpg_key' | sudo rpm --import -"
+        or return 1
     end
 
     # Add the repository
-    log "Adding repository for $repo_name from $repo_url"
-    if sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
-        log "Successfully added repository: $repo_name"
-    else
-        log "Failed to add repository: $repo_name"
-        return 1
-    end
+    step_run "Add repository $repo_name" sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
+    or return 1
 end
 
 # --- Prerequisite Check ---
 function ensure_dnf_plugins_core
     if ! rpm -q dnf-plugins-core >/dev/null 2>&1
-        log "Installing dnf-plugins-core..."
-        if sudo dnf install -y dnf-plugins-core
-            log "dnf-plugins-core installed successfully."
-        else
-            log "Failed to install dnf-plugins-core. Aborting."
-            exit 1
-        end
+        step_run "Install dnf-plugins-core" sudo dnf install -y dnf-plugins-core
+        or exit 1
     else
-        log "dnf-plugins-core is already installed."
+        step_skip "dnf-plugins-core already installed"
     end
 end
 
@@ -91,7 +64,7 @@ handle_rpmfusion
 or exit 1
 
 # Process common repositories
-log "Processing common repositories from repos.yaml..."
+step_header "Common DNF repositories"
 {{ range $name, $repo := .repos.common  }}
 {{ if and (ne $name "flathub") (ne $repo.url "dynamic") -}}
 {{ $gpg_key := "" -}}
@@ -106,14 +79,14 @@ or exit 1
 # TODO Clean up
 # Install DNF installed repo for server
 {{ if .isServer }}
-sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
+step_run "Install GetPageSpeed repository" sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
 or exit 1
 {{ end }}
 
 
 # Process client-specific repositories if applicable
 {{ if .isClient }}
-log "Processing client-specific repositories from repos.yaml..."
+step_header "Client DNF repositories"
 {{ range $name, $repo := .repos.client }}
 {{ if and (ne $name "flathub") (ne $repo.url "dynamic") -}}
 {{ $gpg_key := "" -}}
@@ -126,6 +99,6 @@ or exit 1
 {{ end }}
 {{ end }}
 
-log "All DNF repositories processed."
+step_ok "DNF repositories processed"
 
 {{ end -}}

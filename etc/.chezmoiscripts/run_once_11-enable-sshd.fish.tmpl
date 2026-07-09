@@ -1,20 +1,25 @@
 #!/usr/bin/env fish
 {{ if .isServer -}}
 
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-enable-sshd
+
 # Check if sshd is already enabled
 if systemctl is-enabled sshd >/dev/null 2>&1
-    echo "sshd is already enabled."
+    step_skip "sshd service already enabled"
 else
-    echo "Enabling sshd..."
-    sudo systemctl enable sshd
+    step_run "Enable sshd service" sudo systemctl enable sshd
+    or exit 1
 end
 
 # Check if sshd is already active
 if systemctl is-active sshd >/dev/null 2>&1
-    echo "sshd is already active."
+    step_skip "sshd service already active"
 else
-    echo "Starting sshd..."
-    sudo systemctl start sshd
+    step_run "Start sshd service" sudo systemctl start sshd
+    or exit 1
 end
+
+step_ok "sshd service ready"
 
 {{ end -}}

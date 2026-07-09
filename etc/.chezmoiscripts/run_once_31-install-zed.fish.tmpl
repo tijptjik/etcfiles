@@ -43,7 +43,7 @@ function zed_arch
         case x86_64 x86_64\* i686
             echo x86_64
         case '*'
-            log "Zed > Unsupported architecture: $arch"
+            step_fail "Zed unsupported architecture: $arch"
             return 1
     end
 end
@@ -103,18 +103,17 @@ function run_zed_installer
     set installer (mktemp)
 
     if not test -f "$installer"
-        log "Zed $channel > Failed to create installer temp file."
+        step_fail "Create Zed $channel installer temp file"
         return 1
     end
 
-    if not curl -fL -o "$installer" https://zed.dev/install.sh
-        log "Zed $channel > Failed to download installer."
+    if not step_run "Download Zed $channel installer" curl -fsSL -o "$installer" https://zed.dev/install.sh
         rm -f "$installer"
         return 1
     end
     chmod 755 "$installer"
     or begin
-        log "Zed $channel > Failed to make installer executable."
+        step_fail "Make Zed $channel installer executable"
         rm -f "$installer"
         return 1
     end
@@ -125,9 +124,9 @@ function run_zed_installer
     end
 
     if test (id -u) -eq 0; and test "$zed_target_user" != "root"
-        sudo -u "$zed_target_user" env $install_env sh "$installer"
+        step_run "Install Zed $channel for $zed_target_user" sudo -u "$zed_target_user" env $install_env sh "$installer"
     else
-        env $install_env sh "$installer"
+        step_run "Install Zed $channel for $zed_target_user" env $install_env sh "$installer"
     end
     set install_status $status
 
@@ -146,14 +145,14 @@ function install_zed_channel
 
     set installed_version (installed_zed_version "$binary")
     if test "$install_mode" = "optional"; and test -n "$installed_version"
-        log "Zed $channel > Local version $installed_version is available; skipping optional install."
+        step_skip "Zed $channel optional install; local version $installed_version is available"
         return 0
     end
 
     if test "$install_mode" = "optional"
         set local_version (any_local_zed_version)
         if test -n "$local_version"
-            log "Zed $channel > Another local Zed version $local_version is available; skipping optional install."
+            step_skip "Zed $channel optional install; another local version $local_version is available"
             return 0
         end
     end
@@ -162,11 +161,11 @@ function install_zed_channel
 
     if test -z "$latest_version"
         if test -n "$installed_version"
-            log "Zed $channel > Latest version unavailable; keeping installed $installed_version."
+            step_skip "Zed $channel latest unavailable; keeping installed $installed_version"
             return 0
         end
 
-        log "Zed $channel > Failed to determine latest version."
+        step_fail "Determine latest Zed $channel version"
         return 1
     end
 
@@ -175,13 +174,13 @@ function install_zed_channel
         set normalized_installed (normalize_zed_version $installed_version)
 
         if test "$normalized_installed" = "$normalized_latest"
-            log "Zed $channel > Current version $installed_version is already latest."
+            step_ok "Zed $channel already latest ($installed_version)"
             return 0
         end
 
-        log "Zed $channel > Updating $installed_version to $latest_version for $zed_target_user."
+        step_note "Zed $channel updating $installed_version to $latest_version for $zed_target_user"
     else
-        log "Zed $channel > Installing $latest_version for $zed_target_user."
+        step_note "Zed $channel installing $latest_version for $zed_target_user"
     end
 
     run_zed_installer $channel
@@ -189,12 +188,14 @@ function install_zed_channel
 
     set installed_version (installed_zed_version "$binary")
     if test -n "$installed_version"
-        log "Zed $channel > Installed $installed_version."
+        step_ok "Zed $channel installed ($installed_version)"
     else
-        log "Zed $channel > Install finished, but $binary is unavailable."
+        step_fail "Verify Zed $channel binary"
         return 1
     end
 end
+
+step_header "Zed editor"
 
 install_zed_channel stable "" required
 or exit 1

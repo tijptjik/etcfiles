@@ -1,36 +1,40 @@
 #!/usr/bin/env fish
 {{ if eq .chezmoi.os "linux" -}}
 
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-telegram
+
 # Check if Telegram is already installed
 if test -x "/opt/Telegram/Telegram"
-    echo "Telegram is already installed at /opt/Telegram/Telegram, skipping installation."
+    step_skip "Telegram already installed"
     exit 0
 end
 
-echo "Installing Telegram..."
+step_header "Telegram Desktop"
 
 # Create temporary directory
 set tmpdir (mktemp -d)
 if not test -d "$tmpdir"
-    echo "Failed to create temporary directory."
+    step_fail "Create Telegram temporary directory"
     exit 1
 end
+step_ok "Create Telegram temporary directory"
 
 # Download Telegram
-echo "Downloading Telegram to $tmpdir..."
-if not curl -L -o "$tmpdir/telegram.tar.xz" "https://telegram.org/dl/desktop/linux"
-    echo "Failed to download Telegram."
+if not step_run "Download Telegram" curl -fsSL -o "$tmpdir/telegram.tar.xz" "https://telegram.org/dl/desktop/linux"
     rm -rf "$tmpdir"
     exit 1
 end
 
 # Create installation directory's parent
-sudo mkdir -p /opt
+step_run "Prepare /opt for Telegram" sudo mkdir -p /opt
+or begin
+    rm -rf "$tmpdir"
+    exit 1
+end
 
 # Untar Telegram
-echo "Extracting Telegram to /opt/..."
-if not sudo tar -xJf "$tmpdir/telegram.tar.xz" -C /opt/
-    echo "Failed to extract Telegram."
+if not step_run "Extract Telegram to /opt" sudo tar -xJf "$tmpdir/telegram.tar.xz" -C /opt/
     # Cleanup
     rm -rf "$tmpdir"
     # Try to clean up opt if something went wrong
@@ -42,7 +46,7 @@ end
 
 # Check if executable exists after extraction
 if not test -x "/opt/Telegram/Telegram"
-    echo "Telegram executable not found at /opt/Telegram/Telegram after extraction."
+    step_fail "Verify Telegram executable"
     # Clean up.
     if test -d "/opt/Telegram"
         sudo rm -rf /opt/Telegram
@@ -50,20 +54,21 @@ if not test -x "/opt/Telegram/Telegram"
     rm -rf "$tmpdir"
     exit 1
 end
+step_ok "Verify Telegram executable"
 
 # Clean up temporary file
 rm -rf "$tmpdir"
 
-echo "Telegram installed successfully."
+step_ok "Telegram installed"
 
 # Start Telegram in the background
-echo "Starting Telegram in the background..."
+step_ok "Starting Telegram in the background"
 /opt/Telegram/Telegram &
 
 # Inform user for login
 echo ""
-echo "ACTION REQUIRED: Please log in to Telegram."
-echo "Scan QR code with mobile telegram; then use Cloud Password stored in Bitwarden to login"
+step_note "ACTION REQUIRED: Please log in to Telegram."
+step_note "Scan QR code with mobile telegram; then use Cloud Password stored in Bitwarden to login"
 echo ""
 
 {{ end -}}

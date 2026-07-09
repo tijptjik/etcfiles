@@ -76,6 +76,7 @@ packages:
     - 'gstreamer1-plugin-libav'
     - 'gstreamer1-plugins-bad-freeworld'
     - 'gstreamer1-plugins-ugly'
+    - 'gum'
     - 'gthumb'
     - 'gtk4-devel'
     - 'gtk4-layer-shell-devel'

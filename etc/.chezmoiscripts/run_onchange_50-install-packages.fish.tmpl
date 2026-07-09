@@ -17,11 +17,10 @@ setup_logging linux-install-packages
 function install_dnf_packages
     set packages $argv
     if test (count $argv) -gt 0
-        log "Installing RPM packages: $argv"
-        if not sudo dnf install -y $argv
-            log "Failed to install RPM packages."
-            return 1
-        end
+        step_run "Install RPM packages" sudo dnf install -y $argv
+        or return 1
+    else
+        step_skip "No RPM packages configured"
     end
 end
 
@@ -31,11 +30,10 @@ function install_flatpak_packages
     set packages $argv[2..]
 
     if test (count $packages) -gt 0
-        log "Installing Flatpak packages from $remote: $packages"
-        if not sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages 2>&1
-            log "Failed to install Flatpak packages from $remote."
-            return 1
-        end
+        step_run "Install Flatpak packages from $remote" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
+        or return 1
+    else
+        step_skip "No Flatpak packages configured for $remote"
     end
 end
 
@@ -89,19 +87,15 @@ install_dnf_packages $rpm_packages
 or exit 1
 
 # Install flatpak packages directly from their respective remotes
-if test (count $fedora_flatpak_packages) -gt 0
-    install_flatpak_packages fedora $fedora_flatpak_packages
-    or exit 1
-end
-
-if test (count $flathub_flatpak_packages) -gt 0
-    install_flatpak_packages flathub $flathub_flatpak_packages
-    or exit 1
-end
-
-# Remove unused flatpak packages
-sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
+install_flatpak_packages fedora $fedora_flatpak_packages
 or exit 1
 
-log "All packages installed successfully!"
+install_flatpak_packages flathub $flathub_flatpak_packages
+or exit 1
+
+# Remove unused flatpak packages
+step_run "Remove unused Flatpak packages" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
+or exit 1
+
+step_ok "Packages installed"
 {{ end }}

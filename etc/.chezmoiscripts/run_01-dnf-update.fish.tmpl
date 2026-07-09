@@ -1,0 +1,17 @@
+#!/usr/bin/env fish
+
+if not command -q gum
+    echo "RUN  Install gum CLI runner"
+    if sudo dnf install -y -q gum
+        echo "OK   Install gum CLI runner"
+    else
+        echo "FAIL Install gum CLI runner"
+        exit 1
+    end
+end
+
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-dnf-update
+
+step_run "Update system packages" sudo dnf update -y
+or exit 1
