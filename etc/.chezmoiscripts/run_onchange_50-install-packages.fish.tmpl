@@ -10,18 +10,8 @@ set -x FLATPAK_CLI 1
 # keep GTK quiet
 set -x NO_AT_BRIDGE 1
 
-# Set up logging based on whether we're running interactively
-if status is-interactive
-    # Interactive mode - just print to stdout
-    function log
-        echo $argv
-    end
-else
-    # Non-interactive mode (cron) - pipe to systemd-cat
-    function log
-        echo $argv | systemd-cat -t linux-install-packages
-    end
-end
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-packages
 
 # Install RPM packages with dnf
 function install_dnf_packages
@@ -29,7 +19,8 @@ function install_dnf_packages
     if test (count $argv) -gt 0
         log "Installing RPM packages: $argv"
         if not sudo dnf install -y $argv
-            log "Warning: Some RPM packages failed to install"
+            log "Failed to install RPM packages."
+            return 1
         end
     end
 end
@@ -41,7 +32,10 @@ function install_flatpak_packages
 
     if test (count $packages) -gt 0
         log "Installing Flatpak packages from $remote: $packages"
-        sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages 2>&1 || true
+        if not sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages 2>&1
+            log "Failed to install Flatpak packages from $remote."
+            return 1
+        end
     end
 end
 
@@ -92,18 +86,22 @@ set -a flathub_flatpak_packages '{{ . }}'
 
 # Install all packages
 install_dnf_packages $rpm_packages
+or exit 1
 
 # Install flatpak packages directly from their respective remotes
 if test (count $fedora_flatpak_packages) -gt 0
     install_flatpak_packages fedora $fedora_flatpak_packages
+    or exit 1
 end
 
 if test (count $flathub_flatpak_packages) -gt 0
     install_flatpak_packages flathub $flathub_flatpak_packages
+    or exit 1
 end
 
 # Remove unused flatpak packages
-sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y || true
+sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
+or exit 1
 
 log "All packages installed successfully!"
 {{ end }}

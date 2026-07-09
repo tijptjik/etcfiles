@@ -5,18 +5,8 @@ set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
 
 # repos.yaml hash: {{ include ".chezmoidata/repos.yaml" | sha256sum }}
 
-# Set up logging based on whether we're running interactively
-if status is-interactive
-    # Interactive mode - just print to stdout
-    function log
-        echo $argv
-    end
-else
-    # Non-interactive mode (cron) - pipe to systemd-cat
-    function log
-        echo $argv | systemd-cat -t linux-install-repos
-    end
-end
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-repos
 
 # --- RPM Fusion Handling ---
 function handle_rpmfusion
@@ -26,6 +16,7 @@ function handle_rpmfusion
             log "RPM Fusion Free repository installed successfully."
         else
             log "Failed to install RPM Fusion Free repository."
+            return 1
         end
     else
         log "RPM Fusion Free repository already installed."
@@ -37,6 +28,7 @@ function handle_rpmfusion
             log "RPM Fusion Non-Free repository installed successfully."
         else
             log "Failed to install RPM Fusion Non-Free repository."
+            return 1
         end
     else
         log "RPM Fusion Non-Free repository already installed."
@@ -59,6 +51,7 @@ function add_repo
             log "Successfully imported GPG key for $repo_name"
         else
             log "Failed to import GPG key for $repo_name"
+            return 1
         end
     end
 
@@ -68,6 +61,7 @@ function add_repo
         log "Successfully added repository: $repo_name"
     else
         log "Failed to add repository: $repo_name"
+        return 1
     end
 end
 
@@ -94,6 +88,7 @@ ensure_dnf_plugins_core
 
 # Handle RPM Fusion separately as it's a package install
 handle_rpmfusion
+or exit 1
 
 # Process common repositories
 log "Processing common repositories from repos.yaml..."
@@ -103,8 +98,8 @@ log "Processing common repositories from repos.yaml..."
 {{ if hasKey $repo "gpg_key" -}}
 {{ $gpg_key = $repo.gpg_key -}}
 {{ end -}}
-sudo rpm --import '{{ $gpg_key }}'
-add_repo '{{ $repo.name }}' '{{ $repo.url }}'
+add_repo '{{ $repo.name }}' '{{ $repo.url }}' '{{ $gpg_key }}'
+or exit 1
 {{ end -}}
 {{ end }}
 
@@ -112,6 +107,7 @@ add_repo '{{ $repo.name }}' '{{ $repo.url }}'
 # Install DNF installed repo for server
 {{ if .isServer }}
 sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
+or exit 1
 {{ end }}
 
 
@@ -125,6 +121,7 @@ log "Processing client-specific repositories from repos.yaml..."
 {{ $gpg_key = $repo.gpg_key -}}
 {{ end -}}
 add_repo '{{ $repo.name }}' '{{ $repo.url }}' '{{ $gpg_key }}'
+or exit 1
 {{ end -}}
 {{ end }}
 {{ end }}

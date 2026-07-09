@@ -5,18 +5,8 @@ set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
 
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 
-# Set up logging based on whether we're running interactively
-if status is-interactive
-    # Interactive mode - just print to stdout
-    function log
-        echo $argv
-    end
-else
-    # Non-interactive mode (cron) - pipe to systemd-cat
-    function log
-        echo $argv | systemd-cat -t linux-install-copr
-    end
-end
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-copr
 
 # Check if COPR repository is already enabled
 function is_copr_enabled
@@ -40,6 +30,7 @@ function enable_copr
         log "Successfully enabled COPR: $copr_repo"
     else
         log "Failed to enable COPR: $copr_repo"
+        return 1
     end
 end
 
@@ -66,6 +57,7 @@ if test (count $common_copr_repos) -gt 0
     # Enable each COPR repository
     for repo in $common_copr_repos
         enable_copr $repo
+        or exit 1
     end
 end
 
@@ -77,9 +69,10 @@ if test (count $client_copr_repos) -gt 0
     # Enable each COPR repository
     for repo in $client_copr_repos
         enable_copr $repo
+        or exit 1
     end
 end
 {{ end }}
 
-log "All COPR packages installed successfully!"
+log "All COPR repositories processed successfully!"
 {{ end }}
