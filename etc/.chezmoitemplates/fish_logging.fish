@@ -7,6 +7,7 @@ function setup_logging
         end
     else
         function log --inherit-variable tag
+            echo $argv
             echo $argv | systemd-cat -t $tag
         end
     end

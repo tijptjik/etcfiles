@@ -4,17 +4,58 @@
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-zed
 
+function zed_arch
+    set arch (uname -m)
+    switch $arch
+        case arm64 aarch64
+            echo aarch64
+        case x86_64 x86_64\* i686
+            echo x86_64
+        case '*'
+            log "Zed > Unsupported architecture: $arch"
+            return 1
+    end
+end
+
+function normalize_zed_version
+    string replace -r '^v' '' -- $argv[1] | string replace -r -- '-pre$' ''
+end
+
+function latest_zed_version
+    set channel $argv[1]
+    set arch $argv[2]
+    set url "https://cloud.zed.dev/releases/$channel/latest/download?asset=zed&arch=$arch&os=linux&source=chezetc"
+
+    curl -fsSIL -X GET "$url" \
+        | string match -r 'releases/download/v[^/]+/' \
+        | head -n 1 \
+        | string replace 'releases/download/' '' \
+        | string trim --chars /
+end
+
+function installed_zed_version
+    set binary $argv[1]
+
+    if not test -x "$binary"
+        return 1
+    end
+
+    "$binary" --version 2>/dev/null \
+        | string match -r '[0-9]+\.[0-9]+\.[0-9]+(-pre)?' \
+        | head -n 1
+end
+
 function run_zed_installer
     set channel $argv[1]
     set installer (mktemp)
 
     if not test -f "$installer"
-        log "Failed to create a temporary installer file for Zed $channel."
+        log "Zed $channel > Failed to create installer temp file."
         return 1
     end
 
     if not curl -fL -o "$installer" https://zed.dev/install.sh
-        log "Failed to download Zed $channel installer."
+        log "Zed $channel > Failed to download installer."
         rm -f "$installer"
         return 1
     end
@@ -32,32 +73,58 @@ end
 
 function install_zed_channel
     set channel $argv[1]
-    set binary $argv[2]
+    set suffix $argv[2]
+    set app_dir "$HOME/.local/zed$suffix.app"
+    set binary "$app_dir/bin/zed"
+    set arch (zed_arch)
+    or return 1
 
-    if command -q $binary
-        log "Zed $channel is already available as $binary, skipping installation."
-        return 0
+    set latest_version (latest_zed_version $channel $arch)
+    set installed_version (installed_zed_version "$binary")
+
+    if test -z "$latest_version"
+        if test -n "$installed_version"
+            log "Zed $channel > Latest version unavailable; keeping installed $installed_version."
+            return 0
+        end
+
+        log "Zed $channel > Failed to determine latest version."
+        return 1
     end
 
-    log "Installing Zed $channel..."
+    if test -n "$installed_version"
+        set normalized_latest (normalize_zed_version $latest_version)
+        set normalized_installed (normalize_zed_version $installed_version)
+
+        if test "$normalized_installed" = "$normalized_latest"
+            log "Zed $channel > Current version $installed_version is already latest."
+            return 0
+        end
+
+        log "Zed $channel > Updating $installed_version to $latest_version."
+    else
+        log "Zed $channel > Installing $latest_version."
+    end
+
     run_zed_installer $channel
     or return 1
 
-    if command -q $binary
-        log "Zed $channel installed successfully."
+    set installed_version (installed_zed_version "$binary")
+    if test -n "$installed_version"
+        log "Zed $channel > Installed $installed_version."
     else
-        log "Zed $channel installation finished, but $binary is still unavailable."
+        log "Zed $channel > Install finished, but $binary is unavailable."
         return 1
     end
 end
 
-install_zed_channel stable zed
+install_zed_channel stable ""
 or exit 1
 
-install_zed_channel preview zed-preview
+install_zed_channel preview "-preview"
 or exit 1
 
-install_zed_channel nightly zed-nightly
+install_zed_channel nightly "-nightly"
 or exit 1
 
 {{ end -}}
