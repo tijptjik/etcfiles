@@ -1,0 +1,41 @@
+#!/usr/bin/env fish
+{{ if and (eq .chezmoi.os "linux") .isClient -}}
+
+set codex_desktop_dir "$HOME/.tools/codex-desktop-linux"
+
+if command -q codex-desktop
+    echo "Codex Desktop is already available, skipping installation."
+    exit 0
+end
+
+if rpm -q codex-desktop >/dev/null 2>&1
+    echo "Codex Desktop package is already installed, skipping installation."
+    exit 0
+end
+
+echo "Installing Codex Desktop for Linux..."
+C
+sudo dnf install -y python3 7zip curl unzip rpm-build make gcc-c++ @development-tools
+or exit 1
+
+mkdir -p "$HOME/.tools"
+or exit 1
+
+if not test -d "$codex_desktop_dir"
+    git clone https://github.com/ilysenko/codex-desktop-linux.git "$codex_desktop_dir"
+    or exit 1
+end
+
+make -C "$codex_desktop_dir" bootstrap-native
+or exit 1
+
+if command -q codex-desktop
+    echo "Codex Desktop installed successfully."
+else if rpm -q codex-desktop >/dev/null 2>&1
+    echo "Codex Desktop installed successfully."
+else
+    echo "Codex Desktop installation finished, but the app is still unavailable."
+    exit 1
+end
+
+{{ end -}}
