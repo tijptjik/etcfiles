@@ -1,40 +1,103 @@
 #!/usr/bin/env fish
 {{ if and (eq .chezmoi.os "linux") .isClient -}}
 
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-codex-desktop
+
 set codex_desktop_dir "$HOME/.tools/codex-desktop-linux"
+set codex_desktop_features frameless-titlebar
+set features_file "$codex_desktop_dir/linux-features/features.json"
 
-if command -q codex-desktop
-    echo "Codex Desktop is already available, skipping installation."
+function codex_desktop_is_available
+    command -q codex-desktop
+    or rpm -q codex-desktop >/dev/null 2>&1
+end
+
+function ensure_codex_desktop_source
+    mkdir -p "$HOME/.tools"
+    or return 1
+
+    if not test -d "$codex_desktop_dir"
+        git clone https://github.com/ilysenko/codex-desktop-linux.git "$codex_desktop_dir"
+        or return 1
+    end
+end
+
+function write_desired_features
+    set output_file $argv[1]
+
+    printf '{\n  "enabled": [\n' > "$output_file"
+
+    for index in (seq (count $codex_desktop_features))
+        set feature $codex_desktop_features[$index]
+        if test $index -lt (count $codex_desktop_features)
+            printf '    "%s",\n' "$feature" >> "$output_file"
+        else
+            printf '    "%s"\n' "$feature" >> "$output_file"
+        end
+    end
+
+    printf '  ]\n}\n' >> "$output_file"
+end
+
+function ensure_codex_desktop_features
+    set tmp_features (mktemp)
+
+    if not test -f "$tmp_features"
+        log "Failed to create a temporary Codex Desktop feature file."
+        return 1
+    end
+
+    write_desired_features "$tmp_features"
+
+    if test -f "$features_file"; and cmp -s "$tmp_features" "$features_file"
+        rm -f "$tmp_features"
+        log "Codex Desktop Linux features are already configured."
+        return 0
+    end
+
+    log "Configuring Codex Desktop Linux features: $codex_desktop_features"
+    mkdir -p (dirname "$features_file")
+    or begin
+        rm -f "$tmp_features"
+        return 1
+    end
+
+    mv "$tmp_features" "$features_file"
+    return 2
+end
+
+ensure_codex_desktop_source
+or exit 1
+
+ensure_codex_desktop_features
+set features_status $status
+if test $features_status -eq 1
+    exit 1
+end
+
+if codex_desktop_is_available; and test $features_status -eq 0
+    log "Codex Desktop is already available with the desired Linux features, skipping installation."
     exit 0
 end
 
-if rpm -q codex-desktop >/dev/null 2>&1
-    echo "Codex Desktop package is already installed, skipping installation."
-    exit 0
-end
-
-echo "Installing Codex Desktop for Linux..."
-C
 sudo dnf install -y python3 7zip curl unzip rpm-build make gcc-c++ @development-tools
 or exit 1
 
-mkdir -p "$HOME/.tools"
-or exit 1
-
-if not test -d "$codex_desktop_dir"
-    git clone https://github.com/ilysenko/codex-desktop-linux.git "$codex_desktop_dir"
+if codex_desktop_is_available
+    log "Rebuilding Codex Desktop with updated Linux features..."
+    make -C "$codex_desktop_dir" install-native
+    or exit 1
+else
+    log "Installing Codex Desktop for Linux..."
+    make -C "$codex_desktop_dir" bootstrap-native
     or exit 1
 end
 
-make -C "$codex_desktop_dir" bootstrap-native
-or exit 1
-
-if command -q codex-desktop
-    echo "Codex Desktop installed successfully."
-else if rpm -q codex-desktop >/dev/null 2>&1
-    echo "Codex Desktop installed successfully."
+if codex_desktop_is_available
+    log "Codex Desktop installed successfully."
 else
-    echo "Codex Desktop installation finished, but the app is still unavailable."
+    log "Codex Desktop installation finished, but the app is still unavailable."
     exit 1
 end
 
