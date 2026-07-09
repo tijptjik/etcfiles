@@ -1,0 +1,63 @@
+#!/usr/bin/env fish
+{{ if eq .chezmoi.os "linux" -}}
+
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-zed
+
+function run_zed_installer
+    set channel $argv[1]
+    set installer (mktemp)
+
+    if not test -f "$installer"
+        log "Failed to create a temporary installer file for Zed $channel."
+        return 1
+    end
+
+    if not curl -fL -o "$installer" https://zed.dev/install.sh
+        log "Failed to download Zed $channel installer."
+        rm -f "$installer"
+        return 1
+    end
+
+    if test "$channel" = "stable"
+        sh "$installer"
+    else
+        env ZED_CHANNEL=$channel sh "$installer"
+    end
+    set install_status $status
+
+    rm -f "$installer"
+    return $install_status
+end
+
+function install_zed_channel
+    set channel $argv[1]
+    set binary $argv[2]
+
+    if command -q $binary
+        log "Zed $channel is already available as $binary, skipping installation."
+        return 0
+    end
+
+    log "Installing Zed $channel..."
+    run_zed_installer $channel
+    or return 1
+
+    if command -q $binary
+        log "Zed $channel installed successfully."
+    else
+        log "Zed $channel installation finished, but $binary is still unavailable."
+        return 1
+    end
+end
+
+install_zed_channel stable zed
+or exit 1
+
+install_zed_channel preview zed-preview
+or exit 1
+
+install_zed_channel nightly zed-nightly
+or exit 1
+
+{{ end -}}
