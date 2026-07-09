@@ -4,6 +4,12 @@
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-zed
 
+set zed_target_user "{{ .chezmoi.username }}"
+set zed_target_home (getent passwd "$zed_target_user" | cut -d: -f6)
+if test -z "$zed_target_home"
+    set zed_target_home "/home/$zed_target_user"
+end
+
 function zed_arch
     set arch (uname -m)
     switch $arch
@@ -59,11 +65,22 @@ function run_zed_installer
         rm -f "$installer"
         return 1
     end
+    chmod 755 "$installer"
+    or begin
+        log "Zed $channel > Failed to make installer executable."
+        rm -f "$installer"
+        return 1
+    end
 
-    if test "$channel" = "stable"
-        sh "$installer"
+    set install_env HOME="$zed_target_home"
+    if test "$channel" != "stable"
+        set -a install_env ZED_CHANNEL="$channel"
+    end
+
+    if test (id -u) -eq 0; and test "$zed_target_user" != "root"
+        sudo -u "$zed_target_user" env $install_env sh "$installer"
     else
-        env ZED_CHANNEL=$channel sh "$installer"
+        env $install_env sh "$installer"
     end
     set install_status $status
 
@@ -74,7 +91,7 @@ end
 function install_zed_channel
     set channel $argv[1]
     set suffix $argv[2]
-    set app_dir "$HOME/.local/zed$suffix.app"
+    set app_dir "$zed_target_home/.local/zed$suffix.app"
     set binary "$app_dir/bin/zed"
     set arch (zed_arch)
     or return 1
@@ -101,9 +118,9 @@ function install_zed_channel
             return 0
         end
 
-        log "Zed $channel > Updating $installed_version to $latest_version."
+        log "Zed $channel > Updating $installed_version to $latest_version for $zed_target_user."
     else
-        log "Zed $channel > Installing $latest_version."
+        log "Zed $channel > Installing $latest_version for $zed_target_user."
     end
 
     run_zed_installer $channel
