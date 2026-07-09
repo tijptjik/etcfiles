@@ -7,6 +7,7 @@ setup_logging linux-install-codex-desktop
 set codex_desktop_dir "$HOME/.tools/codex-desktop-linux"
 set codex_desktop_features frameless-titlebar
 set features_file "$codex_desktop_dir/linux-features/features.json"
+set installed_build_info /opt/codex-desktop/.codex-linux/build-info.json
 
 function codex_desktop_is_available
     command -q codex-desktop
@@ -67,6 +68,32 @@ function ensure_codex_desktop_features
     return 2
 end
 
+function codex_desktop_installed_features_match
+    if not test -f "$installed_build_info"
+        return 1
+    end
+
+    command -q python3
+    or return 1
+
+    python3 -c '
+import json
+import sys
+
+path = sys.argv[1]
+desired = sorted(sys.argv[2:])
+
+try:
+    with open(path, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+except Exception:
+    sys.exit(1)
+
+installed = sorted(data.get("linuxFeatures", {}).get("enabled", []))
+sys.exit(0 if installed == desired else 1)
+' "$installed_build_info" $codex_desktop_features
+end
+
 ensure_codex_desktop_source
 or exit 1
 
@@ -76,7 +103,7 @@ if test $features_status -eq 1
     exit 1
 end
 
-if codex_desktop_is_available; and test $features_status -eq 0
+if codex_desktop_is_available; and test $features_status -eq 0; and codex_desktop_installed_features_match
     log "Codex Desktop is already available with the desired Linux features, skipping installation."
     exit 0
 end
