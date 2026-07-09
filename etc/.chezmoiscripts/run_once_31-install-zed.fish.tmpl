@@ -4,7 +4,32 @@
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-zed
 
-set zed_target_user "{{ .chezmoi.username }}"
+function detect_zed_target_user
+    if test (id -u) -ne 0
+        id -un
+        return 0
+    end
+
+    if set -q SUDO_USER; and test -n "$SUDO_USER"; and test "$SUDO_USER" != "root"
+        echo "$SUDO_USER"
+        return 0
+    end
+
+    set login_user (logname 2>/dev/null)
+    if test -n "$login_user"; and test "$login_user" != "root"
+        echo "$login_user"
+        return 0
+    end
+
+    if test -d /home/io
+        echo io
+        return 0
+    end
+
+    echo root
+end
+
+set zed_target_user (detect_zed_target_user)
 set zed_target_home (getent passwd "$zed_target_user" | cut -d: -f6)
 if test -z "$zed_target_home"
     set zed_target_home "/home/$zed_target_user"
@@ -46,9 +71,31 @@ function installed_zed_version
         return 1
     end
 
-    "$binary" --version 2>/dev/null \
+    if test (id -u) -eq 0; and test "$zed_target_user" != "root"
+        sudo -u "$zed_target_user" env HOME="$zed_target_home" "$binary" --version 2>/dev/null
+    else
+        env HOME="$zed_target_home" "$binary" --version 2>/dev/null
+    end \
         | string match -r '[0-9]+\.[0-9]+\.[0-9]+(-pre)?' \
         | head -n 1
+end
+
+function any_local_zed_version
+    set candidates \
+        "$zed_target_home/.local/zed.app/bin/zed" \
+        "$zed_target_home/.local/zed-preview.app/bin/zed" \
+        "$zed_target_home/.local/zed-nightly.app/bin/zed" \
+        "$zed_target_home/.local/bin/zed"
+
+    for candidate in $candidates
+        set version (installed_zed_version "$candidate")
+        if test -n "$version"
+            echo "$version"
+            return 0
+        end
+    end
+
+    return 1
 end
 
 function run_zed_installer
@@ -91,13 +138,27 @@ end
 function install_zed_channel
     set channel $argv[1]
     set suffix $argv[2]
+    set install_mode $argv[3]
     set app_dir "$zed_target_home/.local/zed$suffix.app"
     set binary "$app_dir/bin/zed"
     set arch (zed_arch)
     or return 1
 
-    set latest_version (latest_zed_version $channel $arch)
     set installed_version (installed_zed_version "$binary")
+    if test "$install_mode" = "optional"; and test -n "$installed_version"
+        log "Zed $channel > Local version $installed_version is available; skipping optional install."
+        return 0
+    end
+
+    if test "$install_mode" = "optional"
+        set local_version (any_local_zed_version)
+        if test -n "$local_version"
+            log "Zed $channel > Another local Zed version $local_version is available; skipping optional install."
+            return 0
+        end
+    end
+
+    set latest_version (latest_zed_version $channel $arch)
 
     if test -z "$latest_version"
         if test -n "$installed_version"
@@ -135,13 +196,13 @@ function install_zed_channel
     end
 end
 
-install_zed_channel stable ""
+install_zed_channel stable "" required
 or exit 1
 
-install_zed_channel preview "-preview"
+install_zed_channel preview "-preview" required
 or exit 1
 
-install_zed_channel nightly "-nightly"
+install_zed_channel nightly "-nightly" optional
 or exit 1
 
 {{ end -}}
