@@ -17,6 +17,34 @@ function is_copr_enabled
     dnf copr list 2>/dev/null | grep -q "^$full_repo\$"
 end
 
+function copr_fallback_chroot
+    set copr_repo $argv[1]
+    set current_fedora (rpm -E %fedora)
+    set arch (uname -m)
+    set repo_parts (string split / -- "$copr_repo")
+
+    if test (count $repo_parts) -ne 2
+        return 1
+    end
+
+    set owner $repo_parts[1]
+    set project $repo_parts[2]
+
+    curl -fsSL "https://copr.fedorainfracloud.org/api_3/project?ownername=$owner&projectname=$project" \
+        | jq -r --arg arch "$arch" --argjson current "$current_fedora" '
+            .chroot_repos
+            | keys[]
+            | capture("^fedora-(?<version>[0-9]+)-(?<arch>.+)$") as $chroot
+            | select($chroot.arch == $arch)
+            | select(($chroot.version | tonumber) <= $current)
+            | [$chroot.version | tonumber, "fedora-\($chroot.version)-\($chroot.arch)"]
+            | @tsv
+        ' \
+        | sort -nr \
+        | head -n 1 \
+        | cut -f2
+end
+
 # Enable COPR repository
 function enable_copr
     set copr_repo $argv[1]
@@ -29,8 +57,20 @@ function enable_copr
     if sudo dnf copr enable -y $copr_repo
         log "Successfully enabled COPR: $copr_repo"
     else
-        log "Failed to enable COPR: $copr_repo"
-        return 1
+        set fallback_chroot (copr_fallback_chroot $copr_repo)
+
+        if test -z "$fallback_chroot"
+            log "Failed to enable COPR: $copr_repo"
+            return 1
+        end
+
+        log "COPR $copr_repo > Current Fedora chroot unavailable; retrying with $fallback_chroot."
+        if sudo dnf copr enable -y $copr_repo $fallback_chroot
+            log "Successfully enabled COPR: $copr_repo ($fallback_chroot)"
+        else
+            log "Failed to enable COPR: $copr_repo ($fallback_chroot)"
+            return 1
+        end
     end
 end
 
