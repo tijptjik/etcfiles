@@ -90,7 +90,7 @@ packages:
     - 'lm_sensors'
     - 'lsd'
     - 'maven'
-    - 'maven-openjdk21'
+    - 'maven-openjdk25'
     - 'mediainfo'
     - 'micro'
     - 'most'
