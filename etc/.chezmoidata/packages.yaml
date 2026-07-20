@@ -216,7 +216,8 @@ packages:
     - 'zen-browser'
     - 'zram-generator-defaults'
     flatpak:
-      fedora: []
+      fedora:
+      - 'org.pulseaudio.pavucontrol'
       flathub:
       - 'com.dec05eba.gpu_screen_recorder'
       - 'com.discordapp.Discord'
@@ -225,7 +226,6 @@ packages:
       - 'md.obsidian.Obsidian'
       - 'net.lutris.Lutris'
       - 'org.azahar_emu.Azahar'
-      - 'org.pulseaudio.pavucontrol'
       - 'org.signal.Signal'
       - 'org.videolan.VLC'
       - 'org.yuzu_emu.yuzu'
