@@ -145,8 +145,8 @@ packages:
     flatpak:
       fedora:
       - 'com.github.tchx84.Flatseal'
-      flathub:
       - 'org.gnome.seahorse.Application'
+      flathub:
   client:
     copr:
     - 'errornointernet/quickshell'
