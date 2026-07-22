@@ -91,7 +91,7 @@ function __all_systems_go
         return 0
     end
 
-    set -l colors 9 11 10 14 12 13
+    set -l colors red yellow green cyan blue magenta
     set -l message_length (string length -- "$message")
     for wave in (seq 0 5)
         printf "\r"
@@ -100,7 +100,7 @@ function __all_systems_go
             if test "$character" = " "
                 printf " "
             else
-                set -l color_index (math "mod($index + $wave - 1, 6) + 1")
+                set -l color_index (math "($index + $wave - 1) % 6 + 1")
                 set_color --bold $colors[$color_index]
                 printf "%s" "$character"
                 set_color normal
