@@ -1,9 +1,6 @@
 #!/usr/bin/env fish
 source "{{ .chezmoi.sourceDir }}/.chezmoihelpers/status.fish"
 
-__stage_result UPDATE "Chezetc"
-echo
-
 if command -q gum; and isatty stdout
     gum style --foreground 14 --bold "Prerequisites"
 else
@@ -35,3 +32,7 @@ check_command "Fish" fish
 check_command "Bun" bun
 check_command "FNM" fnm
 check_command "Herdr" herdr
+
+echo
+__stage_result PULL "Chezetc"
+echo
