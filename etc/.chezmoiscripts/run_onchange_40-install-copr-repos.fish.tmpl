@@ -50,7 +50,7 @@ end
 function enable_copr
     set copr_repo $argv[1]
     if is_copr_enabled $copr_repo
-        step_skip "$copr_repo enabled"
+        step_skip_ok "$copr_repo enabled"
         return 0
     end
 

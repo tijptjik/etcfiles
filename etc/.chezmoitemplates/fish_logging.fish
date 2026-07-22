@@ -44,6 +44,12 @@ function setup_logging
         _chezetc_system_log "SKIP $title"
     end
 
+    function step_skip_ok
+        set title $argv
+        __stage_label SKIP "✓" "$title"
+        _chezetc_system_log "SKIP $title"
+    end
+
     function step_fail
         set title $argv
         __stage_failure "$title"

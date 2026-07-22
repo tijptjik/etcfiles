@@ -17,14 +17,14 @@ function handle_rpmfusion
         step_run "RPM Fusion Free" sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
         or return 1
     else
-        step_skip "RPM Fusion Free installed"
+        step_skip_ok "RPM Fusion Free installed"
     end
 
     if ! rpm -q rpmfusion-nonfree-release >/dev/null 2>&1
         step_run "RPM Fusion Non-Free" sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
         or return 1
     else
-        step_skip "RPM Fusion Non-Free installed"
+        step_skip_ok "RPM Fusion Non-Free installed"
     end
 end
 
@@ -52,7 +52,7 @@ function ensure_dnf_plugins_core
         step_run "dnf-plugins-core" sudo dnf install -y dnf-plugins-core
         or exit 1
     else
-        step_skip "dnf-plugins-core installed"
+        step_skip_ok "dnf-plugins-core installed"
     end
 end
 
