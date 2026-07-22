@@ -33,7 +33,7 @@ function __stage_styled_subject --argument-names subject
         set -l base (string replace -- "$qualifier" "" "$subject" | string trim)
         set -l styled_base (gum style --foreground 15 "$base")
         set -l styled_qualifier (gum style --foreground 8 "$qualifier")
-        printf "%s %s" "$styled_base" "$styled_qualifier"
+        printf "%s %s\n" "$styled_base" "$styled_qualifier"
     else
         gum style --foreground 15 "$subject"
     end
@@ -48,7 +48,6 @@ function __stage_label --argument-names stage_name icon subject
         set -l styled_icon (gum style --foreground 10 "$icon")
         printf "%s %s " "$styled_stage" "$styled_icon"
         __stage_styled_subject "$subject"
-        printf "\n"
     else
         echo "$padded_stage $icon $subject"
     end
