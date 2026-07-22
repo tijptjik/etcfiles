@@ -83,6 +83,18 @@ function setup_logging
         return $run_status
     end
 
+    function step_run_as
+        set stage_name $argv[1]
+        set title $argv[2]
+        set command $argv[3..]
+        set previous_stage $chezetc_stage
+        set chezetc_stage $stage_name
+        step_run "$title" $command
+        set run_status $status
+        set chezetc_stage $previous_stage
+        return $run_status
+    end
+
     function log
         _chezetc_system_log $argv
     end

@@ -50,22 +50,22 @@ end
 function enable_copr
     set copr_repo $argv[1]
     if is_copr_enabled $copr_repo
-        step_skip "COPR $copr_repo already enabled"
+        step_skip "$copr_repo enabled"
         return 0
     end
 
-    if step_run "Enable COPR $copr_repo" sudo dnf copr enable -y $copr_repo
+    if step_run "$copr_repo" sudo dnf copr enable -y $copr_repo
         return 0
     else
         set fallback_chroot (copr_fallback_chroot $copr_repo)
 
         if test -z "$fallback_chroot"
-            step_fail "Enable COPR $copr_repo"
+            step_fail "$copr_repo"
             return 1
         end
 
-        step_note "COPR $copr_repo current Fedora chroot unavailable; trying $fallback_chroot"
-        step_run "Enable COPR $copr_repo ($fallback_chroot)" sudo dnf copr enable -y $copr_repo $fallback_chroot
+        step_note "$copr_repo current Fedora chroot unavailable; trying $fallback_chroot"
+        step_run "$copr_repo [$fallback_chroot]" sudo dnf copr enable -y $copr_repo $fallback_chroot
         or return 1
     end
 end
@@ -110,5 +110,4 @@ if test (count $client_copr_repos) -gt 0
 end
 {{ end }}
 
-step_ok "COPR repositories processed"
 {{ end }}

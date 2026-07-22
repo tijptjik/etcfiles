@@ -141,19 +141,27 @@ function install_zed_channel
     set install_mode $argv[3]
     set app_dir "$zed_target_home/.local/zed$suffix.app"
     set binary "$app_dir/bin/zed"
+    set channel_label $channel
+    if test "$channel" = stable
+        set channel_label Stable
+    else if test "$channel" = preview
+        set channel_label Preview
+    else if test "$channel" = nightly
+        set channel_label Nightly
+    end
     set arch (zed_arch)
     or return 1
 
     set installed_version (installed_zed_version "$binary")
     if test "$install_mode" = "optional"; and test -n "$installed_version"
-        step_skip "Zed $channel optional install; local version $installed_version is available"
+        step_skip "$channel_label optional; local version $installed_version is available"
         return 0
     end
 
     if test "$install_mode" = "optional"
         set local_version (any_local_zed_version)
         if test -n "$local_version"
-            step_skip "Zed $channel optional install; another local version $local_version is available"
+            step_skip "$channel_label optional; local version $local_version is available"
             return 0
         end
     end
@@ -175,7 +183,7 @@ function install_zed_channel
         set normalized_installed (normalize_zed_version $installed_version)
 
         if test "$normalized_installed" = "$normalized_latest"
-            step_ok "Zed $channel already latest ($installed_version)"
+            __stage_result SKIP "$channel_label ($installed_version) latest"
             return 0
         end
 

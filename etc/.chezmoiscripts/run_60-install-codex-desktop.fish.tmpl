@@ -105,7 +105,7 @@ if test $features_status -eq 1
 end
 
 if codex_desktop_is_available; and test $features_status -eq 0; and codex_desktop_installed_features_match
-    step_skip "Codex Desktop"
+    step_skip "Codex Desktop installed"
     echo
     __all_systems_go
     exit 0

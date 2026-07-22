@@ -9,20 +9,22 @@ set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-repos
 
+step_header "RPM"
+
 # --- RPM Fusion Handling ---
 function handle_rpmfusion
     if ! rpm -q rpmfusion-free-release >/dev/null 2>&1
-        step_run "Install RPM Fusion Free repository" sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+        step_run "RPM Fusion Free" sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
         or return 1
     else
-        step_skip "RPM Fusion Free repository already installed"
+        step_skip "RPM Fusion Free installed"
     end
 
     if ! rpm -q rpmfusion-nonfree-release >/dev/null 2>&1
-        step_run "Install RPM Fusion Non-Free repository" sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+        step_run "RPM Fusion Non-Free" sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
         or return 1
     else
-        step_skip "RPM Fusion Non-Free repository already installed"
+        step_skip "RPM Fusion Non-Free installed"
     end
 end
 
@@ -35,22 +37,22 @@ function add_repo
     # Import GPG key if provided
     if test -n "$gpg_key"
         # Use curl to download the key and pipe to rpm --import
-        step_run "Import GPG key for $repo_name" fish -c "curl -sSL '$gpg_key' | sudo rpm --import -"
+        step_run_as IMPORT "$repo_name GPG key" fish -c "curl -sSL '$gpg_key' | sudo rpm --import -"
         or return 1
     end
 
     # Add the repository
-    step_run "Add repository $repo_name" sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
+    step_run_as ADD "$repo_name repo" sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
     or return 1
 end
 
 # --- Prerequisite Check ---
 function ensure_dnf_plugins_core
     if ! rpm -q dnf-plugins-core >/dev/null 2>&1
-        step_run "Install dnf-plugins-core" sudo dnf install -y dnf-plugins-core
+        step_run "dnf-plugins-core" sudo dnf install -y dnf-plugins-core
         or exit 1
     else
-        step_skip "dnf-plugins-core already installed"
+        step_skip "dnf-plugins-core installed"
     end
 end
 
@@ -65,7 +67,6 @@ handle_rpmfusion
 or exit 1
 
 # Process common repositories
-step_header "Common DNF repositories"
 {{ range $name, $repo := .repos.common  }}
 {{ if and (ne $name "flathub") (ne $repo.url "dynamic") -}}
 {{ $gpg_key := "" -}}
@@ -80,14 +81,13 @@ or exit 1
 # TODO Clean up
 # Install DNF installed repo for server
 {{ if .isServer }}
-step_run "Install GetPageSpeed repository" sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
+step_run "GetPageSpeed repo" sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
 or exit 1
 {{ end }}
 
 
 # Process client-specific repositories if applicable
 {{ if .isClient }}
-step_header "Client DNF repositories"
 {{ range $name, $repo := .repos.client }}
 {{ if and (ne $name "flathub") (ne $repo.url "dynamic") -}}
 {{ $gpg_key := "" -}}
@@ -99,7 +99,5 @@ or exit 1
 {{ end -}}
 {{ end }}
 {{ end }}
-
-step_ok "DNF repositories processed"
 
 {{ end -}}

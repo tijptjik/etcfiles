@@ -8,6 +8,10 @@ function __stage_color --argument-names verb
             echo 14
         case REMOVE
             echo 9
+        case IMPORT
+            echo 13
+        case ADD
+            echo 10
         case CONFIG
             echo 14
         case CHECK
@@ -22,7 +26,7 @@ function __stage_color --argument-names verb
 end
 
 function __stage_styled_subject --argument-names subject
-    set -l qualifier (string match -r -o '\[[^]]+\]$' -- "$subject")
+    set -l qualifier (string match -r '\[[^]]+\]$' -- "$subject")
     if test (count $qualifier) -gt 0
         set -l base (string replace -- "$qualifier" "" "$subject" | string trim)
         set -l styled_base (gum style --foreground 15 "$base")
@@ -42,6 +46,7 @@ function __stage_label --argument-names stage_name icon subject
         set -l styled_icon (gum style --foreground 10 "$icon")
         printf "%s %s " "$styled_stage" "$styled_icon"
         __stage_styled_subject "$subject"
+        printf "\n"
     else
         echo "$padded_stage $icon $subject"
     end
