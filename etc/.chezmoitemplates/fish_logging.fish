@@ -50,6 +50,12 @@ function setup_logging
         _chezetc_system_log "SKIP $title"
     end
 
+    function step_skip_available
+        set title $argv
+        __stage_label_note SKIP "✓" "$title" "(available)"
+        _chezetc_system_log "SKIP $title (available)"
+    end
+
     function step_fail
         set title $argv
         __stage_failure "$title"

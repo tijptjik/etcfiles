@@ -17,22 +17,32 @@ function handle_rpmfusion
         step_run "RPM Fusion Free" sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
         or return 1
     else
-        step_skip_ok "RPM Fusion Free installed"
+        step_skip_available "RPM Fusion Free"
     end
 
     if ! rpm -q rpmfusion-nonfree-release >/dev/null 2>&1
         step_run "RPM Fusion Non-Free" sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
         or return 1
     else
-        step_skip_ok "RPM Fusion Non-Free installed"
+        step_skip_available "RPM Fusion Non-Free"
     end
 end
 
 # --- Generic Repo Handling ---
+function is_repo_configured
+    set repo_name $argv[1]
+    dnf repolist --all 2>/dev/null | string match -q -- "*$repo_name*"
+end
+
 function add_repo
     set repo_name $argv[1]
     set repo_url $argv[2]
     set gpg_key $argv[3]
+
+    if is_repo_configured "$repo_name"
+        step_skip_ok "$repo_name repo"
+        return 0
+    end
 
     # Import GPG key if provided
     if test -n "$gpg_key"
@@ -52,7 +62,7 @@ function ensure_dnf_plugins_core
         step_run "dnf-plugins-core" sudo dnf install -y dnf-plugins-core
         or exit 1
     else
-        step_skip_ok "dnf-plugins-core installed"
+        step_skip_available "dnf-plugins-core"
     end
 end
 

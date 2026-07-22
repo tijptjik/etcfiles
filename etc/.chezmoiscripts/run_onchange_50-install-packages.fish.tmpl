@@ -21,7 +21,7 @@ function install_dnf_packages
         step_run "RPM packages" sudo dnf install -y $argv
         or return 1
     else
-        step_skip "No RPM packages configured"
+        step_skip_ok "No RPM packages configured"
     end
 end
 
@@ -34,7 +34,7 @@ function install_flatpak_packages
         step_run "Flatpak packages [$remote]" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
         or return 1
     else
-        step_skip "No Flatpak packages configured for $remote"
+        step_skip_ok "No Flatpak packages configured for $remote"
     end
 end
 
