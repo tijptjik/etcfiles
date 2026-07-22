@@ -1,6 +1,7 @@
 #!/usr/bin/env fish
 {{ if .isServer -}}
 
+{{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-enable-sshd
 

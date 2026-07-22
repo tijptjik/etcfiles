@@ -4,28 +4,34 @@
 
 set -euo pipefail
 
-step_ok() {
+stage_label() {
+    local stage="$1"
+    local icon="$2"
+    local subject="$3"
+    local padded_stage
+    printf -v padded_stage '%-7s' "$stage"
+
     if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
-        gum style --foreground 42 --bold "OK   $*"
+        gum style --foreground 10 --bold "$padded_stage" | tr -d '\n'
+        printf ' '
+        gum style --foreground 10 "$icon" | tr -d '\n'
+        printf ' '
+        gum style --foreground 15 "$subject"
     else
-        echo "OK   $*"
+        printf '%s %s %s\n' "$padded_stage" "$icon" "$subject"
     fi
+}
+
+step_ok() {
+    stage_label INSTALL '✓' "$*"
 }
 
 step_skip() {
-    if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
-        gum style --foreground 244 --bold "SKIP $*"
-    else
-        echo "SKIP $*"
-    fi
+    stage_label SKIP '-' "$*"
 }
 
 step_fail() {
-    if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
-        gum style --foreground 196 --bold "FAIL $*"
-    else
-        echo "FAIL $*"
-    fi
+    stage_label FAILED '✗' "$*"
 }
 
 step_run() {
@@ -36,7 +42,7 @@ step_run() {
     if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
         gum spin --show-error --title "$title" -- "$@"
     else
-        echo "RUN  $title"
+        stage_label INSTALL '...' "$title"
         "$@"
     fi
 

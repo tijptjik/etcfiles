@@ -10,6 +10,7 @@ set -x FLATPAK_CLI 1
 # keep GTK quiet
 set -x NO_AT_BRIDGE 1
 
+{{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-packages
 

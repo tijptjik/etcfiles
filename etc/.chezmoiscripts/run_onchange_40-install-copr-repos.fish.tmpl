@@ -5,6 +5,7 @@ set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
 
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 
+{{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-copr
 

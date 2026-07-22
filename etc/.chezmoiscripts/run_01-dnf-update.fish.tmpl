@@ -1,11 +1,13 @@
 #!/usr/bin/env fish
 
+{{ include ".chezmoihelpers/status.fish" }}
+
 if not command -q gum
-    echo "RUN  Install gum CLI runner"
+    __stage_label INSTALL "..." "Install gum CLI runner"
     if sudo dnf install -y -q gum
-        echo "OK   Install gum CLI runner"
+        __stage_result INSTALL "Install gum CLI runner"
     else
-        echo "FAIL Install gum CLI runner"
+        __stage_failure "Install gum CLI runner"
         exit 1
     end
 end

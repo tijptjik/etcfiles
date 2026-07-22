@@ -1,6 +1,7 @@
 #!/usr/bin/env fish
 {{ if and (eq .chezmoi.os "linux") .isClient -}}
 
+{{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-codex-desktop
 
