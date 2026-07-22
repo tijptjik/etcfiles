@@ -22,11 +22,13 @@ function setup_logging
 
     function step_header
         set title $argv
+        echo
         if command -q gum; and isatty stdout
-            gum style --foreground 39 --bold "==> $title"
+            gum style --foreground 14 --bold "$title"
         else
-            echo "==> $title"
+            echo "$title"
         end
+        echo
         _chezetc_system_log "START $title"
     end
 

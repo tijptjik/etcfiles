@@ -2,7 +2,6 @@
 
 {{ include ".chezmoihelpers/status.fish" }}
 
-echo
 if command -q gum; and isatty stdout
     gum style --foreground 14 --bold "System Update"
 else
@@ -23,5 +22,5 @@ end
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-dnf-update
 
-step_run "Update system packages" sudo dnf update -y
+step_run "System packages" sudo dnf update -y
 or exit 1

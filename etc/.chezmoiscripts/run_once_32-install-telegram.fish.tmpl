@@ -5,13 +5,13 @@
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-telegram
 
+step_header "Applications"
+
 # Check if Telegram is already installed
 if test -x "/opt/Telegram/Telegram"
-    step_skip "Telegram already installed"
+    step_skip "Telegram"
     exit 0
 end
-
-step_header "Telegram Desktop"
 
 # Create temporary directory
 set tmpdir (mktemp -d)

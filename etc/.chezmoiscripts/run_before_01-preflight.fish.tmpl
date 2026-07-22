@@ -1,11 +1,15 @@
 #!/usr/bin/env fish
 source "{{ .chezmoi.sourceDir }}/.chezmoihelpers/status.fish"
 
-if command -q gum; and isatty stdout
-    gum style --foreground 14 --bold "Prerequisites"
-else
-    echo "Prerequisites"
+function print_header --argument-names title
+    if command -q gum; and isatty stdout
+        gum style --foreground 14 --bold "$title"
+    else
+        echo "$title"
+    end
 end
+
+print_header "Prerequisites"
 echo
 
 function check_command --argument-names subject command_name
@@ -33,6 +37,8 @@ check_command "Bun" bun
 check_command "FNM" fnm
 check_command "Herdr" herdr
 
+echo
+print_header "Git"
 echo
 __stage_result PULL "Chezetc"
 echo

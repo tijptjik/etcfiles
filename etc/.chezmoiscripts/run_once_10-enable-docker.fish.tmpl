@@ -4,17 +4,19 @@
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-enable-docker
 
+step_header "Docker"
+
 # Add user to docker group
 if [ "$USER" != "root" ]
     step_run "Add $USER to docker group" sudo usermod -aG docker $USER
     or exit 1
 else
-    step_skip "Root user does not need docker group membership"
+    step_skip "Docker group membership for root"
 end
 
 # Check if docker is already enabled
 if systemctl is-enabled docker >/dev/null 2>&1
-    step_skip "Docker service already enabled"
+    step_skip "Docker service enabled"
 else
     step_run "Enable Docker service" sudo systemctl enable docker
     or exit 1
@@ -22,10 +24,8 @@ end
 
 # Check if docker is already active
 if systemctl is-active docker >/dev/null 2>&1
-    step_skip "Docker service already active"
+    step_skip "Docker service active"
 else
     step_run "Start Docker service" sudo systemctl start docker
     or exit 1
 end
-
-step_ok "Docker service ready"
