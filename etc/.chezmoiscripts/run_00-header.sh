@@ -1,9 +1,4 @@
 #!/bin/bash
-echo "_____ ___    _ ____ _____   _ ___ _  __
-|_   _|_ _|  | |  _ \_   _| | |_ _| |/ /
-  | |  | |_  | | |_) || |_  | || || ' /
-  | |  | | |_| |  __/ | | |_| || || . \\
-  |_| |___\___/|_|    |_|\___/|___|_|\_\\
-"
-echo "https://github.com/tijptjik/etcfiles"
-echo
+# Compatibility placeholder for the old header script.
+# The banner is printed by run_before_00-print-header.sh.
+exit 0
