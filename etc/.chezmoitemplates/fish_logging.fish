@@ -45,15 +45,19 @@ function setup_logging
     end
 
     function step_skip_ok
-        set title $argv
-        __stage_label SKIP "✓" "$title"
-        _chezetc_system_log "SKIP $title"
+        set title $argv[1]
+        if test (count $argv) -gt 1
+            set note $argv[2]
+            __stage_label_note SKIP "✓" "$title" "$note"
+            _chezetc_system_log "SKIP $title ($note)"
+        else
+            __stage_label SKIP "✓" "$title"
+            _chezetc_system_log "SKIP $title"
+        end
     end
 
     function step_skip_available
-        set title $argv
-        __stage_label_note SKIP "✓" "$title" "(available)"
-        _chezetc_system_log "SKIP $title (available)"
+        step_skip_ok "$argv[1]" available
     end
 
     function step_fail

@@ -40,7 +40,7 @@ function add_repo
     set gpg_key $argv[3]
 
     if is_repo_configured "$repo_name"
-        step_skip_ok "$repo_name repo"
+        step_skip_ok "$repo_name repo" available
         return 0
     end
 

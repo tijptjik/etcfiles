@@ -154,14 +154,14 @@ function install_zed_channel
 
     set installed_version (installed_zed_version "$binary")
     if test "$install_mode" = "optional"; and test -n "$installed_version"
-        step_skip_ok "$channel_label optional; local version $installed_version is available"
+        step_skip_ok "$channel_label optional" "local Zed $installed_version available"
         return 0
     end
 
     if test "$install_mode" = "optional"
         set local_version (any_local_zed_version)
         if test -n "$local_version"
-            step_skip_ok "$channel_label optional; local version $local_version is available"
+            step_skip_ok "$channel_label optional" "local Zed $local_version available"
             return 0
         end
     end
@@ -170,7 +170,7 @@ function install_zed_channel
 
     if test -z "$latest_version"
         if test -n "$installed_version"
-            step_skip_ok "$channel_label latest unavailable; keeping installed $installed_version"
+            step_skip_ok "$channel_label" "latest unavailable; keeping $installed_version installed"
             return 0
         end
 
@@ -183,7 +183,7 @@ function install_zed_channel
         set normalized_installed (normalize_zed_version $installed_version)
 
         if test "$normalized_installed" = "$normalized_latest"
-            __stage_result SKIP "$channel_label ($installed_version) latest"
+            step_skip_ok "$channel_label ($installed_version)" latest
             return 0
         end
 
