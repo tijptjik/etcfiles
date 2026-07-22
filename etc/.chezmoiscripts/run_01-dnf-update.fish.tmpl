@@ -2,6 +2,13 @@
 
 {{ include ".chezmoihelpers/status.fish" }}
 
+if command -q gum; and isatty stdout
+    gum style --foreground 14 --bold "System Update"
+else
+    echo "System Update"
+end
+echo
+
 if not command -q gum
     __stage_label INSTALL "..." "Install gum CLI runner"
     if sudo dnf install -y -q gum

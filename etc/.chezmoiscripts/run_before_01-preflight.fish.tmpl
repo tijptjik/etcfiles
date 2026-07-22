@@ -1,6 +1,13 @@
 #!/usr/bin/env fish
 source "{{ .chezmoi.sourceDir }}/.chezmoihelpers/status.fish"
 
+if command -q gum; and isatty stdout
+    gum style --foreground 14 --bold "Prerequisites"
+else
+    echo "Prerequisites"
+end
+echo
+
 function check_command --argument-names subject command_name
     if command -v "$command_name" >/dev/null 2>&1
         __stage_result CHECK "$subject"
