@@ -99,6 +99,36 @@ function setup_logging
         return $run_status
     end
 
+    function step_run_note
+        set title $argv[1]
+        set note $argv[2]
+        set cmd $argv[3..]
+
+        if test (count $cmd) -eq 0
+            step_fail "$title"
+            return 1
+        end
+
+        _chezetc_system_log "RUN $title: $cmd"
+
+        if command -q gum; and isatty stdout
+            gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
+        else
+            __stage_label "$chezetc_stage" "..." "$title"
+            $cmd
+        end
+
+        set run_status $status
+        if test $run_status -eq 0
+            __stage_label_note "$chezetc_stage" "✓" "$title" "$note"
+            _chezetc_system_log "OK $title ($note)"
+        else
+            __stage_failure "$title"
+        end
+
+        return $run_status
+    end
+
     function step_run_as
         set stage_name $argv[1]
         set title $argv[2]

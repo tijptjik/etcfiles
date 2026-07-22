@@ -22,5 +22,13 @@ end
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-dnf-update
 
-step_run "System packages" sudo dnf update -y
+dnf -q check-update >/dev/null 2>&1
+set check_status $status
+if test $check_status -eq 0
+    set update_note "no changes"
+else
+    set update_note updates
+end
+
+step_run_note "System packages" "$update_note" sudo dnf update -y
 or exit 1
