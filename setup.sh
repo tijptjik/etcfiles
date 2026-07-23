@@ -4,15 +4,26 @@
 
 set -euo pipefail
 
+stage_color() {
+    case "$1" in
+        SKIP) printf '8' ;;
+        CHECK|WARN|UPDATE) printf '14' ;;
+        INSTALL|SYNC|PULL|REMOVE|IMPORT|ADD|CONFIG|FAILED) printf '9' ;;
+        *) printf '14' ;;
+    esac
+}
+
 stage_label() {
     local stage="$1"
     local icon="$2"
     local subject="$3"
     local padded_stage
+    local color
+    color="$(stage_color "$stage")"
     printf -v padded_stage '%-7s' "$stage"
 
     if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
-        gum style --foreground 10 --bold "$padded_stage" | tr -d '\n'
+        gum style --foreground "$color" --bold "$padded_stage" | tr -d '\n'
         printf ' '
         gum style --foreground 10 "$icon" | tr -d '\n'
         printf ' '

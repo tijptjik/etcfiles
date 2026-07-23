@@ -1,31 +1,13 @@
 function __stage_color --argument-names verb
     switch "$verb"
-        case INSTALL
-            echo 10
-        case SYNC
-            echo 12
-        case UPDATE
-            echo 12
-        case PULL
-            echo 14
-        case REMOVE
-            echo 9
-        case IMPORT
-            echo 13
-        case ADD
-            echo 10
-        case CONFIG
-            echo 14
-        case CHECK
-            echo 13
         case SKIP
             echo 8
-        case FAILED
+        case CHECK WARN UPDATE
+            echo 14
+        case INSTALL SYNC PULL REMOVE IMPORT ADD CONFIG FAILED
             echo 9
-        case WARN
-            echo 11
         case '*'
-            echo 15
+            echo 14
     end
 end
 
