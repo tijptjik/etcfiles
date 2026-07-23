@@ -5,7 +5,13 @@ function snapshot_rpm_versions
     set packages $argv[2..]
 
     begin
+        set seen_packages
         for package in $packages
+            if contains -- "$package" $seen_packages
+                continue
+            end
+            set -a seen_packages "$package"
+
             set versions (rpm -q --qf '%{VERSION}\n' "$package" 2>/dev/null)
             if test (count $versions) -gt 0
                 printf "%s\t%s\n" "$package" "$versions[1]"

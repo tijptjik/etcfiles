@@ -84,12 +84,25 @@ if test $dnf_status -eq 0
 end
 
 if test (count $tracked_flatpak_packages) -gt 0
-    step_run_note_quiet "Flatpak packages" updates sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak update --system --noninteractive --assumeyes $tracked_flatpak_packages
-    set flatpak_status $status
+    set installed_flatpak_packages
+    for installed in (command cat $flatpak_versions_before)
+        set installed_fields (string split \t -- "$installed")
+        if test (count $installed_fields) -ge 1
+            set -a installed_flatpak_packages "$installed_fields[1]"
+        end
+    end
 
-    if test $flatpak_status -eq 0
-        snapshot_flatpak_versions $flatpak_versions_after $tracked_flatpak_packages
-        report_package_updates $flatpak_versions_before $flatpak_versions_after
+    if test (count $installed_flatpak_packages) -gt 0
+        step_run_note_quiet "Flatpak packages" updates sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak update --system --noninteractive --assumeyes $installed_flatpak_packages
+        set flatpak_status $status
+
+        if test $flatpak_status -eq 0
+            snapshot_flatpak_versions $flatpak_versions_after $tracked_flatpak_packages
+            report_package_updates $flatpak_versions_before $flatpak_versions_after
+        end
+    else
+        step_skip_ok "No installed Flatpak packages to update"
+        set flatpak_status 0
     end
 else
     step_skip_ok "No Flatpak packages configured"
