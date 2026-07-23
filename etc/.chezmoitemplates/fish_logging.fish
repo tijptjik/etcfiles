@@ -24,7 +24,7 @@ function setup_logging
         set title $argv
         echo
         if command -q gum; and isatty stdout
-            gum style --foreground 12 --bold "$title"
+            gum style --foreground 14 --bold "$title"
         else
             echo "$title"
         end
