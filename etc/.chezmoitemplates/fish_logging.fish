@@ -129,6 +129,20 @@ function setup_logging
         return $run_status
     end
 
+    function step_run_note_quiet
+        set title $argv[1]
+        set note $argv[2]
+        set cmd $argv[3..]
+
+        if test (count $cmd) -eq 0
+            step_fail "$title"
+            return 1
+        end
+
+        _chezetc_system_log "RUN $title: $cmd"
+        __stage_run "$title" "$chezetc_stage" "$title" "$note" $cmd
+    end
+
     function step_run_as
         set stage_name $argv[1]
         set title $argv[2]

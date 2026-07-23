@@ -4,6 +4,8 @@ function __stage_color --argument-names verb
             echo 10
         case SYNC
             echo 12
+        case UPDATE
+            echo 12
         case PULL
             echo 14
         case REMOVE
@@ -148,7 +150,7 @@ function __stage_run
     end
 
     wait $pid 2>/dev/null
-    set -l code (cat $status_file)
+    set -l code (command cat $status_file)
 
     if test "$code" -eq 0
         if test -n "$note"
@@ -158,7 +160,7 @@ function __stage_run
         end
     else
         __stage_failure "$title"
-        cat $log_file
+        command cat $log_file
         rm -f $log_file $status_file
         exit $code
     end

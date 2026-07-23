@@ -1,6 +1,7 @@
 #!/usr/bin/env fish
 
 {{ include ".chezmoihelpers/status.fish" }}
+{{ include ".chezmoitemplates/package_reporting.fish" }}
 
 if command -q gum; and isatty stdout
     gum style --foreground 14 --bold "System Update"
@@ -22,6 +23,50 @@ end
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-dnf-update
 
+set tracked_rpm_packages
+{{ range .packages.common.rpm -}}
+set -a tracked_rpm_packages '{{ . }}'
+{{ end }}
+{{ if .isClient -}}
+{{ range .packages.client.rpm -}}
+set -a tracked_rpm_packages '{{ . }}'
+{{ end }}
+{{ else if .isServer -}}
+{{ range .packages.server.rpm -}}
+set -a tracked_rpm_packages '{{ . }}'
+{{ end }}
+{{ end }}
+
+set tracked_flatpak_packages
+{{ range .packages.common.flatpak.fedora -}}
+set -a tracked_flatpak_packages '{{ . }}'
+{{ end }}
+{{ range .packages.common.flatpak.flathub -}}
+set -a tracked_flatpak_packages '{{ . }}'
+{{ end }}
+{{ if .isClient -}}
+{{ range .packages.client.flatpak.fedora -}}
+set -a tracked_flatpak_packages '{{ . }}'
+{{ end }}
+{{ range .packages.client.flatpak.flathub -}}
+set -a tracked_flatpak_packages '{{ . }}'
+{{ end }}
+{{ else if .isServer -}}
+{{ range .packages.server.flatpak.fedora -}}
+set -a tracked_flatpak_packages '{{ . }}'
+{{ end }}
+{{ range .packages.server.flatpak.flathub -}}
+set -a tracked_flatpak_packages '{{ . }}'
+{{ end }}
+{{ end }}
+
+set rpm_versions_before (mktemp)
+set rpm_versions_after (mktemp)
+set flatpak_versions_before (mktemp)
+set flatpak_versions_after (mktemp)
+snapshot_rpm_versions $rpm_versions_before $tracked_rpm_packages
+snapshot_flatpak_versions $flatpak_versions_before $tracked_flatpak_packages
+
 dnf -q check-update >/dev/null 2>&1
 set check_status $status
 if test $check_status -eq 0
@@ -30,5 +75,29 @@ else
     set update_note updates
 end
 
-step_run_note "System packages" "$update_note" sudo dnf update -y
-or exit 1
+step_run_note_quiet "System packages" "$update_note" sudo dnf update -y
+set dnf_status $status
+
+if test $dnf_status -eq 0
+    snapshot_rpm_versions $rpm_versions_after $tracked_rpm_packages
+    report_package_updates $rpm_versions_before $rpm_versions_after
+end
+
+if test (count $tracked_flatpak_packages) -gt 0
+    step_run_note_quiet "Flatpak packages" updates sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak update --system --noninteractive --assumeyes $tracked_flatpak_packages
+    set flatpak_status $status
+
+    if test $flatpak_status -eq 0
+        snapshot_flatpak_versions $flatpak_versions_after $tracked_flatpak_packages
+        report_package_updates $flatpak_versions_before $flatpak_versions_after
+    end
+else
+    step_skip_ok "No Flatpak packages configured"
+    set flatpak_status 0
+end
+
+rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
+
+if test $dnf_status -ne 0; or test $flatpak_status -ne 0
+    exit 1
+end
