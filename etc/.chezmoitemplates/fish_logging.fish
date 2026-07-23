@@ -143,6 +143,36 @@ function setup_logging
         __stage_run "$title" "$chezetc_stage" "$title" "$note" $cmd
     end
 
+    function step_run_quiet
+        set title $argv[1]
+        set cmd $argv[2..]
+
+        if test (count $cmd) -eq 0
+            step_fail "$title"
+            return 1
+        end
+
+        _chezetc_system_log "RUN $title: $cmd"
+        __stage_run "$title" "$chezetc_stage" "$title" "__silent_success__" $cmd
+    end
+
+    function step_result_note
+        set title $argv[1]
+        set note $argv[2]
+        set color_stage $chezetc_stage
+
+        if test "$note" = "no changes"
+            if test "$chezetc_stage" = SYNC
+                set color_stage SKIP
+            else
+                set color_stage CHECK
+            end
+        end
+
+        __stage_label_note "$chezetc_stage" "✓" "$title" "$note" "$color_stage"
+        _chezetc_system_log "OK $title ($note)"
+    end
+
     function step_run_as
         set stage_name $argv[1]
         set title $argv[2]

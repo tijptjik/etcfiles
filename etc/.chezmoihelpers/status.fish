@@ -39,6 +39,11 @@ end
 
 function __stage_label_note --argument-names stage_name icon subject note
     set -l color (__stage_color "$stage_name")
+    if test (count $argv) -ge 5
+        set color (__stage_color "$argv[5]")
+    else if test "$stage_name" = PULL; and test "$note" = "no changes"
+        set color 14
+    end
     set -l padded_stage (printf "%-7s" "$stage_name")
     set -l note_column 72
     set -l prefix_length 10
@@ -135,8 +140,18 @@ function __stage_run
     set -l code (command cat $status_file)
 
     if test "$code" -eq 0
-        if test -n "$note"
-            __stage_label_note "$stage_name" "✓" "$subject" "$note"
+        if test "$note" = "__silent_success__"
+            true
+        else if test -n "$note"
+            set result_color_stage $stage_name
+            if test "$note" = "no changes"
+                if test "$stage_name" = SYNC
+                    set result_color_stage SKIP
+                else
+                    set result_color_stage CHECK
+                end
+            end
+            __stage_label_note "$stage_name" "✓" "$subject" "$note" "$result_color_stage"
         else
             __stage_result "$stage_name" "$subject"
         end

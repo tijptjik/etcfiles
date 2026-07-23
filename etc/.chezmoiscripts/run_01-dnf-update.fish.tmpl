@@ -67,19 +67,21 @@ set flatpak_versions_after (mktemp)
 snapshot_rpm_versions $rpm_versions_before $tracked_rpm_packages
 snapshot_flatpak_versions $flatpak_versions_before $tracked_flatpak_packages
 
-dnf -q check-update >/dev/null 2>&1
-set check_status $status
-if test $check_status -eq 0
-    set update_note "no changes"
-else
-    set update_note updates
-end
-
-step_run_note_quiet "System packages" "$update_note" sudo dnf update -y
+step_run_quiet "System packages" sudo dnf update -y
 set dnf_status $status
 
 if test $dnf_status -eq 0
     snapshot_rpm_versions $rpm_versions_after $tracked_rpm_packages
+    report_package_updates $rpm_versions_before $rpm_versions_after --count-only
+    set dnf_update_count $package_update_count
+    if test $dnf_update_count -eq 0
+        set dnf_note "no changes"
+    else if test $dnf_update_count -eq 1
+        set dnf_note "1 update"
+    else
+        set dnf_note "$dnf_update_count updates"
+    end
+    step_result_note "System packages" "$dnf_note"
     report_package_updates $rpm_versions_before $rpm_versions_after
 end
 
@@ -93,11 +95,21 @@ if test (count $tracked_flatpak_packages) -gt 0
     end
 
     if test (count $installed_flatpak_packages) -gt 0
-        step_run_note_quiet "Flatpak packages" updates sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak update --system --noninteractive --assumeyes $installed_flatpak_packages
+        step_run_quiet "Flatpak packages" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak update --system --noninteractive --assumeyes $installed_flatpak_packages
         set flatpak_status $status
 
         if test $flatpak_status -eq 0
             snapshot_flatpak_versions $flatpak_versions_after $tracked_flatpak_packages
+            report_package_updates $flatpak_versions_before $flatpak_versions_after --count-only
+            set flatpak_update_count $package_update_count
+            if test $flatpak_update_count -eq 0
+                set flatpak_note "no changes"
+            else if test $flatpak_update_count -eq 1
+                set flatpak_note "1 update"
+            else
+                set flatpak_note "$flatpak_update_count updates"
+            end
+            step_result_note "Flatpak packages" "$flatpak_note"
             report_package_updates $flatpak_versions_before $flatpak_versions_after
         end
     else

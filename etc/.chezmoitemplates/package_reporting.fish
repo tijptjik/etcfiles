@@ -42,6 +42,12 @@ end
 function report_package_updates
     set before_file $argv[1]
     set after_file $argv[2]
+    set emit_updates 1
+    if test (count $argv) -ge 3; and test "$argv[3]" = "--count-only"
+        set emit_updates 0
+    end
+
+    set -g package_update_count 0
 
     for updated in (command cat "$after_file")
         set updated_fields (string split \t -- "$updated")
@@ -62,7 +68,76 @@ function report_package_updates
         end
 
         if test -n "$old_version"; and test "$old_version" != "$new_version"
-            __stage_label_note UPDATE "✓" "$package ($old_version)" "$new_version"
+            set -g package_update_count (math "$package_update_count + 1")
+            if test $emit_updates -eq 1
+                __stage_label_note UPDATE "✓" "$package ($old_version)" "$new_version"
+            end
+        end
+    end
+end
+
+function count_package_changes
+    set before_file $argv[1]
+    set after_file $argv[2]
+    set -g package_change_count 0
+    set before_entries (command cat "$before_file")
+    set after_entries (command cat "$after_file")
+
+    for after in $after_entries
+        set after_fields (string split \t -- "$after")
+        if test (count $after_fields) -lt 2
+            continue
+        end
+
+        set old_version
+        for before in $before_entries
+            set before_fields (string split \t -- "$before")
+            if test (count $before_fields) -ge 2; and test "$before_fields[1]" = "$after_fields[1]"
+                set old_version $before_fields[2]
+                break
+            end
+        end
+
+        if test -z "$old_version"; or test "$old_version" != "$after_fields[2]"
+            set -g package_change_count (math "$package_change_count + 1")
+        end
+    end
+
+    for before in $before_entries
+        set before_fields (string split \t -- "$before")
+        if test (count $before_fields) -lt 2
+            continue
+        end
+
+        set found 0
+        for after in $after_entries
+            set after_fields (string split \t -- "$after")
+            if test (count $after_fields) -ge 2; and test "$after_fields[1]" = "$before_fields[1]"
+                set found 1
+                break
+            end
+        end
+
+        if test $found -eq 0
+            set -g package_change_count (math "$package_change_count + 1")
+        end
+    end
+end
+
+function snapshot_flatpak_refs
+    set output_file $argv[1]
+    flatpak list --system --all --columns=ref 2>/dev/null >$output_file
+end
+
+function count_removed_entries
+    set before_file $argv[1]
+    set after_file $argv[2]
+    set -g package_change_count 0
+    set after_entries (command cat "$after_file")
+
+    for before in (command cat "$before_file")
+        if not contains -- "$before" $after_entries
+            set -g package_change_count (math "$package_change_count + 1")
         end
     end
 end

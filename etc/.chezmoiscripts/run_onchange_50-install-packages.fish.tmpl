@@ -19,8 +19,24 @@ setup_logging linux-install-packages
 function install_dnf_packages
     set packages $argv
     if test (count $argv) -gt 0
-        step_run_note_quiet "RPM packages" installed sudo dnf install -y $argv
-        or return 1
+        set versions_before (mktemp)
+        set versions_after (mktemp)
+        snapshot_rpm_versions $versions_before $packages
+        step_run_quiet "RPM packages" sudo dnf install -y $argv
+        set run_status $status
+        if test $run_status -eq 0
+            snapshot_rpm_versions $versions_after $packages
+            count_package_changes $versions_before $versions_after
+            if test $package_change_count -eq 0
+                set result_note "no changes"
+            else
+                set result_note installed
+            end
+            step_result_note "RPM packages" "$result_note"
+            report_package_updates $versions_before $versions_after
+        end
+        rm -f $versions_before $versions_after
+        return $run_status
     else
         step_skip_ok "No RPM packages configured"
     end
@@ -32,8 +48,24 @@ function install_flatpak_packages
     set packages $argv[2..]
 
     if test (count $packages) -gt 0
-        step_run_note_quiet "Flatpak packages [$remote]" installed sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
-        or return 1
+        set versions_before (mktemp)
+        set versions_after (mktemp)
+        snapshot_flatpak_versions $versions_before $packages
+        step_run_quiet "Flatpak packages [$remote]" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
+        set run_status $status
+        if test $run_status -eq 0
+            snapshot_flatpak_versions $versions_after $packages
+            count_package_changes $versions_before $versions_after
+            if test $package_change_count -eq 0
+                set result_note "no changes"
+            else
+                set result_note installed
+            end
+            step_result_note "Flatpak packages [$remote]" "$result_note"
+            report_package_updates $versions_before $versions_after
+        end
+        rm -f $versions_before $versions_after
+        return $run_status
     else
         step_skip_ok "No Flatpak packages configured for $remote"
     end
@@ -84,47 +116,38 @@ set -a flathub_flatpak_packages '{{ . }}'
 {{ end }}
 {{ end }}
 
-# Snapshot selected versions before package installation/update.
-set rpm_versions_before (mktemp)
-set rpm_versions_after (mktemp)
-set flatpak_versions_before (mktemp)
-set flatpak_versions_after (mktemp)
-snapshot_rpm_versions $rpm_versions_before $rpm_packages
-set tracked_flatpak_packages $fedora_flatpak_packages $flathub_flatpak_packages
-snapshot_flatpak_versions $flatpak_versions_before $tracked_flatpak_packages
-
 # Install all packages
 install_dnf_packages $rpm_packages
-set dnf_status $status
-if test $dnf_status -ne 0
-    rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
-    exit 1
-end
+or exit 1
 
-# Install flatpak packages directly from their respective remotes
+# Install Flatpak packages directly from their respective remotes
 install_flatpak_packages fedora $fedora_flatpak_packages
 or exit 1
 
 install_flatpak_packages flathub $flathub_flatpak_packages
-set flatpak_install_status $status
-if test $flatpak_install_status -ne 0
-    rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
-    exit 1
-end
+or exit 1
 
-# Remove unused flatpak packages
-set rpm_versions_after_status 0
-snapshot_rpm_versions $rpm_versions_after $rpm_packages
-report_package_updates $rpm_versions_before $rpm_versions_after
-snapshot_flatpak_versions $flatpak_versions_after $tracked_flatpak_packages
-report_package_updates $flatpak_versions_before $flatpak_versions_after
+# Remove unused Flatpak packages
+set flatpak_refs_before (mktemp)
+set flatpak_refs_after (mktemp)
+snapshot_flatpak_refs $flatpak_refs_before
 
 set previous_stage $chezetc_stage
 set chezetc_stage REMOVE
-step_run_note_quiet "Flatpak packages [unused]" removed sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
+step_run_quiet "Flatpak packages [unused]" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
 set remove_status $status
+if test $remove_status -eq 0
+    snapshot_flatpak_refs $flatpak_refs_after
+    count_removed_entries $flatpak_refs_before $flatpak_refs_after
+    if test $package_change_count -eq 0
+        set result_note "no changes"
+    else
+        set result_note removed
+    end
+    step_result_note "Flatpak packages [unused]" "$result_note"
+end
 set chezetc_stage $previous_stage
-rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
+rm -f $flatpak_refs_before $flatpak_refs_after
 test $remove_status -eq 0
 or exit 1
 {{ end }}
