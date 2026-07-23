@@ -7,9 +7,9 @@ set -euo pipefail
 stage_color() {
     case "$1" in
         SKIP) printf '8' ;;
-        CHECK|WARN|UPDATE) printf '14' ;;
+        CHECK|WARN|UPDATE) printf '12' ;;
         INSTALL|SYNC|PULL|REMOVE|IMPORT|ADD|CONFIG|FAILED) printf '9' ;;
-        *) printf '14' ;;
+        *) printf '12' ;;
     esac
 }
 

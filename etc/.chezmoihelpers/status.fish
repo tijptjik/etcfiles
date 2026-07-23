@@ -3,11 +3,11 @@ function __stage_color --argument-names verb
         case SKIP
             echo 8
         case CHECK WARN UPDATE
-            echo 14
+            echo 12
         case INSTALL SYNC PULL REMOVE IMPORT ADD CONFIG FAILED
             echo 9
         case '*'
-            echo 14
+            echo 12
     end
 end
 
