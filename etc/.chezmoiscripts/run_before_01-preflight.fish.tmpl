@@ -24,7 +24,7 @@ function check_file --argument-names subject path
     if test -f "$path"
         __stage_label_note CHECK "✓" "$subject" "available"
     else
-        __stage_label_note SKIP "✓" "$subject" "available"
+        __stage_label_note SKIP "✓" "$subject" "not configured"
     end
 end
 

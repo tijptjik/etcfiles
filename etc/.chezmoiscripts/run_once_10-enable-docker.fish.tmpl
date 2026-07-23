@@ -8,24 +8,24 @@ step_header "Docker"
 
 # Add user to docker group
 if [ "$USER" != "root" ]
-    step_run "Add $USER to docker group" sudo usermod -aG docker $USER
+    step_run_note "Group membership for $USER" configured sudo usermod -aG docker $USER
     or exit 1
 else
-    step_skip_ok "Group membership for root"
+    step_skip_ok "Group membership for root" "not needed"
 end
 
 # Check if docker is already enabled
 if systemctl is-enabled docker >/dev/null 2>&1
-    step_skip_ok "Service enabled"
+    step_skip_ok Service enabled
 else
-    step_run "Enable Docker service" sudo systemctl enable docker
+    step_run_note Service enabled sudo systemctl enable docker
     or exit 1
 end
 
 # Check if docker is already active
 if systemctl is-active docker >/dev/null 2>&1
-    step_skip_ok "Service active"
+    step_skip_ok Service active
 else
-    step_run "Start Docker service" sudo systemctl start docker
+    step_run_note Service active sudo systemctl start docker
     or exit 1
 end

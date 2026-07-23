@@ -18,7 +18,7 @@ setup_logging linux-install-packages
 function install_dnf_packages
     set packages $argv
     if test (count $argv) -gt 0
-        step_run "RPM packages" sudo dnf install -y $argv
+        step_run_note "RPM packages" installed sudo dnf install -y $argv
         or return 1
     else
         step_skip_ok "No RPM packages configured"
@@ -31,7 +31,7 @@ function install_flatpak_packages
     set packages $argv[2..]
 
     if test (count $packages) -gt 0
-        step_run "Flatpak packages [$remote]" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
+        step_run_note "Flatpak packages [$remote]" installed sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
         or return 1
     else
         step_skip_ok "No Flatpak packages configured for $remote"
@@ -97,7 +97,7 @@ or exit 1
 # Remove unused flatpak packages
 set previous_stage $chezetc_stage
 set chezetc_stage REMOVE
-step_run "Flatpak packages [unused]" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
+step_run_note "Flatpak packages [unused]" removed sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
 set remove_status $status
 set chezetc_stage $previous_stage
 test $remove_status -eq 0
