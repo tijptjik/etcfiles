@@ -91,6 +91,7 @@ packages:
     - 'less'
     - 'lm_sensors'
     - 'lsd'
+    - 'lua'
     - 'maven'
     - 'maven-openjdk25'
     - 'mediainfo'
