@@ -15,7 +15,7 @@ set waybar_prefix "$HOME/.local/lib/chezetc/waybar"
 set waybar_binary "$waybar_prefix/bin/waybar"
 set waybar_revision_file "$waybar_prefix/revision"
 set waybar_launcher "$HOME/.local/bin/waybar-lua"
-set waybar_failure_log "$waybar_build_dir/chezetc-build-failure.log"
+set waybar_failure_log "/tmp/chezetc-waybar-build-failure.log"
 
 function write_waybar_launcher
     mkdir -p (dirname "$waybar_launcher")
