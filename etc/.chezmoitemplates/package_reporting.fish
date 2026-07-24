@@ -13,7 +13,7 @@ function snapshot_rpm_versions
             set -a seen_packages "$package"
 
             set versions (rpm -q --qf '%{VERSION}\n' "$package" 2>/dev/null)
-            if test (count $versions) -gt 0
+            if test $status -eq 0; and test (count $versions) -gt 0
                 printf "%s\t%s\n" "$package" "$versions[1]"
             end
         end
@@ -67,7 +67,12 @@ function report_package_updates
             end
         end
 
-        if test -n "$old_version"; and test "$old_version" != "$new_version"
+        if test -z "$old_version"
+            set -g package_update_count (math "$package_update_count + 1")
+            if test $emit_updates -eq 1
+                __stage_label_note INSTALL "✓" "$package (new)" "$new_version"
+            end
+        else if test "$old_version" != "$new_version"
             set -g package_update_count (math "$package_update_count + 1")
             if test $emit_updates -eq 1
                 __stage_label_note UPDATE "✓" "$package ($old_version)" "$new_version"
