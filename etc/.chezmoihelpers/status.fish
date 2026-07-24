@@ -2,8 +2,10 @@ function __stage_color --argument-names verb
     switch "$verb"
         case SKIP
             echo 8
-        case CHECK WARN UPDATE
+        case CHECK WARN
             echo 14
+        case UPDATE
+            echo 9
         case INSTALL SYNC PULL REMOVE IMPORT ADD CONFIG FAILED
             echo 9
         case '*'
@@ -12,7 +14,7 @@ function __stage_color --argument-names verb
 end
 
 function __stage_styled_subject --argument-names subject
-    set -l qualifier (string match -r '\[[^]]+\]$' -- "$subject")
+    set -l qualifier (string match -r '(\[[^]]+\]|\([^)]*\))$' -- "$subject")
     if test (count $qualifier) -gt 0
         set -l base (string replace -- "$qualifier" "" "$subject" | string trim)
         set -l styled_base (gum style --foreground 15 "$base")
