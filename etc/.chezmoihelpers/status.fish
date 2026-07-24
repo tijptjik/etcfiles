@@ -14,7 +14,9 @@ function __stage_color --argument-names verb
 end
 
 function __stage_styled_subject --argument-names subject
-    set -l qualifier (string match -r '(\[[^]]+\]|\([^)]*\))$' -- "$subject")
+    # Do not use a capture group here: Fish emits captures as additional values
+    # and those values make printf repeat the formatted subject.
+    set -l qualifier (string match -r '\[[^]]+\]$|\([^)]*\)$' -- "$subject")
     if test (count $qualifier) -gt 0
         set -l base (string replace -- "$qualifier" "" "$subject" | string trim)
         set -l styled_base (gum style --foreground 15 "$base")
@@ -142,7 +144,7 @@ function __stage_run
     set -l code (command cat $status_file)
 
     if test "$code" -eq 0
-        if test "$note" = "__silent_success__"
+        if test "$note" = "__silent_success__"; or test "$note" = "__silent_failure__"
             true
         else if test -n "$note"
             set result_color_stage $stage_name
@@ -159,9 +161,11 @@ function __stage_run
         end
     else
         __stage_failure "$title"
-        command cat $log_file
+        if test "$note" != "__silent_failure__"
+            command cat $log_file
+        end
         rm -f $log_file $status_file
-        exit $code
+        return $code
     end
 
     rm -f $log_file $status_file

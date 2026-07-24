@@ -156,6 +156,27 @@ function setup_logging
         __stage_run "$title" "$chezetc_stage" "$title" "__silent_success__" $cmd
     end
 
+    # Keep an expected or optional command failure to one status line, while
+    # leaving the caller free to decide whether the failure is fatal.
+    function step_run_silent
+        set title $argv[1]
+        set cmd $argv[2..]
+
+        if test (count $cmd) -eq 0
+            step_fail "$title"
+            return 1
+        end
+
+        _chezetc_system_log "RUN $title: $cmd"
+        __stage_run "$title" "$chezetc_stage" "$title" "__silent_failure__" $cmd
+    end
+
+    function step_warn
+        set title $argv
+        __stage_label WARN "!" "$title"
+        _chezetc_system_log "WARN $title"
+    end
+
     function step_result_note
         set title $argv[1]
         set note $argv[2]

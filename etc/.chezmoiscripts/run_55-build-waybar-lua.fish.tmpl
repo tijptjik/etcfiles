@@ -114,13 +114,13 @@ function build_waybar
         -Dwireplumber=disabled \
         -Dgps=disabled \
         -Dwwan=disabled \
-        -Dcava=false
+        -Dcava=disabled
 
-    step_run "Configure Waybar Lua build" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
+    step_run_silent "Configure Waybar Lua build" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
     or return 1
-    step_run "Compile Waybar Lua build" ninja -C "$waybar_build_dir"
+    step_run_silent "Compile Waybar Lua build" ninja -C "$waybar_build_dir"
     or return 1
-    step_run "Install Waybar Lua build" meson install -C "$waybar_build_dir"
+    step_run_silent "Install Waybar Lua build" meson install -C "$waybar_build_dir"
     or return 1
 
     mkdir -p "$waybar_prefix"
@@ -142,6 +142,11 @@ end
 ensure_waybar_source
 or exit 1
 build_waybar
-or exit 1
+or begin
+    # The generated launcher falls back to Fedora's Waybar, so an unavailable
+    # temporary source build must not make an otherwise successful apply fail.
+    step_warn "Waybar Lua build unavailable; using the system Waybar"
+    exit 0
+end
 
 {{ end -}}
