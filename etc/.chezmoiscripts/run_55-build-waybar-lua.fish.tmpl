@@ -104,6 +104,7 @@ function build_waybar
         -Dsystemd=disabled \
         -Dlibinput=disabled \
         -Dlibnl=disabled \
+        -Dlibudev=enabled \
         -Dlibevdev=disabled \
         -Dupower_glib=disabled \
         -Dpipewire=disabled \
@@ -118,7 +119,9 @@ function build_waybar
 
     step_run_silent_logged "Configure Waybar Lua build" "$waybar_failure_log" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
     or return 1
-    step_run_silent_logged "Compile Waybar Lua build" "$waybar_failure_log" ninja -C "$waybar_build_dir"
+    # Waybar's generated protocol headers are not fully ordered on master;
+    # parallel Ninja jobs can compile a consumer before its header exists.
+    step_run_silent_logged "Compile Waybar Lua build" "$waybar_failure_log" ninja -C "$waybar_build_dir" -j1
     or return 1
     step_run_silent_logged "Install Waybar Lua build" "$waybar_failure_log" meson install -C "$waybar_build_dir"
     or return 1
