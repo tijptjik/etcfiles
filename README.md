@@ -8,6 +8,11 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
 - Packages
   - RPM
   - Flatpak
+- Local builds that are temporarily required for upstream compatibility
+  - Waybar is built from `master` on Hyprland clients until an official release
+    containing the Lua workspace-dispatch fix is available from Fedora.
+    Chezetc checks for Waybar `0.16.0+` on every apply; once found, it stops the
+    local build and asks for this temporary step to be removed.
 - `fstab`
 
 ## Supported Hosts

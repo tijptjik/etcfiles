@@ -1,0 +1,147 @@
+#!/usr/bin/env fish
+{{ if and (eq .chezmoi.os "linux") .isClient -}}
+
+{{ include ".chezmoihelpers/status.fish" }}
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-build-waybar-lua
+
+# Waybar 0.16.0 is the first expected release to include the Hyprland Lua IPC
+# workspace-dispatch fix. Stop here when Fedora exposes it so this temporary
+# source build can be deliberately removed from Chezetc and the dotfiles.
+set waybar_release_threshold 0.16.0
+set waybar_source_dir "$HOME/.local/share/chezetc/waybar"
+set waybar_build_dir "$waybar_source_dir/build"
+set waybar_prefix "$HOME/.local/lib/chezetc/waybar"
+set waybar_binary "$waybar_prefix/bin/waybar"
+set waybar_revision_file "$waybar_prefix/revision"
+set waybar_launcher "$HOME/.local/bin/waybar-lua"
+
+function write_waybar_launcher
+    mkdir -p (dirname "$waybar_launcher")
+    or return 1
+
+    set launcher_tmp (mktemp)
+    or return 1
+
+    printf '%s\n' \
+        '#!/usr/bin/env sh' \
+        'set -eu' \
+        'local_binary="$HOME/.local/lib/chezetc/waybar/bin/waybar"' \
+        'if [ -x "$local_binary" ]; then' \
+        '    exec "$local_binary" "$@"' \
+        'fi' \
+        'exec /usr/bin/waybar "$@"' > "$launcher_tmp"
+    chmod 755 "$launcher_tmp"
+    and mv "$launcher_tmp" "$waybar_launcher"
+end
+
+function stable_version
+    string match -r '[0-9]+(\.[0-9]+){1,2}' -- $argv[1] | head -n 1
+end
+
+function version_at_least
+    set installed (string split . -- (stable_version $argv[1]))
+    set required (string split . -- (stable_version $argv[2]))
+
+    for index in 1 2 3
+        set installed_part 0
+        set required_part 0
+        if test $index -le (count $installed)
+            set installed_part $installed[$index]
+        end
+        if test $index -le (count $required)
+            set required_part $required[$index]
+        end
+
+        if test $installed_part -gt $required_part
+            return 0
+        else if test $installed_part -lt $required_part
+            return 1
+        end
+    end
+
+    return 0
+end
+
+function available_waybar_version
+    dnf repoquery --latest-limit 1 --qf '%{version}\n' waybar 2>/dev/null | head -n 1
+end
+
+function ensure_waybar_source
+    mkdir -p (dirname "$waybar_source_dir")
+    or return 1
+
+    if not test -d "$waybar_source_dir/.git"
+        step_run "Waybar source" git clone --depth 1 https://github.com/Alexays/Waybar.git "$waybar_source_dir"
+        return $status
+    end
+
+    if git -C "$waybar_source_dir" fetch --quiet --depth 1 origin master; and git -C "$waybar_source_dir" merge --ff-only --quiet origin/master
+        step_skip_ok "Waybar source" current
+    else
+        step_skip_ok "Waybar source" "offline; keeping local checkout"
+    end
+end
+
+function build_waybar
+    set source_revision (git -C "$waybar_source_dir" rev-parse HEAD)
+    or return 1
+    set built_revision
+    if test -f "$waybar_revision_file"
+        set built_revision (string trim < "$waybar_revision_file")
+    end
+
+    if test -x "$waybar_binary"; and test "$source_revision" = "$built_revision"
+        step_skip_ok "Waybar Lua build" current
+        return 0
+    end
+
+    set meson_options \
+        "--prefix=$waybar_prefix" \
+        -Dman-pages=disabled \
+        -Dtests=disabled \
+        -Dsystemd=disabled \
+        -Dlibinput=disabled \
+        -Dlibnl=disabled \
+        -Dlibudev=disabled \
+        -Dlibevdev=disabled \
+        -Dupower_glib=disabled \
+        -Dpipewire=disabled \
+        -Dmpris=disabled \
+        -Dmpd=disabled \
+        -Drfkill=disabled \
+        -Djack=disabled \
+        -Dwireplumber=disabled \
+        -Dgps=disabled \
+        -Dwwan=disabled \
+        -Dcava=false
+
+    step_run "Configure Waybar Lua build" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
+    or return 1
+    step_run "Compile Waybar Lua build" ninja -C "$waybar_build_dir"
+    or return 1
+    step_run "Install Waybar Lua build" meson install -C "$waybar_build_dir"
+    or return 1
+
+    mkdir -p "$waybar_prefix"
+    and printf '%s\n' "$source_revision" > "$waybar_revision_file"
+end
+
+set available_release (available_waybar_version)
+if test -n "$available_release"; and version_at_least "$available_release" "$waybar_release_threshold"
+    step_note "ACTION REQUIRED: Fedora offers Waybar $available_release (>= $waybar_release_threshold). Remove Chezetc's temporary Waybar Lua build and change Hyprland back to the system Waybar launcher."
+    exit 0
+end
+
+write_waybar_launcher
+or begin
+    step_fail "Write Waybar launcher"
+    exit 1
+end
+
+ensure_waybar_source
+or exit 1
+build_waybar
+or exit 1
+
+{{ end -}}
