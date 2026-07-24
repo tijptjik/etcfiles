@@ -15,6 +15,7 @@ set waybar_prefix "$HOME/.local/lib/chezetc/waybar"
 set waybar_binary "$waybar_prefix/bin/waybar"
 set waybar_revision_file "$waybar_prefix/revision"
 set waybar_launcher "$HOME/.local/bin/waybar-lua"
+set waybar_failure_log "$waybar_build_dir/chezetc-build-failure.log"
 
 function write_waybar_launcher
     mkdir -p (dirname "$waybar_launcher")
@@ -103,7 +104,6 @@ function build_waybar
         -Dsystemd=disabled \
         -Dlibinput=disabled \
         -Dlibnl=disabled \
-        -Dlibudev=disabled \
         -Dlibevdev=disabled \
         -Dupower_glib=disabled \
         -Dpipewire=disabled \
@@ -116,11 +116,11 @@ function build_waybar
         -Dwwan=disabled \
         -Dcava=disabled
 
-    step_run_silent "Configure Waybar Lua build" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
+    step_run_silent_logged "Configure Waybar Lua build" "$waybar_failure_log" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
     or return 1
-    step_run_silent "Compile Waybar Lua build" ninja -C "$waybar_build_dir"
+    step_run_silent_logged "Compile Waybar Lua build" "$waybar_failure_log" ninja -C "$waybar_build_dir"
     or return 1
-    step_run_silent "Install Waybar Lua build" meson install -C "$waybar_build_dir"
+    step_run_silent_logged "Install Waybar Lua build" "$waybar_failure_log" meson install -C "$waybar_build_dir"
     or return 1
 
     mkdir -p "$waybar_prefix"
@@ -145,7 +145,7 @@ build_waybar
 or begin
     # The generated launcher falls back to Fedora's Waybar, so an unavailable
     # temporary source build must not make an otherwise successful apply fail.
-    step_warn "Waybar Lua build unavailable; using the system Waybar"
+    step_warn "Waybar Lua build unavailable; using the system Waybar (log: $waybar_failure_log)"
     exit 0
 end
 

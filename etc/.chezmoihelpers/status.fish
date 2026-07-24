@@ -144,7 +144,7 @@ function __stage_run
     set -l code (command cat $status_file)
 
     if test "$code" -eq 0
-        if test "$note" = "__silent_success__"; or test "$note" = "__silent_failure__"
+        if test "$note" = "__silent_success__"; or test "$note" = "__silent_failure__"; or string match -q -r '^__silent_failure__:' -- "$note"
             true
         else if test -n "$note"
             set result_color_stage $stage_name
@@ -161,7 +161,11 @@ function __stage_run
         end
     else
         __stage_failure "$title"
-        if test "$note" != "__silent_failure__"
+        if string match -q -r '^__silent_failure__:' -- "$note"
+            set -l failure_log (string replace -r '^__silent_failure__:' '' -- "$note")
+            mkdir -p (dirname "$failure_log")
+            and command mv "$log_file" "$failure_log"
+        else if test "$note" != "__silent_failure__"
             command cat $log_file
         end
         rm -f $log_file $status_file

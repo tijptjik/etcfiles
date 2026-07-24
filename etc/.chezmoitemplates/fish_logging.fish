@@ -171,6 +171,22 @@ function setup_logging
         __stage_run "$title" "$chezetc_stage" "$title" "__silent_failure__" $cmd
     end
 
+    # As step_run_silent, but retain the command output at a caller-selected
+    # location for diagnosis without flooding the interactive apply output.
+    function step_run_silent_logged
+        set title $argv[1]
+        set failure_log $argv[2]
+        set cmd $argv[3..]
+
+        if test (count $cmd) -eq 0
+            step_fail "$title"
+            return 1
+        end
+
+        _chezetc_system_log "RUN $title: $cmd"
+        __stage_run "$title" "$chezetc_stage" "$title" "__silent_failure__:$failure_log" $cmd
+    end
+
     function step_warn
         set title $argv
         __stage_label WARN "!" "$title"
