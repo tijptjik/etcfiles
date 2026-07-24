@@ -145,7 +145,10 @@ build_waybar
 or begin
     # The generated launcher falls back to Fedora's Waybar, so an unavailable
     # temporary source build must not make an otherwise successful apply fail.
-    step_warn "Waybar Lua build unavailable; using the system Waybar (log: $waybar_failure_log)"
+    if test -f "$waybar_failure_log"
+        step_log_created "$waybar_failure_log"
+    end
+    step_warn "Waybar Lua build unavailable; using the system Waybar"
     exit 0
 end
 

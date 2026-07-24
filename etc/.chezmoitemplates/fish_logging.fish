@@ -193,6 +193,12 @@ function setup_logging
         _chezetc_system_log "WARN $title"
     end
 
+    function step_log_created
+        set path $argv[1]
+        __stage_label_note LOG "✓" "$path" created
+        _chezetc_system_log "LOG $path (created)"
+    end
+
     function step_result_note
         set title $argv[1]
         set note $argv[2]
