@@ -88,7 +88,15 @@ function defer_fedora_upgrade --argument-names target_release
         return 1
     end
 
-    set deferred_until (math (date +%s) + (7 * 24 * 60 * 60))
+    set current_time (date +%s)
+    set deferred_until (math "$current_time + 7 * 24 * 60 * 60")
+    string match -qr '^[0-9]+$' -- "$deferred_until"
+    or begin
+        rm -f "$temporary_file"
+        step_warn "Could not save Fedora $target_release upgrade reminder"
+        return 1
+    end
+
     if printf '%s\n' "$deferred_until" > "$temporary_file"; and mv "$temporary_file" "$deferral_file"
         return 0
     end
