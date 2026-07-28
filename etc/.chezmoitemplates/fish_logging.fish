@@ -80,8 +80,8 @@ function setup_logging
         end
     end
 
-    function step_skip_available
-        step_skip_ok "$argv[1]" available
+    function step_skip_enabled
+        step_skip_ok "$argv[1]" enabled
     end
 
     function step_fail

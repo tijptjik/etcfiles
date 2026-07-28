@@ -78,7 +78,7 @@ function ensure_waybar_source
     end
 
     if git -C "$waybar_source_dir" fetch --quiet --depth 1 origin master; and git -C "$waybar_source_dir" merge --ff-only --quiet origin/master
-        step_skip_ok "Waybar source" current
+        step_skip_ok "Waybar source" "no changes"
     else
         step_skip_ok "Waybar source" "offline; keeping local checkout"
     end
@@ -93,7 +93,7 @@ function build_waybar
     end
 
     if test -x "$waybar_binary"; and test "$source_revision" = "$built_revision"
-        step_skip_ok "Waybar Lua build" current
+        step_skip_ok "Waybar Lua build" "no changes"
         return 0
     end
 

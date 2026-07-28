@@ -27,7 +27,11 @@ function __stage_event --argument-names stage_name icon subject note
         return
     end
 
-    printf '%s\t%s\t%s\t%s\n' "$stage_name" "$icon" "$subject" "$note" >> "$TJIKUP_REPORT_FILE"
+    # Chezetc runs ChezMoi through sudo.  On FUSE-backed home directories an
+    # elevated process can pass `test -w` but still be denied when opening the
+    # user-owned tempfile.  Let tee handle the best-effort append so Fish does
+    # not print a redirection warning if that happens.
+    printf '%s\t%s\t%s\t%s\n' "$stage_name" "$icon" "$subject" "$note" | command tee -a "$TJIKUP_REPORT_FILE" >/dev/null 2>&1
 end
 
 function __stage_icon_color --argument-names icon

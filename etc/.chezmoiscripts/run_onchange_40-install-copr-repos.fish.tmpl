@@ -88,7 +88,7 @@ set -a client_copr_repos '{{ . }}'
 
 # Enable common COPR repositories
 if test (count $common_copr_repos) -gt 0
-    step_header "Common COPR repositories"
+    step_header "Common COPR"
 
     # Enable each COPR repository
     for repo in $common_copr_repos
@@ -100,7 +100,7 @@ end
 # Enable client-specific COPR repositories
 {{ if .isClient -}}
 if test (count $client_copr_repos) -gt 0
-    step_header "Client COPR repositories"
+    step_header "Client COPR"
 
     # Enable each COPR repository
     for repo in $client_copr_repos
