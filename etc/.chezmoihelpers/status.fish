@@ -74,12 +74,33 @@ end
 # Public presentation API.  All setup sections use this rather than printing
 # headings or spacing themselves, so adjacent scripts compose predictably.
 function section_header --argument-names title
+    set -l color 12
+    if test (count $argv) -gt 1
+        set color $argv[2]
+    end
     echo
     if command -q gum; and isatty stdout
-        gum style --foreground 12 --bold "$title"
+        gum style --foreground "$color" --bold "$title"
     else
         echo "$title"
     end
+    echo
+end
+
+# A repository banner leaves one visual line before the title; the following
+# section header supplies the single separator after the URL.
+function repo_header --argument-names title url
+    echo
+    if command -q gum; and isatty stdout
+        gum style --foreground 13 --bold "$title"
+        gum style --foreground 8 "$url"
+    else
+        echo "$title"
+        echo "$url"
+    end
+end
+
+function output_gap
     echo
 end
 
