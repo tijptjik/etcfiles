@@ -158,7 +158,7 @@ if test $dnf_status -eq 0
     report_package_updates $rpm_versions_before $rpm_versions_after --count-only
     set dnf_update_count $package_update_count
     if test $dnf_update_count -eq 0
-        set dnf_note latest
+        set dnf_note "no changes"
     else if test $dnf_update_count -eq 1
         set dnf_note "1 update"
     else
@@ -186,7 +186,7 @@ if test (count $tracked_flatpak_packages) -gt 0
             report_package_updates $flatpak_versions_before $flatpak_versions_after --count-only
             set flatpak_update_count $package_update_count
             if test $flatpak_update_count -eq 0
-                set flatpak_note latest
+                set flatpak_note "no changes"
             else if test $flatpak_update_count -eq 1
                 set flatpak_note "1 update"
             else
@@ -203,6 +203,130 @@ else
     step_skip_ok "No Flatpak packages configured"
     set flatpak_status 0
 end
+
+# Reconcile the declared package set immediately after applying available
+# updates.  Keeping both operations in this section avoids reporting the same
+# package state again later in the run.
+function install_dnf_packages
+    set packages $argv
+    if test (count $argv) -eq 0
+        step_skip_ok "System packages [rpm]" "no packages"
+        return 0
+    end
+
+    set versions_before (mktemp)
+    set versions_after (mktemp)
+    snapshot_rpm_versions $versions_before $packages
+    step_run_quiet "System packages [rpm]" sudo dnf install -y $packages
+    set run_status $status
+    if test $run_status -eq 0
+        snapshot_rpm_versions $versions_after $packages
+        count_package_changes $versions_before $versions_after
+        if test $package_change_count -eq 0
+            set result_note "no changes"
+        else
+            set result_note installed
+        end
+        step_result_note "System packages [rpm]" "$result_note"
+        report_package_updates $versions_before $versions_after
+    end
+    rm -f $versions_before $versions_after
+    return $run_status
+end
+
+function install_flatpak_packages
+    set remote $argv[1]
+    set packages $argv[2..]
+    set subject "Flatpak packages [$remote]"
+
+    if test (count $packages) -eq 0
+        step_skip_ok "$subject" "no packages"
+        return 0
+    end
+
+    set versions_before (mktemp)
+    set versions_after (mktemp)
+    snapshot_flatpak_versions $versions_before $packages
+    step_run_quiet "$subject" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak install --system $remote --noninteractive --assumeyes --or-update $packages
+    set run_status $status
+    if test $run_status -eq 0
+        snapshot_flatpak_versions $versions_after $packages
+        count_package_changes $versions_before $versions_after
+        if test $package_change_count -eq 0
+            set result_note "no changes"
+        else
+            set result_note installed
+        end
+        step_result_note "$subject" "$result_note"
+        report_package_updates $versions_before $versions_after
+    end
+    rm -f $versions_before $versions_after
+    return $run_status
+end
+
+set rpm_packages
+set fedora_flatpak_packages
+set flathub_flatpak_packages
+
+{{ range .packages.common.rpm -}}
+set -a rpm_packages '{{ . }}'
+{{ end }}
+{{ range .packages.common.flatpak.fedora -}}
+set -a fedora_flatpak_packages '{{ . }}'
+{{ end }}
+{{ range .packages.common.flatpak.flathub -}}
+set -a flathub_flatpak_packages '{{ . }}'
+{{ end }}
+{{ if .isClient -}}
+{{ range .packages.client.rpm -}}
+set -a rpm_packages '{{ . }}'
+{{ end }}
+{{ range .packages.client.flatpak.fedora -}}
+set -a fedora_flatpak_packages '{{ . }}'
+{{ end }}
+{{ range .packages.client.flatpak.flathub -}}
+set -a flathub_flatpak_packages '{{ . }}'
+{{ end }}
+{{ else if .isServer -}}
+{{ range .packages.server.rpm -}}
+set -a rpm_packages '{{ . }}'
+{{ end }}
+{{ range .packages.server.flatpak.fedora -}}
+set -a fedora_flatpak_packages '{{ . }}'
+{{ end }}
+{{ range .packages.server.flatpak.flathub -}}
+set -a flathub_flatpak_packages '{{ . }}'
+{{ end }}
+{{ end }}
+
+install_dnf_packages $rpm_packages
+or exit 1
+install_flatpak_packages fedora $fedora_flatpak_packages
+or exit 1
+install_flatpak_packages flathub $flathub_flatpak_packages
+or exit 1
+
+set flatpak_refs_before (mktemp)
+set flatpak_refs_after (mktemp)
+snapshot_flatpak_refs $flatpak_refs_before
+set previous_stage $chezetc_stage
+set chezetc_stage REMOVE
+step_run_quiet "Flatpak packages [unused]" sudo env XDG_DATA_DIRS="/var/lib/flatpak/exports/share:/root/.local/share/flatpak/exports/share:/usr/local/share:/usr/share" dbus-run-session flatpak remove --system --unused -y
+set remove_status $status
+if test $remove_status -eq 0
+    snapshot_flatpak_refs $flatpak_refs_after
+    count_removed_entries $flatpak_refs_before $flatpak_refs_after
+    if test $package_change_count -eq 0
+        set result_note "no changes"
+    else
+        set result_note removed
+    end
+    step_result_note "Flatpak packages [unused]" "$result_note"
+end
+set chezetc_stage $previous_stage
+rm -f $flatpak_refs_before $flatpak_refs_after
+test $remove_status -eq 0
+or exit 1
 
 rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
 
@@ -234,7 +358,7 @@ if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match 
             end
         end
     else
-        step_check_ok "Fedora upgrade" latest
+        step_check_ok "Fedora upgrade" "no changes"
     end
 else
     step_skip_ok "Fedora upgrade" "check unavailable"

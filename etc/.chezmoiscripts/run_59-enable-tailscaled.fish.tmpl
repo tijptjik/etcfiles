@@ -29,45 +29,27 @@ if test -z "$tailscale_operator"
 end
 set -l configured_tailscale_operator (sudo tailscale debug prefs 2>/dev/null | jq -r '.OperatorUser // empty' 2>/dev/null)
 if test "$configured_tailscale_operator" = "$tailscale_operator"
-    step_skip_ok "Tailscale operator for $tailscale_operator" configured
+    step_skip_ok "Tailscale operator for $tailscale_operator" available
 else
-    step_run_note "Tailscale operator for $tailscale_operator" configured sudo tailscale set --operator=$tailscale_operator
+    step_run_note "Tailscale operator for $tailscale_operator" available sudo tailscale set --operator=$tailscale_operator
     or exit 1
 end
 
 set -l tailscale_state (tailscale status --json 2>/dev/null | jq -r '.BackendState // empty' 2>/dev/null)
-
-function report_tailnet_state --argument-names state
-    if test "$state" = Running
-        step_skip_ok "Tailnet connection" connected
-    else if test "$state" = NeedsLogin
-        step_warn_note "Tailscale login required," "run tailscale up"
-    else if test -n "$state"
-        step_expected "Tailnet connection" "$state"
-    else
-        step_warn "Tailscale status unavailable"
-    end
-end
 
 {{ if .isDesktop -}}
 # fi is reachable from the tailnet only while its Hyprlock wrapper is active.
 # Keep the daemon enabled for boot reliability, but leave the node disconnected
 # after an ordinary desktop apply.
 if not pgrep -x hyprlock >/dev/null 2>&1
-    if test "$tailscale_state" = Stopped
-        step_expected "Tailnet connection" "disconnected until lock"
-    else if test "$tailscale_state" = NeedsLogin
-        step_warn_note "Tailscale login required," "run tailscale up"
-    else if test -z "$tailscale_state"
-        step_warn "Tailscale status unavailable"
-    else
-        step_run_note_as STOP "Tailnet connection" "disconnected until lock" tailscale down
-        or exit 1
+    if test "$tailscale_state" != Stopped; and test "$tailscale_state" != NeedsLogin; and test -n "$tailscale_state"
+        if not tailscale down
+            step_fail "Tailnet connection"
+            exit 1
+        end
     end
-else
-    report_tailnet_state "$tailscale_state"
 end
-{{ else -}}
-report_tailnet_state "$tailscale_state"
 {{ end -}}
+
+step_skip_ok "Tailnet connection" available
 {{ end -}}

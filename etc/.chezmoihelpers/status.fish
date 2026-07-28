@@ -50,6 +50,14 @@ function __stage_icon_color --argument-names icon
 end
 
 function __stage_styled_subject --argument-names subject
+    set -l tailscale_operator (string match -r '^Tailscale operator for (.+)$' -- "$subject")
+    if test (count $tailscale_operator) -gt 1
+        gum style --foreground 15 "Tailscale operator for" | tr -d '\n'
+        printf " "
+        gum style --foreground 6 "$tailscale_operator[2]"
+        return
+    end
+
     # Do not use a capture group here: Fish emits captures as additional values
     # and those values make printf repeat the formatted subject.
     set -l qualifier (string match -r '\[[^]]+\]$|\([^)]*\)$' -- "$subject")
@@ -85,6 +93,8 @@ function __stage_label_note --argument-names stage_name icon subject note
         set color (__stage_color "$argv[5]")
     else if test "$stage_name" = PULL; and test "$note" = "no changes"
         set color 14
+    else if test "$stage_name" = SYNC; and contains -- "$note" "no changes" latest "no updates"
+        set color 6
     end
     set -l padded_stage (printf "%-7s" "$stage_name")
     set -l note_column 72
