@@ -4,7 +4,7 @@ function setup_logging
 
     switch $chezetc_log_tag
         case linux-dnf-update
-            set chezetc_stage SYNC
+            set chezetc_stage UPDATE
         case linux-enable-docker linux-enable-sshd
             set chezetc_stage CONFIG
     end
@@ -22,7 +22,6 @@ function setup_logging
 
     function step_header
         set title $argv
-        echo
         if command -q gum; and isatty stdout
             gum style --foreground 12 --bold "$title"
         else
@@ -246,10 +245,8 @@ function setup_logging
         set note $argv[2]
         set color_stage $chezetc_stage
 
-        if test "$chezetc_stage" = SYNC; and contains -- "$note" "no changes" "no updates"
+        if contains -- "$note" "no changes" "no updates"
             set color_stage SYNC
-        else if test "$note" = "no changes"
-            set color_stage CHECK
         end
 
         __stage_label_note "$chezetc_stage" "✓" "$title" "$note" "$color_stage"

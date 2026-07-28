@@ -41,7 +41,7 @@ function add_repo
     set gpg_key $argv[3]
 
     if is_repo_configured "$repo_name"
-        step_skip_ok "$repo_name repo" available
+        step_skip_ok "$repo_name" available
         return 0
     end
 
@@ -53,7 +53,7 @@ function add_repo
     end
 
     # Add the repository
-    step_run_as ADD "$repo_name repo" sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
+    step_run_as ADD "$repo_name" sudo dnf config-manager addrepo --from-repofile="$repo_url" --overwrite
     or return 1
 end
 
@@ -102,5 +102,7 @@ or exit 1
 {{ end -}}
 {{ end }}
 {{ end }}
+
+echo
 
 {{ end -}}

@@ -10,6 +10,7 @@ step_header "Tailscale"
 
 if not command -q tailscale
     step_warn "Tailscale package is unavailable"
+    echo
     exit 0
 end
 
@@ -53,4 +54,5 @@ end
 {{ end -}}
 
 step_skip_ok "Tailnet connection" available
+echo
 {{ end -}}

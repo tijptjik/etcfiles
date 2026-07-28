@@ -10,8 +10,9 @@ set -x SUDO_ASKPASS ""           # force sudo to ask on the terminal
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-copr
 
-# Check if COPR repository is already enabled
-function is_copr_enabled
+# Check if a COPR repository is already configured. `dnf copr list` includes
+# configured repositories, including ones that may have been disabled later.
+function is_copr_configured
     set copr_repo $argv[1]
     # dnf copr list returns repos in format: copr.fedorainfracloud.org/user/repo
     # Convert our format (user/repo) to match
@@ -50,8 +51,8 @@ end
 # Enable COPR repository
 function enable_copr
     set copr_repo $argv[1]
-    if is_copr_enabled $copr_repo
-        step_skip_ok "$copr_repo" enabled
+    if is_copr_configured $copr_repo
+        step_skip_ok "$copr_repo" available
         return 0
     end
 
@@ -96,6 +97,7 @@ if test (count $common_copr_repos) -gt 0
         enable_copr $repo
         or exit 1
     end
+    echo
 end
 
 # Enable client-specific COPR repositories
@@ -108,6 +110,7 @@ if test (count $client_copr_repos) -gt 0
         enable_copr $repo
         or exit 1
     end
+    echo
 end
 {{ end }}
 

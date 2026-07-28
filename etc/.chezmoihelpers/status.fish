@@ -6,10 +6,10 @@ function __stage_color --argument-names verb
             echo 14
         case COMPLETE
             echo 10
-        case UPDATE
+        case UPDATE INSTALL PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD STOP FAILED LOG
             echo 9
-        case INSTALL SYNC PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD STOP FAILED LOG
-            echo 9
+        case SYNC
+            echo 6
         case '*'
             echo 14
     end
