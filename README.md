@@ -8,6 +8,7 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
 - Packages
   - RPM
   - Flatpak
+- Fedora release upgrades, with a seven-day reminder after declining an available release
 - Local builds that are temporarily required for upstream compatibility
   - Waybar is built from `master` on Hyprland clients until an official release
     containing the Lua workspace-dispatch fix is available from Fedora.

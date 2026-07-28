@@ -23,6 +23,82 @@ end
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-dnf-update
 
+# Fedora publishes the active stable releases in this small JSON document.  It
+# avoids trying a system-upgrade transaction merely to discover whether a new
+# release exists, and keeps the check usable with both DNF 4 and DNF 5.
+function available_fedora_release
+    command -q curl
+    and command -q python3
+    or return 1
+
+    command curl -fsSL --max-time 15 https://fedoraproject.org/releases.json | command python3 -c '
+import json
+import sys
+
+try:
+    releases = json.load(sys.stdin)
+except (OSError, ValueError, json.JSONDecodeError):
+    raise SystemExit(1)
+
+if isinstance(releases, dict):
+    releases = releases.get("releases", [])
+
+versions = []
+for release in releases:
+    version = str(release.get("version", ""))
+    state = str(release.get("state", release.get("status", ""))).lower()
+    if version.isdecimal() and state == "active":
+        versions.append(int(version))
+
+if versions:
+    print(max(versions))
+'
+end
+
+set fedora_upgrade_state_dir "$HOME/.local/state/chezetc"
+if set -q XDG_STATE_HOME; and test -n "$XDG_STATE_HOME"
+    set fedora_upgrade_state_dir "$XDG_STATE_HOME/chezetc"
+end
+
+function fedora_upgrade_deferral_file --argument-names target_release
+    echo "$fedora_upgrade_state_dir/fedora-$target_release-upgrade-deferred-until"
+end
+
+function fedora_upgrade_is_deferred --argument-names target_release
+    set deferral_file (fedora_upgrade_deferral_file "$target_release")
+    test -f "$deferral_file"
+    or return 1
+
+    set deferred_until (string trim < "$deferral_file")
+    string match -qr '^[0-9]+$' -- "$deferred_until"
+    or return 1
+
+    test (date +%s) -lt "$deferred_until"
+end
+
+function defer_fedora_upgrade --argument-names target_release
+    set deferral_file (fedora_upgrade_deferral_file "$target_release")
+    if not mkdir -p "$fedora_upgrade_state_dir"
+        step_warn "Could not save Fedora $target_release upgrade reminder"
+        return 1
+    end
+
+    set temporary_file (mktemp "$fedora_upgrade_state_dir/fedora-$target_release.XXXXXX")
+    or begin
+        step_warn "Could not save Fedora $target_release upgrade reminder"
+        return 1
+    end
+
+    set deferred_until (math (date +%s) + (7 * 24 * 60 * 60))
+    if printf '%s\n' "$deferred_until" > "$temporary_file"; and mv "$temporary_file" "$deferral_file"
+        return 0
+    end
+
+    rm -f "$temporary_file"
+    step_warn "Could not save Fedora $target_release upgrade reminder"
+    return 1
+end
+
 set tracked_rpm_packages
 {{ range .packages.common.rpm -}}
 set -a tracked_rpm_packages '{{ . }}'
@@ -125,4 +201,28 @@ rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak
 
 if test $dnf_status -ne 0; or test $flatpak_status -ne 0
     exit 1
+end
+
+set installed_fedora_release (rpm -E %fedora 2>/dev/null)
+set available_fedora_release (available_fedora_release)
+
+if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match -qr '^[0-9]+$' -- "$available_fedora_release"; and test "$available_fedora_release" -gt "$installed_fedora_release"
+    set upgrade_subject "Fedora $available_fedora_release release upgrade"
+
+    if fedora_upgrade_is_deferred "$available_fedora_release"
+        step_skip_ok "$upgrade_subject" deferred
+    else if not isatty stdin; or not isatty stdout
+        step_skip_ok "$upgrade_subject" "non-interactive"
+    else if gum confirm --default=false --affirmative="Upgrade" --negative="Not now" "Fedora $available_fedora_release is available. Download it and reboot into the upgrade?"
+        step_run_as UPDATE "$upgrade_subject" sudo dnf system-upgrade download --releasever="$available_fedora_release" --allowerasing
+        or exit 1
+        step_run_as UPDATE "Reboot into Fedora $available_fedora_release" sudo dnf system-upgrade reboot
+        or exit 1
+    else
+        if defer_fedora_upgrade "$available_fedora_release"
+            step_skip_ok "$upgrade_subject" "remind in 7 days"
+        else
+            step_skip_ok "$upgrade_subject" "reminder unavailable"
+        end
+    end
 end
