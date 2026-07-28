@@ -84,6 +84,15 @@ function ensure_nginx_dav_ext
         or return 1
     end
 
+    # The old repository module requires the GetPageSpeed-specific nginx-r
+    # capability. Remove it before switching back to Fedora Nginx; the
+    # currently running daemon keeps serving until the local replacement is
+    # installed, validated, and reloaded below.
+    if rpm -q nginx-module-dav-ext >/dev/null 2>&1
+        step_run "Remove GetPageSpeed DAV extension" sudo dnf remove -y nginx-module-dav-ext
+        or return 1
+    end
+
     # DNF5's distro-sync only accepts installed packages. Sync the existing
     # GetPageSpeed nginx package first; Fedora's split subpackages are added
     # by the following install transaction.
