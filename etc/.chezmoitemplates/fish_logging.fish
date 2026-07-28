@@ -28,7 +28,6 @@ function setup_logging
         else
             echo "$title"
         end
-        echo
         _chezetc_system_log "START $title"
     end
 
