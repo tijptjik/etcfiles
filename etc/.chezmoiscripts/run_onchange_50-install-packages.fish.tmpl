@@ -67,7 +67,7 @@ function install_flatpak_packages
         rm -f $versions_before $versions_after
         return $run_status
     else
-        step_skip_ok "No Flatpak packages configured for $remote"
+        step_skip_ok "Flatpak packages [$remote]" "no packages"
     end
 end
 
