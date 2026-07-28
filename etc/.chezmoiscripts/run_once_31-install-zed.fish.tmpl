@@ -89,9 +89,9 @@ function any_local_zed_version
         "$zed_target_home/.local/bin/zed"
 
     for candidate in $candidates
-        set version (installed_zed_version "$candidate")
-        if test -n "$version"
-            echo "$version"
+        set zed_version (installed_zed_version "$candidate")
+        if test -n "$zed_version"
+            echo "$zed_version"
             return 0
         end
     end
@@ -154,14 +154,14 @@ function install_zed_channel
 
     set installed_version (installed_zed_version "$binary")
     if test "$install_mode" = "optional"; and test -n "$installed_version"
-        step_skip_ok "$channel_label optional" "local Zed $installed_version available"
+        step_skip_ok "$channel_label optional" "Zed $installed_version available"
         return 0
     end
 
     if test "$install_mode" = "optional"
         set local_version (any_local_zed_version)
         if test -n "$local_version"
-            step_skip_ok "$channel_label optional" "local Zed $local_version available"
+            step_skip_ok "$channel_label optional" "Zed $local_version available"
             return 0
         end
     end
