@@ -15,8 +15,10 @@ end
 
 function nginx_dav_ext_is_current
     set -l nginx_abi (nginx_dav_ext_current_abi)
+    set -l module_release (rpm -q --qf '%{RELEASE}' nginx-mod-dav-ext 2>/dev/null)
     test -n "$nginx_abi"
-    and rpm -q --whatprovides "nginx-mod-dav-ext(nginx-abi) = $nginx_abi" >/dev/null 2>&1
+    and test -n "$module_release"
+    and string match -q "*nginx$nginx_abi*" -- "$module_release"
 end
 
 function remove_fedora_nginx_default_site
