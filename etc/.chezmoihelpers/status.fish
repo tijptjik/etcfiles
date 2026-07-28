@@ -128,6 +128,10 @@ function __stage_run
     set -l log_file (mktemp)
     set -l status_file (mktemp)
 
+    # Keep a durable status line visible while quiet/background commands run.
+    # Gum's spinner is transient and can disappear in terminal captures.
+    __stage_label_note "$stage_name" "…" "$subject" running
+
     begin
         $command $args >$log_file 2>&1
         echo $status >$status_file
@@ -136,8 +140,6 @@ function __stage_run
 
     if command -v gum >/dev/null 2>&1; and isatty stdout
         gum spin --spinner dot --title (__stage_spin_title "$stage_name" "$subject") -- bash -c 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done' bash $pid
-    else
-        __stage_label "$stage_name" "..." "$subject"
     end
 
     wait $pid 2>/dev/null
@@ -190,7 +192,7 @@ function interactive_stage
     set -l command $argv[4]
     set -l args $argv[5..-1]
 
-    __stage_label "$stage_name" "..." "$subject"
+    __stage_label_note "$stage_name" "…" "$subject" running
     $command $args
     set -l code $status
 
