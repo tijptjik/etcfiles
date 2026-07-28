@@ -5,6 +5,7 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
 ## Manages
 
 - DNF Repositories
+- Tailscale package and daemon lifecycle
 - Packages
   - RPM
   - Flatpak

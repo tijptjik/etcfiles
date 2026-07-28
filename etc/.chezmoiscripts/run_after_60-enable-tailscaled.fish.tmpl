@@ -1,0 +1,38 @@
+#!/usr/bin/env fish
+{{ if eq .chezmoi.os "linux" -}}
+
+{{ include ".chezmoihelpers/status.fish" }}
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-enable-tailscale
+
+step_header "Tailscale"
+
+if not command -q tailscale
+    step_warn "Tailscale package is unavailable"
+    exit 0
+end
+
+step_run_note "Tailscale daemon" enabled sudo systemctl enable --now tailscaled
+or exit 1
+
+# Permit the interactive user and user services (including Collie) to manage
+# Serve without giving them general sudo access.
+step_run_note "Tailscale operator for $USER" configured sudo tailscale set --operator=$USER
+or exit 1
+
+if tailscale status --json | jq -e '.BackendState == "Running"' >/dev/null 2>&1
+    step_skip_ok "Tailscale tailnet login" connected
+else
+    step_warn "Tailscale login required: run tailscale up and complete the browser flow"
+end
+
+{{ if .isDesktop -}}
+# fi is reachable from the tailnet only while its Hyprlock wrapper is active.
+# Keep the daemon enabled for boot reliability, but leave the node disconnected
+# after an ordinary desktop apply.
+if not pgrep -x hyprlock >/dev/null 2>&1
+    tailscale down >/dev/null 2>&1
+    and step_skip_ok "Desktop tailnet connectivity" "off until lock"
+end
+{{ end -}}
+{{ end -}}

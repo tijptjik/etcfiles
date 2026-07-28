@@ -132,6 +132,7 @@ packages:
     - 'sssd-kcm'
     - 'starship'
     - 'sudo'
+    - 'tailscale'
     - 'symlinks'
     - 'transmission'
     - 'tree'
