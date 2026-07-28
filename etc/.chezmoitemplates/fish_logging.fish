@@ -21,25 +21,20 @@ function setup_logging
     end
 
     function step_header
-        set title $argv
-        if command -q gum; and isatty stdout
-            gum style --foreground 12 --bold "$title"
-        else
-            echo "$title"
-        end
-        echo
+        set title $argv[1]
+        section_header "$title"
         _chezetc_system_log "START $title"
     end
 
     function step_ok
         set title $argv
-        __stage_result "$chezetc_stage" "$title"
+        status_msg "$chezetc_stage" "✓" "$title"
         _chezetc_system_log "OK $title"
     end
 
     function step_skip
         set title $argv
-        __stage_label SKIP "-" "$title"
+        status_msg SKIP "-" "$title"
         _chezetc_system_log "SKIP $title"
     end
 
@@ -47,10 +42,10 @@ function setup_logging
         set title $argv[1]
         if test (count $argv) -gt 1
             set note $argv[2]
-            __stage_label_note SKIP "✓" "$title" "$note"
+            status_msg SKIP "✓" "$title" "$note"
             _chezetc_system_log "SKIP $title ($note)"
         else
-            __stage_label SKIP "✓" "$title"
+            status_msg SKIP "✓" "$title"
             _chezetc_system_log "SKIP $title"
         end
     end
@@ -71,10 +66,10 @@ function setup_logging
         set title $argv[1]
         if test (count $argv) -gt 1
             set note $argv[2]
-            __stage_label_note CHECK "✓" "$title" "$note"
+            status_msg CHECK "✓" "$title" "$note"
             _chezetc_system_log "CHECK $title ($note)"
         else
-            __stage_label CHECK "✓" "$title"
+            status_msg CHECK "✓" "$title"
             _chezetc_system_log "CHECK $title"
         end
     end
@@ -85,7 +80,7 @@ function setup_logging
 
     function step_fail
         set title $argv
-        __stage_failure "$title"
+        status_msg FAILED "✗" "$title"
         _chezetc_system_log "FAIL $title"
     end
 
@@ -107,15 +102,15 @@ function setup_logging
         if command -q gum; and isatty stdout
             gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
         else
-            __stage_label "$chezetc_stage" "..." "$title"
+            status_msg "$chezetc_stage" "..." "$title"
             $cmd
         end
 
         set run_status $status
         if test $run_status -eq 0
-            __stage_result "$chezetc_stage" "$title"
+            status_msg "$chezetc_stage" "✓" "$title"
         else
-            __stage_failure "$title"
+            status_msg FAILED "✗" "$title"
         end
 
         return $run_status
@@ -135,16 +130,16 @@ function setup_logging
         if command -q gum; and isatty stdout
             gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
         else
-            __stage_label "$chezetc_stage" "..." "$title"
+            status_msg "$chezetc_stage" "..." "$title"
             $cmd
         end
 
         set run_status $status
         if test $run_status -eq 0
-            __stage_label_note "$chezetc_stage" "✓" "$title" "$note"
+            status_msg "$chezetc_stage" "✓" "$title" "$note"
             _chezetc_system_log "OK $title ($note)"
         else
-            __stage_failure "$title"
+            status_msg FAILED "✗" "$title"
         end
 
         return $run_status
@@ -224,20 +219,20 @@ function setup_logging
 
     function step_warn
         set title $argv
-        __stage_label WARN "!" "$title"
+        status_msg WARN "!" "$title"
         _chezetc_system_log "WARN $title"
     end
 
     function step_warn_note
         set title $argv[1]
         set note $argv[2]
-        __stage_label_note WARN "!" "$title" "$note"
+        status_msg WARN "!" "$title" "$note"
         _chezetc_system_log "WARN $title ($note)"
     end
 
     function step_log_created
         set path $argv[1]
-        __stage_label_note LOG "✓" "$path" created
+        status_msg LOG "✓" "$path" created
         _chezetc_system_log "LOG $path (created)"
     end
 
@@ -250,7 +245,7 @@ function setup_logging
             set color_stage SYNC
         end
 
-        __stage_label_note "$chezetc_stage" "✓" "$title" "$note" "$color_stage"
+        status_msg "$chezetc_stage" "✓" "$title" "$note" "$color_stage"
         _chezetc_system_log "OK $title ($note)"
     end
 

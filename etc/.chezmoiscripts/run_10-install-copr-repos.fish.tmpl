@@ -97,7 +97,6 @@ if test (count $common_copr_repos) -gt 0
         enable_copr $repo
         or exit 1
     end
-    echo
 end
 
 # Enable client-specific COPR repositories
@@ -110,7 +109,6 @@ if test (count $client_copr_repos) -gt 0
         enable_copr $repo
         or exit 1
     end
-    echo
 end
 {{ end }}
 

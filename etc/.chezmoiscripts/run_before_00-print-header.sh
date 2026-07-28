@@ -7,7 +7,6 @@ if command -v gum >/dev/null 2>&1 && [ -t 1 ]; then
   echo
   gum style --bold --foreground 13 "Tijpcetera"
   gum style --foreground 8 "https://github.com/tijptjik/etcfiles"
-  echo
   exit 0
 fi
 
@@ -18,4 +17,3 @@ echo "_____ ___    _ ____ _____   _ ___ _  __
   |_| |___\___/|_|    |_|\___/|___|_|\_\\
 "
 echo "https://github.com/tijptjik/etcfiles"
-echo

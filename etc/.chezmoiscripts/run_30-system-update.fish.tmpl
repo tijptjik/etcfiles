@@ -3,26 +3,15 @@
 
 {{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/package_reporting.fish" }}
-
-if command -q gum; and isatty stdout
-    gum style --foreground 12 --bold "System Update"
-else
-    echo "System Update"
-end
-echo
-
-if not command -q gum
-    __stage_label INSTALL "..." "Install gum CLI runner"
-    if sudo dnf install -y -q gum
-        __stage_result INSTALL "Install gum CLI runner"
-    else
-        __stage_failure "Install gum CLI runner"
-        exit 1
-    end
-end
-
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-dnf-update
+
+step_header "System Update"
+
+if not command -q gum
+    step_run_as INSTALL "Install gum CLI runner" sudo dnf install -y -q gum
+    or exit 1
+end
 
 # Fedora publishes the active stable releases in this small JSON document.  It
 # avoids trying a system-upgrade transaction merely to discover whether a new
@@ -370,5 +359,3 @@ if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match 
 else
     step_skip_ok "Fedora upgrade" "check unavailable"
 end
-
-echo
