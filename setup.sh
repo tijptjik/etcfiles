@@ -70,13 +70,13 @@ step_run() {
 
 # Install essential packages
 step_run "Install essential packages for /etc management" sudo dnf install -y kitty fish git chezmoi age uv gum
+step_run "Install TOML extensions" uv pip install --python python3 --user tomli tomli-w
 
 # CHEZETC
 
 if [ ! -d "$HOME/.tools/chezetc" ]; then
     step_run "Clone chezetc" git clone https://github.com/SilverRainZ/chezetc.git "$HOME/.tools/chezetc"
     step_run "Make chezetc executable" chmod +x "$HOME/.tools/chezetc/chezetc"
-    step_run "Install TOML extensions" uv pip install tomli tomli_w
 else
     step_skip "Chezetc already installed"
 fi
