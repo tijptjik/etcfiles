@@ -46,8 +46,7 @@ if isinstance(releases, dict):
 versions = []
 for release in releases:
     version = str(release.get("version", ""))
-    state = str(release.get("state", release.get("status", ""))).lower()
-    if version.isdecimal() and state == "active":
+    if version.isdecimal():
         versions.append(int(version))
 
 if versions:
@@ -227,7 +226,7 @@ if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match 
             end
         end
     else
-        step_skip_ok "Fedora release upgrade" "no newer release"
+        step_skip_ok "Fedora release upgrade" current
     end
 else
     step_skip_ok "Fedora release upgrade" "check unavailable"
