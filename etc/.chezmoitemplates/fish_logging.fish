@@ -56,6 +56,18 @@ function setup_logging
         end
     end
 
+    function step_unchanged
+        step_skip_ok "$argv[1]" "no changes"
+    end
+
+    function step_not_configured
+        step_skip_ok "$argv[1]" "not configured"
+    end
+
+    function step_expected
+        step_skip_ok "$argv[1]" "$argv[2]"
+    end
+
     function step_check_ok
         set title $argv[1]
         if test (count $argv) -gt 1

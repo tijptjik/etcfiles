@@ -23,9 +23,9 @@ end
 function check_file --argument-names subject path
     if test -f "$path"
         __stage_label_note CHECK "✓" "$subject" "available"
-    else
-        __stage_label_note SKIP "✓" "$subject" "not configured"
-    end
+else
+    __stage_label_note SKIP "✓" "$subject" "not configured"
+end
 end
 
 check_command "Bitwarden Secrets Manager CLI" bws
@@ -37,8 +37,4 @@ check_command "Bun" bun
 check_command "FNM" fnm
 check_command "Herdr" herdr
 
-echo
-print_header "Git"
-echo
-__stage_label_note PULL "✓" "Chezetc" "no changes"
 echo

@@ -4,13 +4,23 @@ function __stage_color --argument-names verb
             echo 8
         case CHECK WARN
             echo 14
+        case COMPLETE
+            echo 10
         case UPDATE
             echo 9
-        case INSTALL SYNC PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD FAILED LOG
+        case INSTALL SYNC PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD STOP FAILED LOG
             echo 9
         case '*'
             echo 14
     end
+end
+
+function __stage_event --argument-names stage_name icon subject note
+    if not set -q TJIKUP_REPORT_FILE; or test -z "$TJIKUP_REPORT_FILE"; or test "$icon" = "..."
+        return
+    end
+
+    printf '%s\t%s\t%s\t%s\n' "$stage_name" "$icon" "$subject" "$note" >> "$TJIKUP_REPORT_FILE"
 end
 
 function __stage_styled_subject --argument-names subject
@@ -28,6 +38,7 @@ function __stage_styled_subject --argument-names subject
 end
 
 function __stage_label --argument-names stage_name icon subject
+    __stage_event "$stage_name" "$icon" "$subject" ""
     set -l color (__stage_color "$stage_name")
     set -l padded_stage (printf "%-7s" "$stage_name")
 
@@ -42,6 +53,7 @@ function __stage_label --argument-names stage_name icon subject
 end
 
 function __stage_label_note --argument-names stage_name icon subject note
+    __stage_event "$stage_name" "$icon" "$subject" "$note"
     set -l color (__stage_color "$stage_name")
     if test (count $argv) -ge 5
         set color (__stage_color "$argv[5]")
@@ -88,34 +100,6 @@ end
 
 function __stage_failure --argument-names message
     __stage_label FAILED "✗" "$message"
-end
-
-function __all_systems_go
-    set -l message "ALL SYSTEMS GO"
-
-    if not command -q gum; or not isatty stdout
-        echo "$message"
-        return 0
-    end
-
-    set -l colors red yellow green cyan blue magenta
-    set -l message_length (string length -- "$message")
-    for wave in (seq 0 5)
-        printf "\r"
-        for index in (seq $message_length)
-            set -l character (string sub -s $index -l 1 -- "$message")
-            if test "$character" = " "
-                printf " "
-            else
-                set -l color_index (math "($index + $wave - 1) % 6 + 1")
-                set_color --bold $colors[$color_index]
-                printf "%s" "$character"
-                set_color normal
-            end
-        end
-        sleep 0.08
-    end
-    echo
 end
 
 function __stage_run

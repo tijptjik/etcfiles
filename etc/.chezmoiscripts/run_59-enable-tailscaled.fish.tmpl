@@ -36,16 +36,17 @@ else
 end
 
 set -l tailscale_state (tailscale status --json 2>/dev/null | jq -r '.BackendState // empty' 2>/dev/null)
-if test "$tailscale_state" = Running
-    step_skip_ok "Tailscale tailnet login" connected
-else if test "$tailscale_state" = NeedsLogin
-    step_warn_note "Tailscale login required," "run tailscale up"
-else if test -n "$tailscale_state"
-    # Stopped is expected on desktops while unlocked; it does not mean the
-    # device has lost its tailnet enrollment.
-    step_skip_ok "Tailscale tailnet login" "$tailscale_state"
-else
-    step_warn "Tailscale status unavailable"
+
+function report_tailnet_state --argument-names state
+    if test "$state" = Running
+        step_skip_ok "Tailnet connection" connected
+    else if test "$state" = NeedsLogin
+        step_warn_note "Tailscale login required," "run tailscale up"
+    else if test -n "$state"
+        step_expected "Tailnet connection" "$state"
+    else
+        step_warn "Tailscale status unavailable"
+    end
 end
 
 {{ if .isDesktop -}}
@@ -53,8 +54,20 @@ end
 # Keep the daemon enabled for boot reliability, but leave the node disconnected
 # after an ordinary desktop apply.
 if not pgrep -x hyprlock >/dev/null 2>&1
-    tailscale down >/dev/null 2>&1
-    and step_skip_ok "Desktop tailnet connectivity" "off until lock"
+    if test "$tailscale_state" = Stopped
+        step_expected "Tailnet connection" "disconnected until lock"
+    else if test "$tailscale_state" = NeedsLogin
+        step_warn_note "Tailscale login required," "run tailscale up"
+    else if test -z "$tailscale_state"
+        step_warn "Tailscale status unavailable"
+    else
+        step_run_note_as STOP "Tailnet connection" "disconnected until lock" tailscale down
+        or exit 1
+    end
+else
+    report_tailnet_state "$tailscale_state"
 end
+{{ else -}}
+report_tailnet_state "$tailscale_state"
 {{ end -}}
 {{ end -}}

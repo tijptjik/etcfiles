@@ -106,8 +106,6 @@ end
 
 if codex_desktop_is_available; and test $features_status -eq 0; and codex_desktop_installed_features_match
     step_skip_ok "Codex Desktop" available
-    echo
-    __all_systems_go
     exit 0
 end
 
@@ -124,8 +122,6 @@ end
 
 if codex_desktop_is_available
     step_ok "Codex Desktop installed"
-    echo
-    __all_systems_go
 else
     step_fail "Verify Codex Desktop installation"
     exit 1
