@@ -40,6 +40,7 @@ server {
         # WebDAV methods
         dav_methods PUT DELETE MKCOL COPY MOVE;
         dav_ext_methods PROPFIND OPTIONS LOCK UNLOCK;
+        dav_ext_lock zone=webdav_locks;
 
         # Permissions
         dav_access user:rw group:rw all:rw;

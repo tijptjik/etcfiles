@@ -248,8 +248,8 @@ packages:
   server:
     rpm:
     - 'x265-libs'
+    - 'nginx'
     - 'nginx-mod-stream'
-    - 'nginx-module-dav-ext'
     flatpak:
       fedora: []
       flathub: []

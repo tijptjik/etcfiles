@@ -88,14 +88,6 @@ or exit 1
 {{ end -}}
 {{ end }}
 
-# TODO Clean up
-# Install DNF installed repo for server
-{{ if .isServer }}
-step_run "GetPageSpeed repo" sudo dnf install -y https://extras.getpagespeed.com/release-latest.rpm
-or exit 1
-{{ end }}
-
-
 # Process client-specific repositories if applicable
 {{ if .isClient }}
 {{ range $name, $repo := .repos.client }}
