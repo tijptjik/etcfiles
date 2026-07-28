@@ -153,7 +153,8 @@ function ensure_nginx_dav_ext
 
     set -l built_rpm
     for candidate in (find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm')
-        if test (rpm -qp --qf '%{NAME}' "$candidate" 2>/dev/null) = nginx-mod-dav-ext
+        set -l candidate_name (rpm -qp --qf '%{NAME}' "$candidate" 2>/dev/null)
+        if test "$candidate_name" = nginx-mod-dav-ext
             set built_rpm "$candidate"
             break
         end
