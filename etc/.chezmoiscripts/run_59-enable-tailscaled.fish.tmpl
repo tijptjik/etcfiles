@@ -20,10 +20,13 @@ else
 end
 
 # Permit the interactive user and user services (including Collie) to manage
-# Serve without giving them general sudo access.  Determine this before sudo:
-# under sudo, $USER may resolve to root instead of the account that owns the
-# user services.
-set -l tailscale_operator (id -un)
+# Serve without giving them general sudo access.  A Chezetc system apply may
+# itself run under sudo, so preserve the account that invoked sudo rather than
+# assigning this role to root.
+set -l tailscale_operator "$SUDO_USER"
+if test -z "$tailscale_operator"
+    set tailscale_operator (id -un)
+end
 set -l configured_tailscale_operator (sudo tailscale debug prefs 2>/dev/null | jq -r '.OperatorUser // empty' 2>/dev/null)
 if test "$configured_tailscale_operator" = "$tailscale_operator"
     step_skip_ok "Tailscale operator for $tailscale_operator" configured

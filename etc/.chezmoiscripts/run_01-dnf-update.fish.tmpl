@@ -158,7 +158,7 @@ if test $dnf_status -eq 0
     report_package_updates $rpm_versions_before $rpm_versions_after --count-only
     set dnf_update_count $package_update_count
     if test $dnf_update_count -eq 0
-        set dnf_note "no changes"
+        set dnf_note latest
     else if test $dnf_update_count -eq 1
         set dnf_note "1 update"
     else
@@ -186,7 +186,7 @@ if test (count $tracked_flatpak_packages) -gt 0
             report_package_updates $flatpak_versions_before $flatpak_versions_after --count-only
             set flatpak_update_count $package_update_count
             if test $flatpak_update_count -eq 0
-                set flatpak_note "no changes"
+                set flatpak_note latest
             else if test $flatpak_update_count -eq 1
                 set flatpak_note "1 update"
             else
@@ -234,7 +234,7 @@ if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match 
             end
         end
     else
-        step_skip_ok "Fedora upgrade" current
+        step_check_ok "Fedora upgrade" latest
     end
 else
     step_skip_ok "Fedora upgrade" "check unavailable"

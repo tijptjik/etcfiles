@@ -56,6 +56,18 @@ function setup_logging
         end
     end
 
+    function step_check_ok
+        set title $argv[1]
+        if test (count $argv) -gt 1
+            set note $argv[2]
+            __stage_label_note CHECK "✓" "$title" "$note"
+            _chezetc_system_log "CHECK $title ($note)"
+        else
+            __stage_label CHECK "✓" "$title"
+            _chezetc_system_log "CHECK $title"
+        end
+    end
+
     function step_skip_available
         step_skip_ok "$argv[1]" available
     end
@@ -224,9 +236,7 @@ function setup_logging
         set color_stage $chezetc_stage
 
         if test "$note" = "no changes"
-            if test "$chezetc_stage" = SYNC
-                set color_stage SKIP
-            else
+            if test "$chezetc_stage" != SYNC
                 set color_stage CHECK
             end
         end
