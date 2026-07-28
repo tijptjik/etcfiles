@@ -246,7 +246,7 @@ function setup_logging
         set note $argv[2]
         set color_stage $chezetc_stage
 
-        if test "$chezetc_stage" = SYNC; and contains -- "$note" "no changes" latest "no updates"
+        if test "$chezetc_stage" = SYNC; and contains -- "$note" "no changes" "no updates"
             set color_stage SYNC
         else if test "$note" = "no changes"
             set color_stage CHECK

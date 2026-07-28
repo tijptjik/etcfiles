@@ -93,7 +93,7 @@ function __stage_label_note --argument-names stage_name icon subject note
         set color (__stage_color "$argv[5]")
     else if test "$stage_name" = PULL; and test "$note" = "no changes"
         set color 14
-    else if test "$stage_name" = SYNC; and contains -- "$note" "no changes" latest "no updates"
+    else if test "$stage_name" = SYNC; and contains -- "$note" "no changes" "no updates"
         set color 6
     end
     set -l padded_stage (printf "%-7s" "$stage_name")
