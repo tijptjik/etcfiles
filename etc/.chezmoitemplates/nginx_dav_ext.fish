@@ -4,7 +4,7 @@
 # Nginx source tarball.
 
 set -g nginx_dav_ext_version 3.0.0
-set -g nginx_dav_ext_release 2
+set -g nginx_dav_ext_release 3
 set -g nginx_dav_ext_checksum d2499d94d82d4e4eac8425d799e52883131ae86a956524040ff2fd230ef9f859
 set -g nginx_dav_ext_source_url "https://github.com/arut/nginx-dav-ext-module/archive/refs/tags/v$nginx_dav_ext_version.tar.gz"
 set -g nginx_dav_ext_root /var/cache/chezetc/nginx-mod-dav-ext
@@ -60,10 +60,14 @@ function write_nginx_dav_ext_spec
         echo 'install -pm 0755 ngx_http_dav_ext_module.so %{buildroot}%{nginx_moddir}'
         echo 'popd'
         echo
+        echo 'install -dm 0755 %{buildroot}%{nginx_modconfdir}'
+        echo "echo 'load_module \"%{nginx_moddir}/ngx_http_dav_ext_module.so\";' > %{buildroot}%{nginx_modconfdir}/mod-dav-ext.conf"
+        echo
         echo '%files'
         echo '%license LICENSE'
         echo '%doc README.rst'
         echo '%{nginx_moddir}/ngx_http_dav_ext_module.so'
+        echo '%{nginx_modconfdir}/mod-dav-ext.conf'
     end | sudo tee "$spec_file" >/dev/null
 end
 
@@ -147,15 +151,19 @@ function ensure_nginx_dav_ext
     step_run "Build Nginx DAV RPM" sudo rpmbuild -bb --define "_topdir $nginx_dav_ext_root" "$spec_file"
     or return 1
 
-    set -l built_rpm (find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm' -print -quit)
+    set -l built_rpm
+    for candidate in (find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm')
+        if test (rpm -qp --qf '%{NAME}' "$candidate" 2>/dev/null) = nginx-mod-dav-ext
+            set built_rpm "$candidate"
+            break
+        end
+    end
     if test -z "$built_rpm"
         step_warn "Nginx DAV RPM was not produced"
         return 1
     end
 
     step_run "Install Nginx DAV extension" sudo dnf install -y "$built_rpm"
-    or return 1
-    step_run "Remove automatic DAV module loader" sudo rm -f /usr/share/nginx/modules/mod-dav-ext.conf
     or return 1
     step_run "Validate Nginx configuration" sudo nginx -t
     or return 1
