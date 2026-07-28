@@ -84,9 +84,12 @@ function ensure_nginx_dav_ext
         or return 1
     end
 
-    step_run "Sync Fedora Nginx" sudo dnf distro-sync -y --allowerasing nginx nginx-core nginx-mod-stream
+    # DNF5's distro-sync only accepts installed packages. Sync the existing
+    # GetPageSpeed nginx package first; Fedora's split subpackages are added
+    # by the following install transaction.
+    step_run "Sync Fedora Nginx" sudo dnf distro-sync -y --allowerasing nginx
     or return 1
-    step_run "Nginx module build dependencies" sudo dnf install -y nginx-mod-devel rpm-build
+    step_run "Nginx runtime and module build dependencies" sudo dnf install -y nginx-core nginx-mod-stream nginx-mod-devel rpm-build
     or return 1
 
     if nginx_dav_ext_is_current
