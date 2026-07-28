@@ -28,6 +28,17 @@ function __stage_styled_subject --argument-names subject
 end
 
 function __stage_label --argument-names stage_name icon subject
+    # Treat a trailing qualifier as a status note. This keeps applicability
+    # markers such as "(client only)" visually subordinate and aligned with
+    # the other dimmed notes on the right.
+    set -l qualifier (string match -r '\\([^)]*\\)$' -- "$subject")
+    if test (count $qualifier) -gt 0
+        set -l base (string replace -- "$qualifier" "" "$subject" | string trim)
+        set -l note (string sub -s 2 -e -1 -- "$qualifier")
+        __stage_label_note "$stage_name" "$icon" "$base" "$note"
+        return
+    end
+
     set -l color (__stage_color "$stage_name")
     set -l padded_stage (printf "%-7s" "$stage_name")
 
