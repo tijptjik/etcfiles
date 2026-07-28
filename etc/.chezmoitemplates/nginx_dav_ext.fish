@@ -20,11 +20,14 @@ end
 
 function write_nginx_dav_ext_spec
     set -l spec_file $argv[1]
+    set -l nginx_abi (nginx_dav_ext_current_abi)
+    test -n "$nginx_abi"
+    or return 1
 
     begin
         echo 'Name:           nginx-mod-dav-ext'
         echo 'Version:        3.0.0'
-        echo 'Release:        1%{?dist}.nginx%(rpm -q --qf %{VERSION} nginx)'
+        echo "Release:        1%{?dist}.nginx$nginx_abi"
         echo 'Summary:        Extended WebDAV module for Nginx'
         echo
         echo 'License:        BSD-2-Clause'
@@ -37,7 +40,7 @@ function write_nginx_dav_ext_spec
         echo 'Requires:       libxslt'
         echo '# Rebuild after DNF updates instead of preventing Nginx updates.'
         echo '%global __requires_exclude_from ^%{nginx_moddir}/.*\\.so$'
-        echo 'Provides:       nginx-mod-dav-ext(nginx-abi) = %(rpm -q --qf %{VERSION} nginx)'
+        echo "Provides:       nginx-mod-dav-ext(nginx-abi) = $nginx_abi"
         echo
         echo '%description'
         echo 'Dynamic Nginx module that adds WebDAV PROPFIND, OPTIONS, LOCK, and'
