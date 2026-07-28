@@ -81,11 +81,11 @@ function setup_logging
         end
 
         _chezetc_system_log "RUN $title: $cmd"
+        __stage_label_note "$chezetc_stage" "…" "$title" running
 
         if command -q gum; and isatty stdout
             gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
         else
-            __stage_label "$chezetc_stage" "..." "$title"
             $cmd
         end
 
@@ -110,11 +110,11 @@ function setup_logging
         end
 
         _chezetc_system_log "RUN $title: $cmd"
+        __stage_label_note "$chezetc_stage" "…" "$title" running
 
         if command -q gum; and isatty stdout
             gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
         else
-            __stage_label "$chezetc_stage" "..." "$title"
             $cmd
         end
 
