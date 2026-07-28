@@ -19,6 +19,13 @@ function nginx_dav_ext_is_current
     and rpm -q --whatprovides "nginx-mod-dav-ext(nginx-abi) = $nginx_abi" >/dev/null 2>&1
 end
 
+function remove_fedora_nginx_default_site
+    if test -e /etc/nginx/conf.d/default.conf
+        step_run_note "Fedora Nginx default site" removed sudo rm -f /etc/nginx/conf.d/default.conf
+        or return 1
+    end
+end
+
 function write_nginx_dav_ext_spec
     set -l spec_file $argv[1]
     set -l nginx_abi (nginx_dav_ext_current_abi)
@@ -72,6 +79,9 @@ function write_nginx_dav_ext_spec
 end
 
 function ensure_nginx_dav_ext
+    remove_fedora_nginx_default_site
+    or return 1
+
     if nginx_dav_ext_is_current
         step_skip_ok "Nginx DAV extension" current
         return 0
