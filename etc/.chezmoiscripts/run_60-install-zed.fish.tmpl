@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+# Run on every apply so Zed release status follows application checks.
 {{ if eq .chezmoi.os "linux" -}}
 
 {{ include ".chezmoihelpers/status.fish" }}

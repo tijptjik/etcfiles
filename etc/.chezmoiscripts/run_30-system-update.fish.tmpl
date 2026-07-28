@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+# Run on every apply so package maintenance has one consolidated report.
 
 {{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/package_reporting.fish" }}
@@ -204,6 +205,10 @@ else
     set flatpak_status 0
 end
 
+if test $dnf_status -ne 0; or test $flatpak_status -ne 0
+    exit 1
+end
+
 # Reconcile the declared package set immediately after applying available
 # updates.  Keeping both operations in this section avoids reporting the same
 # package state again later in the run.
@@ -329,10 +334,6 @@ test $remove_status -eq 0
 or exit 1
 
 rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
-
-if test $dnf_status -ne 0; or test $flatpak_status -ne 0
-    exit 1
-end
 
 set installed_fedora_release (rpm -E %fedora 2>/dev/null)
 set available_fedora_release (available_fedora_release)

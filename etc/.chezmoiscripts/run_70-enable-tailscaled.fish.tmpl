@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+# Keep Tailscale last: the preceding apps may use its temporary Serve routes.
 {{ if eq .chezmoi.os "linux" -}}
 
 {{ include ".chezmoihelpers/status.fish" }}

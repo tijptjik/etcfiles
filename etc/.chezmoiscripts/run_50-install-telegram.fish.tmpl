@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+# Run on every apply so application availability is reported consistently.
 {{ if eq .chezmoi.os "linux" -}}
 
 {{ include ".chezmoihelpers/status.fish" }}
