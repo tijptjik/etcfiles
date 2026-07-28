@@ -127,6 +127,20 @@ function setup_logging
         return $run_status
     end
 
+    function step_run_note_as
+        set stage_name $argv[1]
+        set title $argv[2]
+        set note $argv[3]
+        set command $argv[4..]
+        set previous_stage $chezetc_stage
+
+        set chezetc_stage $stage_name
+        step_run_note "$title" "$note" $command
+        set run_status $status
+        set chezetc_stage $previous_stage
+        return $run_status
+    end
+
     function step_run_note_quiet
         set title $argv[1]
         set note $argv[2]

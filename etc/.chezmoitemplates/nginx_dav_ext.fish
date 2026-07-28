@@ -23,7 +23,7 @@ end
 
 function remove_fedora_nginx_default_site
     if test -e /etc/nginx/conf.d/default.conf
-        step_run_note "Fedora Nginx default site" removed sudo rm -f /etc/nginx/conf.d/default.conf
+        step_run_note_as REMOVE "Fedora Nginx default site" removed sudo rm -f /etc/nginx/conf.d/default.conf
         or return 1
     end
 end
@@ -93,7 +93,7 @@ function ensure_nginx_dav_ext
     # Nginx build is replaced with the Fedora build before the local module is
     # compiled, ensuring the module and daemon always share an ABI.
     if rpm -q getpagespeed-extras-release >/dev/null 2>&1
-        step_run_note "GetPageSpeed repository" removed sudo dnf remove -y getpagespeed-extras-release
+        step_run_note_as REMOVE "GetPageSpeed repository" removed sudo dnf remove -y getpagespeed-extras-release
         or return 1
     end
 
@@ -102,16 +102,16 @@ function ensure_nginx_dav_ext
     # currently running daemon keeps serving until the local replacement is
     # installed, validated, and reloaded below.
     if rpm -q nginx-module-dav-ext >/dev/null 2>&1
-        step_run_note "GetPageSpeed DAV extension" removed sudo dnf remove -y nginx-module-dav-ext
+        step_run_note_as REMOVE "GetPageSpeed DAV extension" removed sudo dnf remove -y nginx-module-dav-ext
         or return 1
     end
 
     # DNF5's distro-sync only accepts installed packages. Sync the existing
     # GetPageSpeed nginx package first; Fedora's split subpackages are added
     # by the following install transaction.
-    step_run_note "Fedora Nginx" synced sudo dnf distro-sync -y --allowerasing nginx
+    step_run_note_as SYNC "Nginx" synced sudo dnf distro-sync -y --allowerasing nginx
     or return 1
-    step_run_note "Nginx module build requirements" ready sudo dnf install -y nginx-core nginx-mod-stream nginx-mod-devel rpm-build
+    step_run_note_as INSTALL "Nginx module build requirements" ready sudo dnf install -y nginx-core nginx-mod-stream nginx-mod-devel rpm-build
     or return 1
 
     if nginx_dav_ext_is_current
@@ -125,7 +125,7 @@ function ensure_nginx_dav_ext
     set -l source_archive "$source_dir/nginx-dav-ext-module-$nginx_dav_ext_version.tar.gz"
     set -l spec_file "$spec_dir/nginx-mod-dav-ext.spec"
 
-    step_run_note "Nginx DAV RPM workspace" ready sudo install -d -m 0755 "$source_dir" "$spec_dir" "$rpm_dir"
+    step_run_note_as BUILD "Nginx DAV RPM workspace" ready sudo install -d -m 0755 "$source_dir" "$spec_dir" "$rpm_dir"
     or return 1
 
     set -l source_is_valid false
@@ -137,7 +137,7 @@ function ensure_nginx_dav_ext
     if not $source_is_valid
         set -l downloaded_source (mktemp)
         or return 1
-        step_run_note "Nginx DAV source" verified curl --fail --location --silent --show-error --max-time 60 --output "$downloaded_source" "$nginx_dav_ext_source_url"
+        step_run_note_as PULL "Nginx DAV source" verified curl --fail --location --silent --show-error --max-time 60 --output "$downloaded_source" "$nginx_dav_ext_source_url"
         or begin
             rm -f "$downloaded_source"
             return 1
@@ -158,9 +158,9 @@ function ensure_nginx_dav_ext
 
     # Keep discovery deterministic across Nginx ABI rebuilds. RPM may choose
     # an architecture-specific output directory, so do not infer that path.
-    step_run_note "Nginx DAV RPM artifacts" cleared sudo find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm' -delete
+    step_run_note_as REMOVE "Nginx DAV RPM artifacts" cleared sudo find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm' -delete
     or return 1
-    step_run_note "Nginx DAV RPM" built sudo rpmbuild -bb --define "_topdir $nginx_dav_ext_root" "$spec_file"
+    step_run_note_as BUILD "Nginx DAV RPM" built sudo rpmbuild -bb --define "_topdir $nginx_dav_ext_root" "$spec_file"
     or return 1
 
     set -l built_rpm
@@ -176,9 +176,9 @@ function ensure_nginx_dav_ext
         return 1
     end
 
-    step_run_note "Nginx DAV extension" installed sudo dnf install -y "$built_rpm"
+    step_run_note_as INSTALL "Nginx DAV extension" installed sudo dnf install -y "$built_rpm"
     or return 1
-    step_run_note "Nginx configuration" valid sudo nginx -t
+    step_run_note_as CHECK "Nginx configuration" valid sudo nginx -t
     or return 1
-    step_run_note "Nginx" reloaded sudo systemctl reload nginx
+    step_run_note_as RELOAD "Nginx" reloaded sudo systemctl reload nginx
 end

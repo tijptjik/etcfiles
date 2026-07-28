@@ -215,7 +215,7 @@ set available_fedora_release (available_fedora_release)
 
 if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match -qr '^[0-9]+$' -- "$available_fedora_release"
     if test "$available_fedora_release" -gt "$installed_fedora_release"
-        set upgrade_subject "Fedora $available_fedora_release release upgrade"
+        set upgrade_subject "Fedora $available_fedora_release release"
 
         if fedora_upgrade_is_deferred "$available_fedora_release"
             step_skip_ok "$upgrade_subject" deferred
@@ -234,8 +234,8 @@ if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match 
             end
         end
     else
-        step_skip_ok "Fedora release upgrade" current
+        step_skip_ok "Fedora upgrade" current
     end
 else
-    step_skip_ok "Fedora release upgrade" "check unavailable"
+    step_skip_ok "Fedora upgrade" "check unavailable"
 end
