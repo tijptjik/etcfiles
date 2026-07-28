@@ -143,11 +143,14 @@ function ensure_nginx_dav_ext
     write_nginx_dav_ext_spec "$spec_file"
     or return 1
 
+    # Keep discovery deterministic across Nginx ABI rebuilds. RPM may choose
+    # an architecture-specific output directory, so do not infer that path.
+    step_run "Clear previous Nginx DAV RPM" sudo find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm' -delete
+    or return 1
     step_run "Build Nginx DAV RPM" sudo rpmbuild -bb --define "_topdir $nginx_dav_ext_root" "$spec_file"
     or return 1
 
-    set -l nginx_abi (nginx_dav_ext_current_abi)
-    set -l built_rpm (find "$rpm_dir" -type f -name "nginx-mod-dav-ext-$nginx_dav_ext_version-1.*.nginx$nginx_abi.*.x86_64.rpm" -print -quit)
+    set -l built_rpm (find "$rpm_dir" -type f -name 'nginx-mod-dav-ext-*.rpm' -print -quit)
     if test -z "$built_rpm"
         step_warn "Nginx DAV RPM was not produced"
         return 1
