@@ -16,14 +16,24 @@ step_run_note "Tailscale daemon" enabled sudo systemctl enable --now tailscaled
 or exit 1
 
 # Permit the interactive user and user services (including Collie) to manage
-# Serve without giving them general sudo access.
-step_run_note "Tailscale operator for $USER" configured sudo tailscale set --operator=$USER
+# Serve without giving them general sudo access.  Determine this before sudo:
+# under sudo, $USER may resolve to root instead of the account that owns the
+# user services.
+set -l tailscale_operator (id -un)
+step_run_note "Tailscale operator for $tailscale_operator" configured sudo tailscale set --operator=$tailscale_operator
 or exit 1
 
-if tailscale status --json | jq -e '.BackendState == "Running"' >/dev/null 2>&1
+set -l tailscale_state (tailscale status --json 2>/dev/null | jq -r '.BackendState // empty' 2>/dev/null)
+if test "$tailscale_state" = Running
     step_skip_ok "Tailscale tailnet login" connected
-else
+else if test "$tailscale_state" = NeedsLogin
     step_warn "Tailscale login required: run tailscale up and complete the browser flow"
+else if test -n "$tailscale_state"
+    # Stopped is expected on desktops while unlocked; it does not mean the
+    # device has lost its tailnet enrollment.
+    step_skip_ok "Tailscale tailnet login" "$tailscale_state"
+else
+    step_warn "Tailscale status unavailable"
 end
 
 {{ if .isDesktop -}}
