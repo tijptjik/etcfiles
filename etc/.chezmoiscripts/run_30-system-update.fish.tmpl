@@ -140,7 +140,7 @@ set flatpak_versions_after (mktemp)
 snapshot_rpm_versions $rpm_versions_before $tracked_rpm_packages
 snapshot_flatpak_versions $flatpak_versions_before $tracked_flatpak_packages
 
-step_run_quiet "System packages" sudo dnf update -y
+step_run_dnf_update "System packages" sudo dnf update -y
 set dnf_status $status
 
 if test $dnf_status -eq 0

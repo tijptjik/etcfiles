@@ -186,6 +186,91 @@ function setup_logging
         __stage_run "$title" "$chezetc_stage" "$title" "__silent_success__" $cmd
     end
 
+    # DNF prints its transaction summary before it begins downloading and
+    # installing packages.  Watch the captured output so that the otherwise
+    # quiet update stage can describe that pending work while DNF runs.
+    function step_report_dnf_transaction_summary --argument-names log_file
+        set summary_found 0
+
+        for line in (command cat "$log_file")
+            set fields (string match -r --groups-only '^[[:space:]]*(Installing|Upgrading|Replacing|Removing):[[:space:]]*([0-9]+)[[:space:]]+packages[[:space:]]*$' -- "$line")
+            if test (count $fields) -ne 2
+                continue
+            end
+
+            set action $fields[1]
+            switch "$action"
+                case Installing
+                    set action Install
+                case Upgrading
+                    set action Upgrade
+                case Replacing
+                    set action Replace
+                case Removing
+                    set action Remove
+            end
+
+            # Keep this distinct from the overall UPDATE stage: these rows
+            # describe DNF's planned transaction, rather than completed work.
+            status_msg SYNC "✓" "$action" "$fields[2] pkgs"
+            _chezetc_system_log "SYNC $action ($fields[2] pkgs)"
+            set summary_found 1
+        end
+
+        return (math "1 - $summary_found")
+    end
+
+    function step_run_dnf_update
+        set title $argv[1]
+        set cmd $argv[2..]
+
+        if test (count $cmd) -eq 0
+            step_fail "$title"
+            return 1
+        end
+
+        set log_file (mktemp)
+        set status_file (mktemp)
+        _chezetc_system_log "RUN $title: $cmd"
+
+        begin
+            $cmd >$log_file 2>&1
+            echo $status >$status_file
+        end &
+        set pid $last_pid
+
+        # Unlike the normal quiet runner, leave a stable status row visible
+        # while we wait for DNF to reach its transaction summary.
+        status_msg SYNC "..." "$title"
+        set summary_reported 0
+
+        while kill -0 $pid 2>/dev/null
+            if test $summary_reported -eq 0
+                if step_report_dnf_transaction_summary "$log_file"
+                    set summary_reported 1
+                end
+            end
+            sleep 0.2
+        end
+
+        wait $pid 2>/dev/null
+        set run_status (command cat $status_file)
+
+        # A short transaction can finish between polling intervals.
+        if test $summary_reported -eq 0
+            step_report_dnf_transaction_summary "$log_file"
+            and set summary_reported 1
+        end
+
+        if test "$run_status" -ne 0
+            step_fail "$title"
+            command cat $log_file
+        end
+
+        rm -f $log_file $status_file
+        return $run_status
+    end
+
     # Keep an expected or optional command failure to one status line, while
     # leaving the caller free to decide whether the failure is fatal.
     function step_run_silent
