@@ -6,7 +6,7 @@ function __stage_color --argument-names verb
             echo 14
         case COMPLETE
             echo 10
-        case UPDATE INSTALL PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD STOP FAILED LOG
+        case UPDATE INSTALL PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD STOP FAILED ERROR LOG
             echo 9
         case SYNC
             echo 6
@@ -40,7 +40,7 @@ function __stage_icon_color --argument-names icon
             echo 10
         case '!'
             echo 11
-        case '✗'
+        case '✗' X
             echo 9
         case '-'
             echo 8

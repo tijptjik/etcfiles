@@ -78,10 +78,16 @@ function ensure_waybar_source
         return $status
     end
 
-    if git -C "$waybar_source_dir" fetch --quiet --depth 1 origin master; and git -C "$waybar_source_dir" merge --ff-only --quiet origin/master
+    if not git -C "$waybar_source_dir" fetch --quiet --depth 1 origin master
+        step_skip_ok "Waybar source" "offline; keeping local checkout"
+        return 0
+    end
+
+    set merge_error (git -C "$waybar_source_dir" merge --ff-only --quiet origin/master 2>&1)
+    if test $status -eq 0
         step_skip_ok "Waybar source" "no changes"
     else
-        step_skip_ok "Waybar source" "offline; keeping local checkout"
+        step_error "Waybar source" (string trim -- "$merge_error")
     end
 end
 

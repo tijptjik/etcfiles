@@ -84,6 +84,11 @@ function setup_logging
         _chezetc_system_log "FAIL $title"
     end
 
+    function step_error --argument-names title message
+        status_msg ERROR "X" "$title" "$message"
+        _chezetc_system_log "ERROR $title: $message"
+    end
+
     function step_note
         set message $argv
         _chezetc_emit "NOTE $message"
@@ -212,7 +217,9 @@ function setup_logging
 
             # Keep this distinct from the overall UPDATE stage: these rows
             # describe DNF's planned transaction, rather than completed work.
-            status_msg SYNC "✓" "$action" "$fields[2] pkgs"
+            # Retain the SYNC verb but use the package-work colour for a
+            # non-empty transaction.
+            status_msg SYNC "✓" "$action" "$fields[2] pkgs" INSTALL
             _chezetc_system_log "SYNC $action ($fields[2] pkgs)"
             set summary_found 1
         end
@@ -239,10 +246,27 @@ function setup_logging
         end &
         set pid $last_pid
 
-        # Unlike the normal quiet runner, leave a stable status row visible
-        # while we wait for DNF to reach its transaction summary.
-        status_msg SYNC "..." "$title"
         set summary_reported 0
+
+        # Keep the progress indicator transient. Once DNF writes its summary,
+        # gum clears the spinner and the durable transaction rows replace it.
+        if command -q gum; and isatty stdout
+            gum spin --spinner dot --title (__stage_spin_title SYNC "$title") -- fish -c '
+                set log_file $argv[1]
+                set pid $argv[2]
+                while kill -0 $pid 2>/dev/null
+                    if command grep -Eq "^[[:space:]]*(Installing|Upgrading|Replacing|Removing):[[:space:]]*[0-9]+[[:space:]]+packages[[:space:]]*$" "$log_file"
+                        exit 0
+                    end
+                    sleep 0.2
+                end
+                exit 1
+            ' "$log_file" "$pid"
+
+            if step_report_dnf_transaction_summary "$log_file"
+                set summary_reported 1
+            end
+        end
 
         while kill -0 $pid 2>/dev/null
             if test $summary_reported -eq 0
