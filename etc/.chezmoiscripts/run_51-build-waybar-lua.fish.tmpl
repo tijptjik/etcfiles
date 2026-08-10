@@ -88,6 +88,7 @@ function ensure_waybar_source
         step_skip_ok "Waybar source" "no changes"
     else
         step_error "Waybar source" (string trim -- "$merge_error")
+        return 1
     end
 end
 

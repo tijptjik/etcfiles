@@ -87,6 +87,7 @@ function setup_logging
     function step_error --argument-names title message
         status_msg ERROR "X" "$title" "$message"
         _chezetc_system_log "ERROR $title: $message"
+        return 1
     end
 
     function step_note
