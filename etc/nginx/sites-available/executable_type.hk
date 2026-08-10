@@ -465,6 +465,20 @@ server {
 ###  TIJPTJIK - SOCIAL MEDIA  ###
 #################################
 
+###############################
+###  FACEBOOK               ###
+###  {fb,facebook}.type.hk  ###
+###############################
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name  fb.type.hk facebook.type.hk;
+
+    location / {
+        return 301 https://www.facebook.com/tijptjik;
+    }
+}
+
 ########################
 ###  REDDIT          ###
 ###  reddit.type.hk  ###
