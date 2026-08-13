@@ -74,11 +74,18 @@ function ensure_waybar_source
     or return 1
 
     if not test -d "$waybar_source_dir/.git"
-        step_run "Waybar source" git clone --depth 1 https://github.com/Alexays/Waybar.git "$waybar_source_dir"
+        step_run "Waybar source" git clone https://github.com/Alexays/Waybar.git "$waybar_source_dir"
         return $status
     end
 
-    if not git -C "$waybar_source_dir" fetch --quiet --depth 1 origin master
+    set shallow_repository (git -C "$waybar_source_dir" rev-parse --is-shallow-repository 2>/dev/null)
+    if test "$shallow_repository" = true
+        set fetch_args --unshallow
+    else
+        set fetch_args
+    end
+
+    if not git -C "$waybar_source_dir" fetch --quiet $fetch_args origin master
         step_skip_ok "Waybar source" "offline; keeping local checkout"
         return 0
     end
