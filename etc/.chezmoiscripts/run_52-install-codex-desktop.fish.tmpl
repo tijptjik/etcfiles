@@ -1,130 +1,30 @@
 #!/usr/bin/env fish
-# Keep Codex Desktop availability beside the other application status lines.
+# Keep ChatGPT Desktop availability beside the other application status lines.
 {{ if and (eq .chezmoi.os "linux") .isClient -}}
 
 {{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
-setup_logging linux-install-codex-desktop
+setup_logging linux-install-chatgpt-desktop
 
-set codex_desktop_dir "$HOME/.tools/codex-desktop-linux"
-set codex_desktop_features frameless-titlebar
-set features_file "$codex_desktop_dir/linux-features/features.json"
-set installed_build_info /opt/codex-desktop/.codex-linux/build-info.json
+set chatgpt_rpm https://persistent.oaistatic.com/codex-app-prod/linux/rpm/latest/chatgpt.x86_64.rpm
 
-function codex_desktop_is_available
-    command -q codex-desktop
-    or rpm -q codex-desktop >/dev/null 2>&1
+function chatgpt_desktop_is_available
+    command -q chatgpt
+    or rpm -q chatgpt >/dev/null 2>&1
 end
 
-function ensure_codex_desktop_source
-    mkdir -p "$HOME/.tools"
-    or return 1
-
-    if not test -d "$codex_desktop_dir"
-        step_run "Codex Desktop source" git clone https://github.com/ilysenko/codex-desktop-linux.git "$codex_desktop_dir"
-        or return 1
-    end
-end
-
-function write_desired_features
-    set output_file $argv[1]
-
-    printf '{\n  "enabled": [\n' > "$output_file"
-
-    for index in (seq (count $codex_desktop_features))
-        set feature $codex_desktop_features[$index]
-        if test $index -lt (count $codex_desktop_features)
-            printf '    "%s",\n' "$feature" >> "$output_file"
-        else
-            printf '    "%s"\n' "$feature" >> "$output_file"
-        end
-    end
-
-    printf '  ]\n}\n' >> "$output_file"
-end
-
-function ensure_codex_desktop_features
-    set tmp_features (mktemp)
-
-    if not test -f "$tmp_features"
-        step_fail "Codex features"
-        return 1
-    end
-
-    write_desired_features "$tmp_features"
-
-    if test -f "$features_file"; and cmp -s "$tmp_features" "$features_file"
-        rm -f "$tmp_features"
-        return 0
-    end
-
-    mkdir -p (dirname "$features_file")
-    or begin
-        rm -f "$tmp_features"
-        step_fail "Codex features"
-        return 1
-    end
-
-    mv "$tmp_features" "$features_file"
-    step_ok "Codex features"
-    return 2
-end
-
-function codex_desktop_installed_features_match
-    if not test -f "$installed_build_info"
-        return 1
-    end
-
-    command -q python3
-    or return 1
-
-    python3 -c '
-import json
-import sys
-
-path = sys.argv[1]
-desired = sorted(sys.argv[2:])
-
-try:
-    with open(path, "r", encoding="utf-8") as handle:
-        data = json.load(handle)
-except Exception:
-    sys.exit(1)
-
-installed = sorted(data.get("linuxFeatures", {}).get("enabled", []))
-sys.exit(0 if installed == desired else 1)
-' "$installed_build_info" $codex_desktop_features
-end
-
-ensure_codex_desktop_source
-or exit 1
-
-ensure_codex_desktop_features
-set features_status $status
-if test $features_status -eq 1
-    exit 1
-end
-
-if codex_desktop_is_available; and test $features_status -eq 0; and codex_desktop_installed_features_match
-    step_skip_ok "Codex Desktop" available
-    exit 0
-end
-
-step_run "Codex build dependencies" sudo dnf install -y python3 7zip curl unzip rpm-build make gcc-c++ @development-tools
-or exit 1
-
-if codex_desktop_is_available
-    step_run "Rebuild Codex Desktop" make -C "$codex_desktop_dir" install-native
+if rpm -q chatgpt >/dev/null 2>&1
+    step_run "Update ChatGPT Desktop" sudo dnf upgrade -y --refresh chatgpt
     or exit 1
 else
-    step_run "Install Codex Desktop" make -C "$codex_desktop_dir" bootstrap-native
+    step_run "Install ChatGPT Desktop" sudo dnf install -y "$chatgpt_rpm"
     or exit 1
 end
 
-if codex_desktop_is_available
-    step_ok "Codex Desktop installed"
+if chatgpt_desktop_is_available
+    step_ok "ChatGPT Desktop installed"
 else
-    step_fail "Verify Codex Desktop installation"
+    step_fail "Verify ChatGPT Desktop installation"
     exit 1
 end
 
