@@ -4,6 +4,9 @@
 {{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/package_reporting.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
+{{ if .isServer -}}
+{{ include ".chezmoitemplates/nginx_dav_ext.fish" }}
+{{ end -}}
 setup_logging linux-dnf-update
 
 step_header "System Update"
@@ -139,6 +142,14 @@ set flatpak_versions_before (mktemp)
 set flatpak_versions_after (mktemp)
 snapshot_rpm_versions $rpm_versions_before $tracked_rpm_packages
 snapshot_flatpak_versions $flatpak_versions_before $tracked_flatpak_packages
+
+{{ if .isServer -}}
+# Fedora's Nginx RPM immediately replaces a running master after changing the
+# daemon or a dynamic module.  Hold that trigger until the ABI-dependent DAV
+# module has been rebuilt by the post-update hook.
+prepare_nginx_package_update
+or exit 1
+{{ end -}}
 
 step_run_dnf_update "System packages" sudo dnf update -y
 set dnf_status $status

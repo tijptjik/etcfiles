@@ -8,6 +8,90 @@ set -g nginx_dav_ext_release 3
 set -g nginx_dav_ext_checksum d2499d94d82d4e4eac8425d799e52883131ae86a956524040ff2fd230ef9f859
 set -g nginx_dav_ext_source_url "https://github.com/arut/nginx-dav-ext-module/archive/refs/tags/v$nginx_dav_ext_version.tar.gz"
 set -g nginx_dav_ext_root /var/cache/chezetc/nginx-mod-dav-ext
+set -g nginx_rpm_upgrade_marker /etc/nginx/rpm-disable-upgrade
+
+function nginx_package_signature
+    for package in nginx nginx-core nginx-mod-stream nginx-mod-dav-ext
+        rpm -q --qf '%{NEVRA}\n' "$package" 2>/dev/null
+        or true
+    end
+    return 0
+end
+
+function prepare_nginx_package_update
+    if not rpm -q nginx >/dev/null 2>&1
+        step_skip_ok "Nginx RPM upgrade guard" "Nginx not installed"
+        return 0
+    end
+
+    # Preserve an earlier snapshot after an interrupted apply.  It records the
+    # versions that may still be loaded by the running master.
+    if test -f "$nginx_rpm_upgrade_marker"
+        step_skip_ok "Nginx RPM upgrade guard" active
+        return 0
+    end
+
+    set -l package_snapshot (mktemp)
+    or return 1
+    nginx_package_signature > "$package_snapshot"
+    or begin
+        rm -f "$package_snapshot"
+        return 1
+    end
+
+    step_run_note_as HOLD "Nginx RPM upgrade guard" active sudo install -m 0644 "$package_snapshot" "$nginx_rpm_upgrade_marker"
+    set -l install_status $status
+    rm -f "$package_snapshot"
+    return $install_status
+end
+
+function nginx_packages_changed_since_prepare
+    test -f "$nginx_rpm_upgrade_marker"
+    or return 1
+
+    set -l package_snapshot (mktemp)
+    or return 0
+    nginx_package_signature > "$package_snapshot"
+    or begin
+        rm -f "$package_snapshot"
+        return 0
+    end
+
+    command cmp -s "$package_snapshot" "$nginx_rpm_upgrade_marker"
+    set -l compare_status $status
+    rm -f "$package_snapshot"
+    test $compare_status -ne 0
+end
+
+function converge_nginx_after_package_update
+    step_run_note_as CHECK "Nginx configuration" valid sudo nginx -t
+    or return 1
+
+    set -l upgrade_required false
+    if nginx_packages_changed_since_prepare
+        set upgrade_required true
+    end
+
+    if systemctl is-active --quiet nginx
+        if $upgrade_required
+            # Unlike a reload, this starts the newly installed daemon binary.
+            # nginx -t above guarantees that every rebuilt module can load
+            # before the old master is asked to exit.
+            step_run_note_as RESTART "Nginx" upgraded sudo /usr/bin/nginx-upgrade
+            or return 1
+        else
+            step_skip_ok "Nginx" running
+        end
+    else
+        step_run_note_as START "Nginx" running sudo systemctl start nginx
+        or return 1
+    end
+
+    if test -f "$nginx_rpm_upgrade_marker"
+        step_run_note_as REMOVE "Nginx RPM upgrade guard" removed sudo rm -f "$nginx_rpm_upgrade_marker"
+        or return 1
+    end
+end
 
 function nginx_dav_ext_current_abi
     rpm -q --qf '%{VERSION}' nginx 2>/dev/null
@@ -178,7 +262,4 @@ function ensure_nginx_dav_ext
 
     step_run_note_as INSTALL "Nginx DAV extension" installed sudo dnf install -y "$built_rpm"
     or return 1
-    step_run_note_as CHECK "Nginx configuration" valid sudo nginx -t
-    or return 1
-    step_run_note_as RELOAD "Nginx" reloaded sudo systemctl reload nginx
 end

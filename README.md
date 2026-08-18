@@ -17,8 +17,10 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
     local build and asks for this temporary step to be removed.
   - The server builds the WebDAV extension as a local RPM from the pinned
     `nginx-dav-ext-module` v3.0.0 source. It uses Fedora's `nginx-mod-devel`
-    sources and rebuilds before and after system updates, so it stays aligned
-    with Fedora Nginx without the GetPageSpeed repository.
+    sources and rebuilds after system updates, so it stays aligned with Fedora
+    Nginx without the GetPageSpeed repository. Fedora's automatic live-upgrade
+    trigger is held until the rebuilt module passes `nginx -t`; Chezetc then
+    upgrades the running master or starts Nginx if it was inactive.
 - `fstab`
 
 ## Supported Hosts
