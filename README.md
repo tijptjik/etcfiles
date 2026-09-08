@@ -45,6 +45,14 @@ Now you can manage your `/etc` files with `chezetc`.
 # available before you've set them up with chezmoi.
 $HOME/.tools/chezetc/chezetc apply
 ```
+## Validation
+
+Run `bash scripts/validate.sh` with Bash, Fish, and Python 3 installed. It checks
+shell syntax and tests setup with isolated paths and stubbed install commands.
+If Chezmoi and its configuration are available, it also renders Fish script
+templates for the current host without executing them. Set `CHEZETC_CONFIG` to
+use a different configuration. Skipped rendering is reported explicitly.
+
 ## Todo
 
 - Reenable Sublime Text, once the [GPG key digest issue is fixed](https://discussion.fedoraproject.org/t/sublime-text-not-able-to-install-in-fedora-43/170396/8)

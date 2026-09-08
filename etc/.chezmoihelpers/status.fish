@@ -1,3 +1,34 @@
+function __stage_use_color
+    isatty stdout; or test "$TJIKUP_COLOR" = 1
+end
+
+function __stage_fish_color --argument-names color
+    switch "$color"
+        case 6; echo cyan
+        case 8; echo brblack
+        case 9; echo brred
+        case 10; echo brgreen
+        case 11; echo bryellow
+        case 12; echo brblue
+        case 13; echo brmagenta
+        case 14; echo brcyan
+        case 15; echo brwhite
+        case '*'; echo "$color"
+    end
+end
+
+function __stage_style --argument-names color text
+    set_color (__stage_fish_color "$color")
+    printf "%s" "$text"
+    set_color normal
+end
+
+function __stage_style_bold --argument-names color text
+    set_color --bold (__stage_fish_color "$color")
+    printf "%s" "$text"
+    set_color normal
+end
+
 function __stage_color --argument-names verb
     switch "$verb"
         case SKIP
@@ -52,9 +83,9 @@ end
 function __stage_styled_subject --argument-names subject
     set -l tailscale_operator (string match -r '^Tailscale operator for (.+)$' -- "$subject")
     if test (count $tailscale_operator) -gt 1
-        gum style --foreground 15 "Tailscale operator for" | tr -d '\n'
+        __stage_style 15 "Tailscale operator for"
         printf " "
-        gum style --foreground 6 "$tailscale_operator[2]"
+        __stage_style 6 "$tailscale_operator[2]"
         return
     end
 
@@ -63,11 +94,11 @@ function __stage_styled_subject --argument-names subject
     set -l qualifier (string match -r '\[[^]]+\]$|\([^)]*\)$' -- "$subject")
     if test (count $qualifier) -gt 0
         set -l base (string replace -- "$qualifier" "" "$subject" | string trim)
-        set -l styled_base (gum style --foreground 15 "$base")
-        set -l styled_qualifier (gum style --foreground 8 "$qualifier")
+        set -l styled_base (__stage_style 15 "$base")
+        set -l styled_qualifier (__stage_style 8 "$qualifier")
         printf "%s %s\n" "$styled_base" "$styled_qualifier"
     else
-        gum style --foreground 15 "$subject"
+        __stage_style 15 "$subject"
     end
 end
 
@@ -79,8 +110,8 @@ function section_header --argument-names title
         set color $argv[2]
     end
     echo
-    if command -q gum; and isatty stdout
-        gum style --foreground "$color" --bold "$title"
+    if command -q gum; and __stage_use_color
+        __stage_style_bold "$color" "$title"
     else
         echo "$title"
     end
@@ -91,9 +122,9 @@ end
 # section header supplies the single separator after the URL.
 function repo_header --argument-names title url
     echo
-    if command -q gum; and isatty stdout
-        gum style --foreground 13 --bold "$title"
-        gum style --foreground 8 "$url"
+    if command -q gum; and __stage_use_color
+        __stage_style_bold 13 "$title"
+        __stage_style 8 "$url"
     else
         echo "$title"
         echo "$url"
@@ -109,9 +140,9 @@ function __stage_label --argument-names stage_name icon subject
     set -l color (__stage_color "$stage_name")
     set -l padded_stage (printf "%-7s" "$stage_name")
 
-    if command -v gum >/dev/null 2>&1; and isatty stdout
-        set -l styled_stage (gum style --foreground $color --bold "$padded_stage")
-        set -l styled_icon (gum style --foreground (__stage_icon_color "$icon") "$icon")
+    if command -v gum >/dev/null 2>&1; and __stage_use_color
+        set -l styled_stage (__stage_style_bold $color "$padded_stage")
+        set -l styled_icon (__stage_style (__stage_icon_color "$icon") "$icon")
         printf "%s %s " "$styled_stage" "$styled_icon"
         __stage_styled_subject "$subject"
     else
@@ -139,11 +170,11 @@ function __stage_label_note --argument-names stage_name icon subject note
         set padding 2
     end
 
-    if command -v gum >/dev/null 2>&1; and isatty stdout
-        set -l styled_stage (gum style --foreground $color --bold "$padded_stage")
-        set -l styled_icon (gum style --foreground (__stage_icon_color "$icon") "$icon")
+    if command -v gum >/dev/null 2>&1; and __stage_use_color
+        set -l styled_stage (__stage_style_bold $color "$padded_stage")
+        set -l styled_icon (__stage_style (__stage_icon_color "$icon") "$icon")
         set -l styled_subject (__stage_styled_subject "$subject")
-        set -l styled_note (gum style --foreground 8 "$note")
+        set -l styled_note (__stage_style 8 "$note")
         printf "%s %s %s%s%s\n" "$styled_stage" "$styled_icon" "$styled_subject" (string repeat -n $padding " ") "$styled_note"
     else
         printf "%s %s %s%s%s\n" "$padded_stage" "$icon" "$subject" (string repeat -n $padding " ") "$note"
@@ -173,8 +204,8 @@ function __stage_spin_title --argument-names stage_name subject
     set -l color (__stage_color "$stage_name")
     set -l padded_stage (printf "%-7s" "$stage_name")
 
-    if command -v gum >/dev/null 2>&1; and isatty stdout
-        set -l styled_stage (gum style --foreground $color --bold "$padded_stage")
+    if command -v gum >/dev/null 2>&1; and __stage_use_color
+        set -l styled_stage (__stage_style_bold $color "$padded_stage")
         set -l styled_subject (__stage_styled_subject "$subject")
         printf "%s %s" "$styled_stage" "$styled_subject"
     else

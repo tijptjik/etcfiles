@@ -86,12 +86,14 @@ fi
 # The directory where this script is located.
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_DEST_DIR="$HOME/.config/chezetc"
-ETC_DST="/etc"
-ETC_SRC="$HOME/.local/share/chezetc"
 ETC_CFG="$CONFIG_DEST_DIR/chezetc.toml"
 
 step_run "Create chezetc config directory" mkdir -p "$CONFIG_DEST_DIR"
-if chezmoi execute-template < "$PROJECT_ROOT/chezetc.toml" > "$ETC_CFG"; then
+CONFIG_TEMP="$(mktemp "$CONFIG_DEST_DIR/.chezetc.toml.XXXXXX")"
+trap 'rm -f -- "$CONFIG_TEMP"' EXIT
+if chezmoi execute-template < "$PROJECT_ROOT/chezetc.toml" > "$CONFIG_TEMP"; then
+    # Only replace the existing configuration after rendering succeeds.
+    mv -f -- "$CONFIG_TEMP" "$ETC_CFG"
     step_ok "Render chezetc config"
 else
     step_fail "Render chezetc config"

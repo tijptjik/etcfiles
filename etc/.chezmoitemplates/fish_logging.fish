@@ -247,6 +247,14 @@ function setup_logging
         end &
         set pid $last_pid
 
+        # DNF output is captured so that it cannot flood the ordered report,
+        # but metadata refreshes can be silent for a while.  Give the caller
+        # an immediate durable indication that the command is alive, then
+        # repeat it periodically until DNF produces a transaction summary or
+        # exits.
+        status_msg SYNC "..." "$title" "running"
+        set heartbeat_ticks 0
+
         set summary_reported 0
 
         # Keep the progress indicator transient. Once DNF writes its summary,
@@ -270,6 +278,12 @@ function setup_logging
         end
 
         while kill -0 $pid 2>/dev/null
+            set heartbeat_ticks (math "$heartbeat_ticks + 1")
+            if test $heartbeat_ticks -ge 75
+                status_msg SYNC "..." "$title" "still running"
+                set heartbeat_ticks 0
+            end
+
             if test $summary_reported -eq 0
                 if step_report_dnf_transaction_summary "$log_file"
                     set summary_reported 1
