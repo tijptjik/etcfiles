@@ -7,15 +7,21 @@
 setup_logging linux-build-waybar-lua
 
 # Waybar 0.16.0 is the first expected release to include the Hyprland Lua IPC
-# workspace-dispatch fix. Stop here when Fedora exposes it so this temporary
-# source build can be deliberately removed from Chezetc and the dotfiles.
+# workspace-dispatch fix. Keep the custom build until the numeric workspace
+# sorting patch is upstream too; a version threshold alone is insufficient.
 set waybar_release_threshold 0.16.0
 set waybar_source_dir "$HOME/.local/share/chezetc/waybar"
-set waybar_build_dir "$waybar_source_dir/build"
+set waybar_build_root "$HOME/.cache/chezetc/waybar"
+set waybar_patch_file (mktemp /tmp/chezetc-waybar-patch.XXXXXX)
+# Embed the managed patch so both repositories can be updated independently.
+printf '%s\n' '{{ include ".chezmoitemplates/patches/waybar-numeric-workspace-sort.patch" }}' > "$waybar_patch_file"
+function cleanup_waybar_patch --on-event fish_exit
+    command rm -f -- "$waybar_patch_file"
+end
 set waybar_prefix "$HOME/.local/lib/chezetc/waybar"
 set waybar_binary "$waybar_prefix/bin/waybar"
 set waybar_revision_file "$waybar_prefix/revision"
-set waybar_launcher "$HOME/.local/bin/waybar-lua"
+set waybar_launcher "$HOME/.local/bin/waybar"
 set waybar_failure_log "/tmp/chezetc-waybar-build-failure.log"
 
 function write_waybar_launcher
@@ -102,14 +108,34 @@ end
 function build_waybar
     set source_revision (git -C "$waybar_source_dir" rev-parse HEAD)
     or return 1
+    set patch_revision (sha256sum "$waybar_patch_file" | string split -f1 " ")
+    or return 1
+    set build_revision "$source_revision:$patch_revision"
+    set waybar_build_source "$waybar_build_root/$source_revision-$patch_revision"
+    set waybar_build_dir "$waybar_build_source/build"
     set built_revision
     if test -f "$waybar_revision_file"
         set built_revision (string trim < "$waybar_revision_file")
     end
 
-    if test -x "$waybar_binary"; and test "$source_revision" = "$built_revision"
+    if test -x "$waybar_binary"; and test "$build_revision" = "$built_revision"
         step_skip_ok "Waybar Lua build" "no changes"
         return 0
+    end
+
+    # A separate checkout keeps the upstream fetch/merge tree unpatched.
+    if not test -d "$waybar_build_source"
+        mkdir -p "$waybar_build_root"
+        or return 1
+        git -C "$waybar_source_dir" worktree add --detach "$waybar_build_source" "$source_revision"
+        or return 1
+    end
+    if git -C "$waybar_build_source" apply --check "$waybar_patch_file"
+        git -C "$waybar_build_source" apply "$waybar_patch_file"
+        or return 1
+    else if not git -C "$waybar_build_source" apply --reverse --check "$waybar_patch_file"
+        step_error "Waybar workspace patch" "upstream changed; keeping installed binary"
+        return 1
     end
 
     set meson_options \
@@ -118,7 +144,7 @@ function build_waybar
         -Dtests=disabled \
         -Dsystemd=disabled \
         -Dlibinput=disabled \
-        -Dlibnl=disabled \
+        -Dlibnl=enabled \
         -Dlibudev=enabled \
         -Dlibevdev=disabled \
         -Dupower_glib=disabled \
@@ -132,7 +158,7 @@ function build_waybar
         -Dwwan=disabled \
         -Dcava=disabled
 
-    step_run_silent_logged "Configure Waybar Lua build" "$waybar_failure_log" meson setup "$waybar_build_dir" "$waybar_source_dir" --wipe $meson_options
+    step_run_silent_logged "Configure Waybar Lua build" "$waybar_failure_log" meson setup "$waybar_build_dir" "$waybar_build_source" $meson_options
     or return 1
     # Waybar's generated protocol headers are not fully ordered on master;
     # parallel Ninja jobs can compile a consumer before its header exists.
@@ -142,12 +168,23 @@ function build_waybar
     or return 1
 
     mkdir -p "$waybar_prefix"
-    and printf '%s\n' "$source_revision" > "$waybar_revision_file"
+    and printf '%s\n' "$build_revision" > "$waybar_revision_file"
 end
 
 set available_release (available_waybar_version)
 if test -n "$available_release"; and version_at_least "$available_release" "$waybar_release_threshold"
-    step_note "ACTION REQUIRED: Fedora offers Waybar $available_release (>= $waybar_release_threshold). Remove Chezetc's temporary Waybar Lua build and change Hyprland back to the system Waybar launcher."
+    step_note "Fedora offers Waybar $available_release; keep this custom build until the numeric workspace-sort patch is also upstream."
+end
+
+ensure_waybar_source
+or exit 1
+build_waybar
+or begin
+    # A build failure must not replace the working binary or launcher.
+    if test -f "$waybar_failure_log"
+        step_log_created "$waybar_failure_log"
+    end
+    step_warn "Waybar build unavailable; keeping the existing launcher and binary"
     exit 0
 end
 
@@ -155,19 +192,6 @@ write_waybar_launcher
 or begin
     step_fail "Write Waybar launcher"
     exit 1
-end
-
-ensure_waybar_source
-or exit 1
-build_waybar
-or begin
-    # The generated launcher falls back to Fedora's Waybar, so an unavailable
-    # temporary source build must not make an otherwise successful apply fail.
-    if test -f "$waybar_failure_log"
-        step_log_created "$waybar_failure_log"
-    end
-    step_warn "Waybar Lua build unavailable; using the system Waybar"
-    exit 0
 end
 
 {{ end -}}

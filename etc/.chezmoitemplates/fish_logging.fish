@@ -105,7 +105,7 @@ function setup_logging
         end
 
         _chezetc_system_log "RUN $title: $cmd"
-        if command -q gum; and isatty stdout
+        if command -q gum; and __stage_use_spinner
             gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
         else
             status_msg "$chezetc_stage" "..." "$title"
@@ -133,7 +133,7 @@ function setup_logging
         end
 
         _chezetc_system_log "RUN $title: $cmd"
-        if command -q gum; and isatty stdout
+        if command -q gum; and __stage_use_spinner
             gum spin --show-error --title (__stage_spin_title "$chezetc_stage" "$title") -- $cmd
         else
             status_msg "$chezetc_stage" "..." "$title"
@@ -259,7 +259,7 @@ function setup_logging
 
         # Keep the progress indicator transient. Once DNF writes its summary,
         # gum clears the spinner and the durable transaction rows replace it.
-        if command -q gum; and isatty stdout
+        if command -q gum; and __stage_use_spinner
             gum spin --spinner dot --title (__stage_spin_title SYNC "$title") -- fish -c '
                 set log_file $argv[1]
                 set pid $argv[2]

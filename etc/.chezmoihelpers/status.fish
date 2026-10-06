@@ -2,6 +2,10 @@ function __stage_use_color
     isatty stdout; or test "$TJIKUP_COLOR" = 1
 end
 
+function __stage_use_spinner
+    isatty stdout; and test "$TJIKUP_NO_SPIN" != 1
+end
+
 function __stage_fish_color --argument-names color
     switch "$color"
         case 6; echo cyan
@@ -135,7 +139,32 @@ function output_gap
     echo
 end
 
-function __stage_label --argument-names stage_name icon subject
+function __stage_print_row --argument-names icon row
+    if isatty stdout; or test "$TJIKUP_COLOR" = 1
+        if set -q __stage_pending_row
+            printf '\r\033[2K'
+            set -e __stage_pending_row
+        end
+        if test "$icon" = "..."
+            printf '%s' "$row"
+            set -g __stage_pending_row 1
+            return
+        end
+    end
+    printf '%s\n' "$row"
+end
+
+function __stage_label
+    set -l row (__stage_render_label $argv)
+    __stage_print_row "$argv[2]" "$row"
+end
+
+function __stage_label_note
+    set -l row (__stage_render_label_note $argv)
+    __stage_print_row "$argv[2]" "$row"
+end
+
+function __stage_render_label --argument-names stage_name icon subject
     __stage_event "$stage_name" "$icon" "$subject" ""
     set -l color (__stage_color "$stage_name")
     set -l padded_stage (printf "%-7s" "$stage_name")
@@ -150,7 +179,7 @@ function __stage_label --argument-names stage_name icon subject
     end
 end
 
-function __stage_label_note --argument-names stage_name icon subject note
+function __stage_render_label_note --argument-names stage_name icon subject note
     __stage_event "$stage_name" "$icon" "$subject" "$note"
     set -l color (__stage_color "$stage_name")
     if test (count $argv) -ge 5
@@ -237,7 +266,7 @@ function __stage_run
     end &
     set -l pid $last_pid
 
-    if command -v gum >/dev/null 2>&1; and isatty stdout
+    if command -v gum >/dev/null 2>&1; and __stage_use_spinner
         gum spin --spinner dot --title (__stage_spin_title "$stage_name" "$subject") -- bash -c 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done' bash $pid
     else
         __stage_label "$stage_name" "..." "$subject"

@@ -342,6 +342,7 @@ or exit 1
 rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
 
 set installed_fedora_release (rpm -E %fedora 2>/dev/null)
+status_msg CHECK "..." "Fedora release check" "checking"
 set available_fedora_release (available_fedora_release)
 
 if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match -qr '^[0-9]+$' -- "$available_fedora_release"
