@@ -1,0 +1,70 @@
+#!/usr/bin/env fish
+# Keep Strata beside the custom application installs, including ChatGPT Desktop.
+{{ if and (eq .chezmoi.os "linux") .isClient -}}
+
+{{ include ".chezmoihelpers/status.fish" }}
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-strata
+
+function install_strata_dependencies
+    set -l packages gtk4 gtksourceview5 poppler-glib fontconfig bubblewrap \
+        ffmpegthumbnailer gstreamer1-plugins-base gstreamer1-plugins-good \
+        gstreamer1-plugin-libav gvfs desktop-file-utils xdg-utils curl tar coreutils sed
+
+    # Keep either installed FFmpeg variant; Fedora provides ffmpeg-free.
+    if not rpm -q ffmpeg >/dev/null 2>&1
+        set -a packages ffmpeg-free
+    end
+
+    set -l missing
+    for package in $packages
+        if not rpm -q $package >/dev/null 2>&1
+            set -a missing $package
+        end
+    end
+    if test (count $missing) -gt 0
+        sudo -n dnf install -y $missing; or return $status
+    end
+    rpm -q $packages >/dev/null
+end
+
+function install_strata
+    # Upstream refuses non-interactive installation outside Arch, even when
+    # dependencies are already installed. Adapt that guard and its dependency
+    # confirmation after our Fedora stage succeeds; retain release verification.
+    bash -c '
+        set -euo pipefail
+        installer=$(mktemp)
+        trap '\''rm -f "$installer"'\'' EXIT
+        curl -fsSL https://raw.githubusercontent.com/lgse/strata/main/install.sh -o "$installer"
+        guard='\''die "Non-interactive dependency installation currently supports Arch-based systems only."'\''
+        confirmation='\''prompt "Have you installed the equivalent packages for this distribution?"'\''
+        if ! grep -Fq "$guard" "$installer" || ! grep -Fq "$confirmation" "$installer"; then
+            echo "Strata installer changed; review its Fedora dependency handling." >&2
+            exit 1
+        fi
+        sed -i '\''s/die "Non-interactive dependency installation currently supports Arch-based systems only\."/info "Fedora dependencies verified by chezetc."/'\'' "$installer"
+        sed -i '\''s/prompt "Have you installed the equivalent packages for this distribution?"/true/'\'' "$installer"
+        bash "$installer" --non-interactive
+    '
+end
+
+# Fedora dependencies must also be checked when the binary already exists.
+if not test -f /etc/fedora-release
+    status_msg FAILED "✗" "Strata" "Dependency setup currently supports Fedora only"
+    exit 1
+end
+step_run_quiet "Strata dependencies" install_strata_dependencies
+or exit $status
+
+# Check if strata binary is available, install if not
+if not command -v strata >/dev/null 2>&1
+    step_run_quiet "Strata" install_strata
+    or exit $status
+else
+    step_skip_ok "Strata" "available"
+end
+
+exit 0
+
+{{ end -}}
