@@ -100,6 +100,21 @@ A fresh post-upgrade application backup completed at 19:29 HKT, snapshot `cf72bb
 
 The mergerfs bootstrap pin still targets Fedora 44; existing installations are preserved, while a fresh Fedora 45 bootstrap needs an explicitly selected, verified artifact. A full fresh-host recovery rehearsal remains outstanding.
 
+## Outstanding follow-up audit (2026-10-21)
+
+This list excludes media reacquisition. Zero failed systemd units does not prove every scheduled job or recovery path has run successfully.
+
+- **SnapRAID content-format compatibility is the immediate blocker.** Fedora 45 upgraded SnapRAID 14.1 to 15.0. A read-only `snapraid status` fails with `Legacy content format is no longer supported` and instructs using SnapRAID 14.x `sync` to upgrade the content file. The installed daily sync/weekly scrub will remain blocked until a guarded 14.x conversion sync is completed and the result is checked with 15.x. Preserve content/config/parity recovery metadata and review the diff before any sync; do not recreate content files or force a sync. No conversion or parity write was performed during this audit.
+- **First scheduled maintenance receipts:** neither `last-sync-success.json` nor `last-scrub-success.json` exists yet. After resolving the format blocker, verify the first daily 05:00 sync and Sunday 08:00 scrub, including writer pause/resume and failure reporting. Historical recovery scrubs are distinct from the new scheduled workflow.
+- **Onsite connectivity/security:** public ingress and remote SSH/offsite pull from another network remain deferred until si returns onsite. Validate DNS, firewall and both media ingress and fi's remote backup route there. SELinux is currently permissive; an enforcing policy has not been validated.
+- **Fresh Fedora 45 rebuild:** select and hash-verify an appropriate mergerfs bootstrap artifact, finish secret-input mapping (including Beets Bitwarden items) and declarative integration policy, and rehearse provisioning plus application restore on a disposable clean host. Existing backup content restore and an isolated MariaDB import have been tested; a complete new-machine service recovery has not. Avoid treating the historical audit checklist in SERVER-REBUILD.md as proof that already-implemented tools are still missing.
+- **Recovery-key handoff:** fi's owner-only `~/.config/si-app-backup/RECOVERY-KEYS.txt` exists with mode 0600. Saving these recovery keys independently in Bitwarden remains a user handoff; vault storage was not verified. Never commit it.
+- **Ephemera provider login:** the current boot logs report `Refresh token expired or invalid. Please re-authenticate.` Its web/health endpoint works and its queue remains paused; the affected provider session needs reauthentication before use.
+- **First real archive import:** guard, Unpackerr and Plex notification connections are verified, but a new legitimate completed archive-to-Plex import has not yet been witnessed end to end. Observe the next eligible import without launching a backlog search for this test.
+- **Auto-m4b remains deliberately held:** review its populated conversion queue and enable input backups before an explicit start.
+
+The VIDEO destination currently contains 665 files / 361,976,855,220 bytes. All five files still present in fi's source VIDEO tree have matching destination sizes. This is a size-based check of the remaining source, not a full checksum verification of the original transfer.
+
 ## Restore application state and secrets
 
 Recover the restic repository password out of band. It is intentionally excluded from its own backup; no restore tool generates or replaces it. Supply the repo path (server or fi copy) and an **exact full snapshot ID** from `restic snapshots --json`. Keep the password file root-readable only.
