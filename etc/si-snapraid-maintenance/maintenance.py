@@ -40,7 +40,18 @@ def resume():
    if subprocess.run(['docker','unpause',container]).returncode:failures.append(container)
  if failures:raise RuntimeError('Could not resume: '+','.join(failures))
  p.unlink()
+def verify_status():
+ # Serialize a read-only post-update check without waiting behind a long sync.
+ with open('/run/lock/si-snapraid-maintenance.lock','w') as lock:
+  try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:
+   print('SnapRAID readability check deferred: maintenance is running.',flush=True)
+   return 75
+  config=json.loads(CONFIG.read_text());guard(config)
+  run(['snapraid','status'])
+ return 0
 def main():
+ if sys.argv[1]=='status':raise SystemExit(verify_status())
  os.umask(0o077);STATE.mkdir(parents=True,exist_ok=True)
  lock=open('/run/lock/si-snapraid-maintenance.lock','w');fcntl.flock(lock,fcntl.LOCK_EX)
  mode=sys.argv[1]
