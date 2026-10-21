@@ -8,6 +8,10 @@ Implemented 2026-10-21. These are explicit commands, not apply hooks. **Do not r
 
 Neither provisioning nor restoration is an apply hook. Transmission's mutable settings.json is ignored on the server. Application databases and passwords are not template targets. Existing mergerfs is not replaced, existing accounts are not renumbered, existing directory ownership/modes are not recursively changed, and existing Beets files are not overwritten. Auto-m4b remains opt-in.
 
+## Always-on server power policy
+
+On si only, systemd sleep policy disables suspend and hibernation, and the GDM dconf policy disables idle sleep for the greeter. The server-only apply hook compiles that policy without restarting GDM. Client hosts ignore these policy files. This prevents the greeter default (15-minute idle suspend) from taking storage and media services offline even when the logged-in user has already disabled sleep.
+
 ## Account and storage bootstrap
 
 Run the planning form first; add `--apply` to make the planned changes:
@@ -19,13 +23,72 @@ sudo python3 /etc/si-provision/provision.py mergerfs
 sudo python3 /etc/si-provision/provision.py mergerfs --apply
 ```
 
-Mergerfs 2.42.0 is locked to the upstream Fedora 43 x86_64 RPM and publisher SHA256. Other OS/architectures fail closed. Existing installations are preserved regardless of version. This avoids upgrading si's active 2.32.6 mount. The new package was downloaded and hash-verified, but a fresh mounted-array rehearsal is still required.
+Mergerfs 2.42.0 is locked to the upstream Fedora 44 x86_64 RPM and publisher SHA256. Other OS/architectures fail closed. Existing installations are preserved regardless of version; upgrading a running pool remains an explicit maintenance operation. The Fedora 44 artifact was hash-verified and passed isolated merged-read, write, rename and delete checks. The removed `use_ino` option is no longer generated. On si, the upgrade was explicitly activated by an orderly reboot; disk UUID checks, normal-user pool writes and cross-process SQLite WAL locking passed. A complete fresh-host recovery rehearsal is still required.
 
 Install the server package declarations deliberately during bootstrap (including Docker, Compose, SnapRAID, Plex, rsync, restic and PyYAML); normal server tjikup package maintenance remains enabled. Keep Docker and Plex stopped until mounts and restored state are ready. Use the selective fstab helper described in SERVER-REBUILD.md, then verify:
 
 ```fish
 sudo python3 /etc/si-provision/storage.py --check
 ```
+
+## Fedora 44 to 45: selected package pairs and final checks
+
+Operator decision on 2026-10-21: use Fedora 45's base nginx **1.30.5** packages with the installed DAV extension (ABI 1.30.5), and Fedora/RPM Fusion 45's matching **libheif/libheif-freeworld 1.23.5** pair. Do not mix Fedora 44 repositories into the Fedora 45 transaction. These are upgrade-transaction choices; the running Fedora 44 package set and normal repository settings are unchanged.
+
+The strict resolver preview passed with no conflicts, skips or `--allowerasing`: 62 installs, 3,138 upgrades, six removals and 12 downgrades, approximately 4 GiB downloaded / 677 MiB net installed growth. Counts can change as repositories move. The removals were the oldest Fedora 43 kernel packages plus `low-memory-monitor`. Downgrades were `gh`, two GStreamer freeworld/ugly packages, the libheif pair, `libopenmpt`, `python3-pyOpenSSL`, three Qt4 packages, and two Xen packages. This is a dependency-resolution result, not a completed RPM transaction test or proof of Fedora 45 runtime behavior.
+
+Step 4 is manual. Run these commands on **si in Fish** to define the reviewed RC repository selection. Exclusions affect only the named testing repositories, leaving the matching Fedora 45 base packages selectable. The cache already contains the assessment metadata/trusted repository keys; it does not contain the full upgrade payload.
+
+```fish
+set -l si_fc45_options \
+    --releasever=45 \
+    --setopt=cachedir=/var/cache/si-fedora45-assessment \
+    --disablerepo=rpmfusion-free-updates \
+    --disablerepo=rpmfusion-nonfree-updates \
+    --enablerepo=updates-testing \
+    --enablerepo=rpmfusion-free-updates-testing \
+    --enablerepo=rpmfusion-nonfree-updates-testing \
+    '--setopt=updates-testing.excludepkgs=nginx*,libheif*' \
+    '--setopt=rpmfusion-free-updates-testing.excludepkgs=libheif*' \
+    --best
+
+sudo python3 /etc/si-provision/storage.py --check
+sudo nginx -t
+sudo dnf check
+df -h / /boot
+sudo dnf $si_fc45_options system-upgrade download --assumeno
+```
+
+Review that nginx remains 1.30.5, the libheif pair is 1.23.5, and the removal/downgrade list still matches the decision. `--assumeno` deliberately exits without downloading/staging. The observed free space was 9.1 GiB on `/` and 128 MiB on `/boot`; check it again before downloading. Do not add `--allowerasing` to bypass a new dependency error.
+
+Take a fresh application backup on **si**, then inspect the new success receipt:
+
+```fish
+sudo systemctl start si-app-backup.service
+sudo journalctl -u si-app-backup.service -n 15 --no-pager
+sudo cat /var/lib/si-app-backup/last-success.json
+sudo restic -r /mnt/data/disk42/.recovery-preservation/app-backups/repository \
+    -p /etc/si-app-backup/password snapshots --host si --tag app-state --latest 1 --json
+```
+
+On **fi**, fetch and verify the current retained snapshots (fi initiates SSH):
+
+```fish
+systemctl --user start si-app-backup-pull.service
+journalctl --user -u si-app-backup-pull.service -n 15 --no-pager
+cat ~/.local/share/si-app-backups/last-success.json
+```
+
+Require a new successful server receipt and a local receipt whose source time matches the latest server snapshot. The server backup receipt's `completedAt` is the job completion time; the snapshot/fi `sourceTime` is the capture time, so those timestamps are not expected to be identical. The local job verifies all repository data before recording success. Never print or commit either repository password.
+
+After those checks, this **si** command downloads the approximately 4 GiB payload, checks that the packages can be installed (DNF5's RPM transaction test), and prepares the offline transaction. It does **not** reboot or install Fedora 45 into the running system:
+
+```fish
+sudo dnf $si_fc45_options system-upgrade download
+sudo dnf offline status
+```
+
+Stop there for review. The separate `system-upgrade reboot` action starts the OS upgrade and has not been run. Normal Fedora 44 package updates, Docker startup and nginx convergence remain enabled. After a future Fedora 45 boot, verify mounts, nginx/DAV, services, sleep policy and backups; review the RC repository policy before ordinary maintenance, and retire these transaction exclusions once matching newer package pairs are available. The mergerfs bootstrap pin still targets Fedora 44; an existing installation is preserved, while a fresh Fedora 45 bootstrap needs an explicitly selected, verified artifact.
 
 ## Restore application state and secrets
 
