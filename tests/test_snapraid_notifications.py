@@ -40,7 +40,7 @@ class Notifications(unittest.TestCase):
         notify.recover(self.unit)
         notify.recover(self.unit)
         self.assertEqual(self.send.call_count, 3)
-        self.assertIn('recovered', self.send.call_args.args[0])
+        self.assertIn('recovered', self.send.call_args.args[0].lower())
 
     def test_changed_incident_delivery_failure_is_retried(self):
         notify.incident(self.unit, 'old issue', self.now)

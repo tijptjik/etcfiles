@@ -2,6 +2,7 @@
 """SnapRAID failure/recovery alerts; no parity or application writes."""
 import datetime as dt
 import fcntl
+import html
 import json
 import os
 from pathlib import Path
@@ -52,7 +53,7 @@ def send(text):
         raise RuntimeError('Telegram configuration must be root-only')
     config = read_json(CONFIG)
     payload = {'chat_id': config['chat_id'], 'text': text,
-               'disable_notification': False}
+               'disable_notification': False, 'parse_mode': 'HTML'}
     if config.get('topic_id'):
         payload['message_thread_id'] = config['topic_id']
     request = urllib.request.Request(
@@ -71,6 +72,28 @@ def send(text):
     return result['result']['message_id']
 
 
+
+def format_message(unit, problem=None):
+    test = unit == 'si-snapraid-notification-test.service'
+    if test:
+        title = 'Test alert' if problem is not None else 'Test passed'
+        body = ('This is a notification test. No storage job failed.'
+                if problem is not None else
+                'Failure and recovery notifications are working.')
+        return (f'🧪 <b>SnapRAID · {title}</b>\n'
+                f'<code>si</code> · Notification check\n\n{body}')
+    task = JOBS[unit][0].removeprefix('SnapRAID ').capitalize()
+    if problem is None:
+        return (f'✅ <b>SnapRAID · Recovered</b>\n'
+                f'<code>si</code> · {html.escape(task)}\n\n'
+                'Maintenance completed successfully.')
+    command = 'journalctl -u ' + unit.removesuffix('.service') + ' -n 50'
+    return (f'⚠️ <b>SnapRAID · Action needed</b>\n'
+            f'<code>si</code> · {html.escape(task)}\n\n'
+            f'{html.escape(problem)}\n\n'
+            f'<b>Review logs</b>\n<pre>{html.escape(command)}</pre>')
+
+
 def incident(unit, problem, current=None):
     current = current or utcnow()
     path = STATE / (unit + '.json')
@@ -82,11 +105,7 @@ def incident(unit, problem, current=None):
     # Keep an undelivered incident pending if Telegram is temporarily unavailable.
     state.update(active=True, problem=problem, last_sent_at=None)
     write_json(path, state)
-    label = JOBS[unit][0]
-    text = (f'si — {label} needs attention\n{problem}\n'
-            f'Inspect: journalctl -u {unit} -n 50\n'
-            'No automatic safeguard bypass or repair was attempted.')
-    message_id = send(text)
+    message_id = send(format_message(unit, problem))
     state.update(last_sent_at=current.isoformat(), message_id=message_id)
     write_json(path, state)
     print(f'Alert delivered for {unit}; Telegram message {message_id}', flush=True)
@@ -97,9 +116,7 @@ def recover(unit):
     state = read_json(path)
     if not state.get('active'):
         return
-    message_id = send(f'si — {JOBS[unit][0]} recovered\n'
-                      'The maintenance job completed successfully.\n'
-                      'Normal safeguards remain enabled.')
+    message_id = send(format_message(unit))
     write_json(path, {'active': False, 'recovered_at': utcnow().isoformat(),
                       'message_id': message_id})
     print(f'Recovery delivered for {unit}; Telegram message {message_id}', flush=True)
