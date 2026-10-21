@@ -5,7 +5,7 @@
 # Defines the file to use as parity storage
 # It must NOT be in a data disk
 # Format: "parity FILE [,FILE] ..."
-1-parity /mnt/parity/disk1/snapraid.parity
+1-parity /mnt/parity/disk12/snapraid.parity
 2-parity /mnt/parity/disk22/snapraid.parity
 
 # Content file location(s)
@@ -13,7 +13,7 @@
 content /mnt/data/disk12/.snapraid.content
 content /mnt/data/disk22/.snapraid.content
 content /mnt/data/disk32/.snapraid.content
-content /mnt/data/disk4/.snapraid.content
+content /mnt/data/disk42/.snapraid.content
 content /mnt/data/disk5/.snapraid.content
 
 # Data disks
@@ -21,7 +21,7 @@ content /mnt/data/disk5/.snapraid.content
 data d1 /mnt/data/disk12
 data d2 /mnt/data/disk22
 data d3 /mnt/data/disk32
-data d4 /mnt/data/disk4
+data d4 /mnt/data/disk42
 data d5 /mnt/data/disk5
 
 # Excludes hidden files and directories (uncomment to enable).
@@ -33,6 +33,8 @@ exclude /tmp/
 exclude /lost+found/
 exclude /.Trash-*
 exclude /meta/
+exclude /docker/
+exclude /.recovery-preservation/
 #            /code/
 #            /downloads/
 #            /insync/
