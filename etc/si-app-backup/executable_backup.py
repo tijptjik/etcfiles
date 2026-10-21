@@ -5,6 +5,7 @@ BASE=pathlib.Path('/mnt/data/disk42/.recovery-preservation/app-backups')
 STAGE=BASE/'stage'
 STATE=pathlib.Path('/var/lib/si-app-backup')
 PASSWORD='/etc/si-app-backup/password'
+LIBRARY=pathlib.Path('/mnt/storage/public/library')
 EXPECTED_UUID='9d49130f-b477-4990-b2c2-93ebebf2d0c6'
 os.umask(0o077)
 def run(args,**kw):
@@ -20,6 +21,8 @@ for line in pathlib.Path('/etc/snapraid.conf').read_text().splitlines():
  parts=line.split()
  if len(parts)>=3 and parts[0]=='data' and not os.path.ismount(parts[2]):
   raise RuntimeError('Data disk is not mounted: '+parts[2])
+if not os.path.ismount('/mnt/storage') or not LIBRARY.is_dir():
+ raise RuntimeError('Required library source or storage mount missing')
 BASE.mkdir(parents=True,exist_ok=True);STAGE.mkdir(exist_ok=True)
 os.environ.update(RESTIC_REPOSITORY=str(BASE/'repository'),RESTIC_PASSWORD_FILE=PASSWORD,RESTIC_CACHE_DIR=str(BASE/'cache'))
 if not (BASE/'repository/config').exists():run(['restic','--retry-lock','15m','init'])
@@ -120,9 +123,9 @@ with tmp.open('wb') as f:
 if tmp.stat().st_size<1000:raise RuntimeError('Unexpectedly empty MariaDB dump')
 os.replace(tmp,dumps/'mariadb.sql')
 containers=output(['docker','ps','--format','{{.Names}}']).splitlines()
-save(STAGE/'backup-manifest.json',{'capturedAt':started,'sources':sources,'runningContainers':containers,'consistency':'SQLite online backup API with quick_check; MariaDB locked logical dump; application configuration copied with rsync','sqlite':sqlite_results,'historicalSqlite':historical_sqlite,'mariadbDump':'database-dumps/mariadb.sql','mariadbRestore':'Import with compatible MariaDB; raw databases directory intentionally excluded'})
-run(['restic','--retry-lock','15m','backup',str(STAGE),'--host','si','--tag','app-state'])
-run(['restic','--retry-lock','15m','forget','--host','si','--tag','app-state','--keep-daily','7','--keep-weekly','4','--prune'])
+save(STAGE/'backup-manifest.json',{'capturedAt':started,'sources':sources,'directSources':[str(LIBRARY)],'contentVerification':'Restic --force rereads all source bytes and deduplicates content chunks on every backup','runningContainers':containers,'consistency':'SQLite online backup API with quick_check; MariaDB locked logical dump; application configuration copied with rsync','sqlite':sqlite_results,'historicalSqlite':historical_sqlite,'mariadbDump':'database-dumps/mariadb.sql','mariadbRestore':'Import with compatible MariaDB; raw databases directory intentionally excluded'})
+run(['restic','--retry-lock','15m','backup','--force',str(STAGE),str(LIBRARY),'--host','si','--tag','app-state'])
+run(['restic','--retry-lock','15m','forget','--host','si','--tag','app-state','--group-by','host,tags','--keep-daily','7','--keep-weekly','4','--prune'])
 run(['restic','--retry-lock','15m','check'])
 save(STATE/'last-success.json',{'completedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'repository':str(BASE/'repository')})
 print('BACKUP SUCCESS',flush=True)
