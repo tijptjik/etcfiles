@@ -31,13 +31,13 @@ Install the server package declarations deliberately during bootstrap (including
 sudo python3 /etc/si-provision/storage.py --check
 ```
 
-## Fedora 44 to 45: selected package pairs and final checks
+## Fedora 44 to 45: completed upgrade and compatibility notes
 
-Operator decision on 2026-10-21: use Fedora 45's base nginx **1.30.5** packages with the installed DAV extension (ABI 1.30.5), and Fedora/RPM Fusion 45's matching **libheif/libheif-freeworld 1.23.5** pair. Do not mix Fedora 44 repositories into the Fedora 45 transaction. These are upgrade-transaction choices; the running Fedora 44 package set and normal repository settings are unchanged.
+Operator decision on 2026-10-21: use Fedora 45's base nginx **1.30.5** packages with the installed DAV extension (ABI 1.30.5), and Fedora/RPM Fusion 45's matching **libheif/libheif-freeworld 1.23.5** pair. Do not mix Fedora 44 repositories into the Fedora 45 transaction. These were transaction-scoped choices; si is now running Fedora 45.
 
-The strict resolver preview passed with no conflicts, skips or `--allowerasing`: 62 installs, 3,138 upgrades, six removals and 12 downgrades, approximately 4 GiB downloaded / 677 MiB net installed growth. Counts can change as repositories move. The removals were the oldest Fedora 43 kernel packages plus `low-memory-monitor`. Downgrades were `gh`, two GStreamer freeworld/ugly packages, the libheif pair, `libopenmpt`, `python3-pyOpenSSL`, three Qt4 packages, and two Xen packages. This is a dependency-resolution result, not a completed RPM transaction test or proof of Fedora 45 runtime behavior.
+The strict resolver preview passed with no conflicts, skips or `--allowerasing`: 62 installs, 3,138 upgrades, six removals and 12 downgrades, approximately 4 GiB downloaded / 677 MiB net installed growth. Counts can change as repositories move. The removals were the oldest Fedora 43 kernel packages plus `low-memory-monitor`. Downgrades were `gh`, two GStreamer freeworld/ugly packages, the libheif pair, `libopenmpt`, `python3-pyOpenSSL`, three Qt4 packages, and two Xen packages. The downloaded payload subsequently passed the RPM transaction test and was installed successfully (DNF history transaction 86, status Ok).
 
-Step 4 is manual. Run these commands on **si in Fish** to define the reviewed RC repository selection. Exclusions affect only the named testing repositories, leaving the matching Fedora 45 base packages selectable. The cache already contains the assessment metadata/trusted repository keys; it does not contain the full upgrade payload.
+The following historical preparation commands were already executed on **si in Fish**. Do not repeat the system-upgrade transaction on the upgraded server. They define the reviewed RC repository selection. Exclusions affect only the named testing repositories, leaving the matching Fedora 45 base packages selectable. The assessment cache was reused for the reviewed payload download and offline transaction.
 
 ```fish
 set -l si_fc45_options \
@@ -88,7 +88,17 @@ sudo dnf $si_fc45_options system-upgrade download
 sudo dnf offline status
 ```
 
-Stop there for review. The separate `system-upgrade reboot` action starts the OS upgrade and has not been run. Normal Fedora 44 package updates, Docker startup and nginx convergence remain enabled. After a future Fedora 45 boot, verify mounts, nginx/DAV, services, sleep policy and backups; review the RC repository policy before ordinary maintenance, and retire these transaction exclusions once matching newer package pairs are available. The mergerfs bootstrap pin still targets Fedora 44; an existing installation is preserved, while a fresh Fedora 45 bootstrap needs an explicitly selected, verified artifact.
+The operator authorized `sudo dnf -y system-upgrade reboot` at 19:04 HKT on 2026-10-21. The offline transaction completed and si returned at about 19:20 HKT on Fedora 45, kernel `7.2.11-300.fc45.x86_64`; no offline transaction remains queued. Post-upgrade `dnf check` and duplicate-package checks passed. Normal package updates, Docker startup and nginx convergence remain enabled.
+
+The running mergerfs process is 2.42.0 (the preserved Fedora 44 RPM). All expected disk UUID mounts and the pool passed storage checks; normal-user writes, fsync and removal through `/home/m/downloads` passed. Plex remains claimed, nginx/DAV passes `nginx -t`, `/tmp` remains root:root 1777, Node 22/npm run, and logind refuses suspend.
+
+Fedora 45 moved its vendor repository files to `/usr/share/dnf5/repos.d`; DNF reads those alongside administrator files in `/etc/yum.repos.d`. The effective defaults enable Fedora 45 base/updates and RPM Fusion 45 base/testing, with Fedora updates-testing disabled and the unavailable released RPM Fusion updates disabled. Ordinary `dnf upgrade --assumeno --best` resolves successfully and reports nothing to do. No Fedora 44 repository URLs or persistent testing-repository overrides were added. Reassess nginx/DAV ABI and matching libheif/freeworld versions before enabling additional testing updates.
+
+All 22 intended containers are running without restart loops, and the checked Plex, Sonarr, Radarr, Lidarr, Prowlarr, Navidrome, Audiobookshelf, Grimmory, Feishin, Byparr, FlareSolverr and Ephemera endpoints return HTTP 200. Radarr required about six minutes for its existing ownership scan; the media guard recovered automatically when the API became ready. Transmission retains its 100 KB/s download cap; the Radarr client remains disabled, the Sonarr client enabled, and Auto-m4b stopped. Backup, parity and media-guard timers are active. The only remaining failed system unit is the pre-existing unused `mdmonitor.service`.
+
+A fresh post-upgrade application backup completed at 19:29 HKT, snapshot `cf72bbe0f375d5b40f2c127bd5fa1dafbc874f98afa69d4141a464e108bc6857`. SQLite validation, the MariaDB logical dump and the server restic check passed. The independent encrypted fi copy completed at 19:30 HKT with the same source snapshot/time; `restic check --read-data` read all 188 packs without errors. Pre- and post-upgrade snapshots are retained. Operational evidence stays outside Git at `/mnt/data/disk42/.recovery-preservation/fc45-preparation-20261021/`.
+
+The mergerfs bootstrap pin still targets Fedora 44; existing installations are preserved, while a fresh Fedora 45 bootstrap needs an explicitly selected, verified artifact. A full fresh-host recovery rehearsal remains outstanding.
 
 ## Restore application state and secrets
 
