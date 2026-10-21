@@ -4,7 +4,7 @@
 # Nginx source tarball.
 
 set -g nginx_dav_ext_version 3.0.0
-set -g nginx_dav_ext_release 3
+set -g nginx_dav_ext_release 4
 set -g nginx_dav_ext_checksum d2499d94d82d4e4eac8425d799e52883131ae86a956524040ff2fd230ef9f859
 set -g nginx_dav_ext_source_url "https://github.com/arut/nginx-dav-ext-module/archive/refs/tags/v$nginx_dav_ext_version.tar.gz"
 set -g nginx_dav_ext_root /var/cache/chezetc/nginx-mod-dav-ext
@@ -94,7 +94,9 @@ function converge_nginx_after_package_update
 end
 
 function nginx_dav_ext_current_abi
-    rpm -q --qf '%{VERSION}' nginx 2>/dev/null
+    # Interrupted RPM transactions can leave multiple version records. The
+    # installed binary determines which ABI its dynamic modules must use.
+    nginx -v 2>&1 | string match --regex --groups-only '^nginx version: nginx/([0-9]+\.[0-9]+\.[0-9]+)$'
 end
 
 function nginx_dav_ext_is_current
@@ -102,7 +104,12 @@ function nginx_dav_ext_is_current
     set -l module_release (rpm -q --qf '%{RELEASE}' nginx-mod-dav-ext 2>/dev/null)
     test -n "$nginx_abi"
     and test -n "$module_release"
-    and string match -q "*nginx$nginx_abi*" -- "$module_release"
+    and string match -q "*nginx$nginx_abi" -- "$module_release"
+    or return 1
+
+    # A matching DAV RPM alone does not prove the stream module can load.
+    # Keep the existing configuration checks, including WebDAV and TLS.
+    sudo nginx -t >/dev/null 2>&1
 end
 
 function remove_fedora_nginx_default_site
@@ -117,6 +124,11 @@ function write_nginx_dav_ext_spec
     set -l nginx_abi (nginx_dav_ext_current_abi)
     test -n "$nginx_abi"
     or return 1
+    set -l build_abi (rpm --eval '%{_nginx_abiversion}')
+    if test "$build_abi" != "$nginx_abi"
+        step_warn "Nginx build headers ($build_abi) do not match binary ($nginx_abi)"
+        return 1
+    end
 
     begin
         echo 'Name:           nginx-mod-dav-ext'
