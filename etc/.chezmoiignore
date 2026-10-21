@@ -9,6 +9,7 @@ si-snapraid-maintenance
 si-media-guard
 si-provision
 docker/daemon.json
+systemd/system/mdmonitor.service
 systemd/system/docker.service.d/si-storage.conf
 systemd/system/si-media-guard*
 systemd/system/si-snapraid-*
