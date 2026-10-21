@@ -20,7 +20,11 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
     sources and rebuilds after system updates, so it stays aligned with Fedora
     Nginx without the GetPageSpeed repository. Fedora's automatic live-upgrade
     trigger is held until the rebuilt module passes `nginx -t`; Chezetc then
-    upgrades the running master or starts Nginx if it was inactive.
+    upgrades the running master or starts Nginx if it was inactive. The ABI is read
+    from the installed `nginx -v` binary, so duplicate RPM records after an
+    interrupted update cannot produce a combined version string. A current
+    module is accepted only when the full `nginx -t` check passes, including
+    the stream module; rebuilding requires matching Fedora header macros.
 - `fstab`
 
 ## Supported Hosts
@@ -56,3 +60,7 @@ use a different configuration. Skipped rendering is reported explicitly.
 ## Todo
 
 - Reenable Sublime Text, once the [GPG key digest issue is fixed](https://discussion.fedoraproject.org/t/sublime-text-not-able-to-install-in-fedora-43/170396/8)
+
+## Server recovery and reproducibility
+
+See [SERVER-REBUILD.md](SERVER-REBUILD.md) for the service inventory, version-control boundaries, storage guards, restore order, and remaining work toward unattended provisioning. Do not use a blanket apply as a fresh-server recovery procedure yet.
