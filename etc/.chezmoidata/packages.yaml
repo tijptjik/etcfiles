@@ -4,7 +4,6 @@ packages:
     - 'atim/bottom'
     - 'atim/lazygit'
     - 'atim/starship'
-    - 'lionheartp/Hyprland'
     - 'skoved/vivid'
     - 'sneexy/zen-browser'
     rpm:
@@ -164,6 +163,7 @@ packages:
       flathub:
   client:
     copr:
+    - 'lionheartp/Hyprland'
     - 'errornointernet/quickshell'
     - 'iucar/duckdb'
     - 'purian23/material-symbols-fonts'

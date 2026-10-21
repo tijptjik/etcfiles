@@ -72,6 +72,16 @@ function enable_copr
     end
 end
 
+# Migrate si away from the desktop COPR formerly enabled for every host.
+# Keep the definition for troubleshooting; clients still enable it below.
+{{ if .isServer -}}
+set hyprland_repo 'copr:copr.fedorainfracloud.org:lionheartp:Hyprland'
+if dnf repo list --enabled --quiet | string match -q "$hyprland_repo *"
+    step_run_note_as DISABLE "Hyprland COPR" "client-only" sudo dnf config-manager setopt "$hyprland_repo.enabled=0"
+    or exit 1
+end
+{{ end }}
+
 # Initialize package arrays
 set common_copr_repos
 set client_copr_repos
