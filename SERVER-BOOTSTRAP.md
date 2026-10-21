@@ -60,20 +60,20 @@ sudo python3 /etc/si-provision/provision.py beets --apply
 
 The directory inventory records deployed bind-directory numeric owners/modes. Existing paths are preserved. A conflicting downloads or Plex symlink target aborts; move any package-created empty Plex directory out of the way explicitly after checking it. Beets seeding only fills missing custom source files; all YAML configuration and secrets are recovered through the application backup.
 
-Start **only** the pinned MariaDB container on a fresh data directory, allowing it to initialize. Then:
+Start **only** the MariaDB container on a fresh data directory, allowing it to initialize. Then:
 
 ```fish
 sudo python3 /etc/si-provision/restore.py import-mariadb \
   --stage /mnt/data/disk42/.recovery-preservation/restore-STAMP
 ```
 
-The importer verifies the container's config mount, refuses existing application tables or other running applications, and records a receipt before importing. A partial import requires manual diagnosis; it is never retried automatically. The all-databases dump restores users/grants as well as application data; use the compatible pinned image. Restore the backup credentials before bringing dependent services up.
+The importer verifies the container's config mount, refuses existing application tables or other running applications, and records a receipt before importing. A partial import requires manual diagnosis; it is never retried automatically. The all-databases dump restores users/grants as well as application data; use an image version compatible with the backup. Restore the backup credentials before bringing dependent services up.
 
 Validate Compose (`docker compose config --quiet`), paths, tokens and mounts, then create `/etc/si-provision/services-ready` and explicitly start the services/timers as described in SERVER-REBUILD.md. Keep Auto-m4b held.
 
 ## Image and customization updates
 
-Compose image references are immutable digests from the deployed containers; `home/dockers/image-lock.json` records them. The locally built Lidarr base is a separately resolved fixed registry digest, rather than an inferred digest for the old local build; its ffmpeg package dependency is still fetched during build. A bit-for-bit reproducible custom image would require publishing and pinning the built artifact too. No image pulls or container recreation were done here.
+Compose uses the intended upstream tags; only explicitly chosen pins in Compose are retained (currently Unpackerr). There is no separate image-lock.json. Lidarr builds from its original nightly tag. Pull/recreate services deliberately and verify a current application backup before upgrades; database migrations may require restoring that backup to roll back. No automatic image-update service is added.
 
 Nonsecret Beets plugin source and genre tools are under chezmoi `home/dockers/beets-customizations/`. Credentials belong in Bitwarden, not Git, including encrypted credential archives. Provisioning must resolve secrets from Bitwarden at runtime without printing them or writing them into repository sources. The proposed Beets credential archive is cancelled; none was exported. Existing application backups may contain credential-bearing application state; restoring that state is distinct from version-controlling credentials. A Beets-specific Bitwarden item mapping has not yet been implemented; do not invent item IDs or replace existing secrets.
 

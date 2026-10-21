@@ -12,7 +12,7 @@ Keep `/etc` policy in **chezetc**, home-owned Compose/build definitions in **che
 | OS mounts | Keep installer-owned root, home, boot and EFI entries | Server fstab target is ignored; explicitly run the selective storage helper after review. |
 | SnapRAID | `etc/snapraid.conf.tmpl`, maintenance script, guards and units | Preserve content/parity files. Template now matches disk42 and new parity1 and excludes `/docker/` and `/.recovery-preservation/`. Keep template layout in agreement with the inventory. |
 | mergerfs | Explicit branches in generated fstab, mounts required before services | Installed 2.32.6 fc33 package has no candidate in current repositories. Select a supported, pinned, checksum-verified upstream package and test its mount options before automating installation. Do not silently upgrade the live pool. |
-| Docker and Compose | Package/repo declarations, `etc/docker/daemon.json`, systemd mount guard; chezmoi `home/dockers/docker-compose.yaml.tmpl` | Docker data-root is `/mnt/data/disk22/docker`. Most images use mutable tags: capture and pin approved digests, with a deliberate update workflow. Do not restore Docker layers as application backups. |
+| Docker and Compose | Package/repo declarations, `etc/docker/daemon.json`, systemd mount guard; chezmoi `home/dockers/docker-compose.yaml.tmpl` | Docker data-root is `/mnt/data/disk22/docker`. Images retain their intended tags; pin only when explicitly chosen in Compose. Use a deliberate update workflow. Do not restore Docker layers as application backups. |
 | Sonarr, Radarr, Prowlarr, Lidarr, Bookshelf | Compose; Lidarr ffmpeg Dockerfile | Restore appData databases/config: paths, profiles, indexes, clients, tokens, notifications and monitoring state live there. Future API reconciliation must preserve existing user settings. |
 | Byparr, FlareSolverr | Compose | Audit FlareSolverr anonymous `/config` volume before treating it as disposable. |
 | LazyLibrarian, Ephemera, Shelfmark, Octo-fiestarr, Grimmory | Compose | Restore appData, credentials and dependencies; verify service-specific health after restore. |
@@ -56,14 +56,14 @@ These steps are an operator runbook; they are not an unattended script. Use a fr
 
    Create mountpoint directories, mount each physical disk, then `/mnt/storage`, and run `sudo python3 /etc/si-provision/storage.py --check`. The helper never creates storage data directories on unmounted disks.
 5. **Restore state.** Follow the application-backup recovery guide in chezmoi `docs/si-application-backups.md`. Restore SQLite snapshots, configs, Plex identity, and the MariaDB logical dump with services stopped. Ensure `/home/m/downloads` links to `/mnt/storage/meta/downloads` and Plex's state symlink points at restored state. Check Compose bind sources exist and owners match; avoid Docker creating empty root-owned directories.
-6. **Validate configuration.** Render m's Compose with `docker compose config --quiet`. Restore Unpackerr secrets and test Arr/Transmission/Plex connections. Review image digests and custom Beets plugins. Test `nginx -t`. Keep Radarr's disabled download client and paused torrents unchanged unless deliberately authorized.
+6. **Validate configuration.** Render m's Compose with `docker compose config --quiet`. Restore Unpackerr secrets and test Arr/Transmission/Plex connections. Review intended image tags or explicit pins and custom Beets plugins. Test `nginx -t`. Keep Radarr's disabled download client and paused torrents unchanged unless deliberately authorized.
 7. **Enable services deliberately.** Create `sudo touch /etc/si-provision/services-ready` only when restore and checks pass. Enable Docker, dockers.service, Plex and nginx in dependency order; review logs and endpoints. Auto-m4b remains outside the default stack. Enable `si-app-backup.timer`, `si-media-guard.timer`, `si-snapraid-sync.timer`, `si-snapraid-scrub.timer`, and `si-snapraid-resume.service` only after credentials, storage and dataset checks pass. Never sync an empty/incomplete restore against the recovery parity.
 8. **Prove recovery.** Run a backup and sample restore, check next timer runs, then test fi's pull. Rehearse the whole process on a disposable host before promising one-command provisioning.
 
 ## Remaining work toward one-command bootstrap
 
 - [ ] Split server packages from desktop-heavy common packages.
-- [ ] Pin and verify a supported mergerfs artifact; pin container images and Lidarr base image.
+- [ ] Verify the supported mergerfs artifact; retain intended container tags and only explicit Compose pins.
 - [ ] Implement collision-safe account/directory/symlink provisioning with restore-aware ordering.
 - [ ] Implement staged bootstrap that blocks package-triggered service starts until restored state is ready.
 - [ ] Capture Beets custom code/config and generate Unpackerr config from secret inputs.
