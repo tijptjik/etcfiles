@@ -61,7 +61,7 @@ def render_fstab(original, config):
     block = [BEGIN]
     for path, uuid in mounts.items():
         block.append(f'UUID={uuid} {path} ext4 defaults,nofail 0 2')
-    options = 'defaults,allow_other,minfreespace=1M,moveonenospc=true,use_ino,cache.files=partial,dropcacheonclose=true,category.create=mfs,fsname=mergerfs'
+    options = 'defaults,allow_other,minfreespace=1M,moveonenospc=true,cache.files=partial,dropcacheonclose=true,category.create=mfs,fsname=mergerfs'
     options += ''.join(',x-systemd.requires-mounts-for=' + p for p in data)
     block.append(f'{":".join(data)} /mnt/storage fuse.mergerfs {options} 0 0')
     block.append('/mnt/data/disk22/swap none swap defaults,nofail 0 0')
