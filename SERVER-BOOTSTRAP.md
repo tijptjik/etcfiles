@@ -174,3 +174,28 @@ Compose uses the intended upstream tags; only explicitly chosen pins in Compose 
 Nonsecret Beets plugin source and genre tools are under chezmoi `home/dockers/beets-customizations/`. Credentials belong in Bitwarden, not Git, including encrypted credential archives. Provisioning must resolve secrets from Bitwarden at runtime without printing them or writing them into repository sources. The proposed Beets credential archive is cancelled; none was exported. Existing application backups may contain credential-bearing application state; restoring that state is distinct from version-controlling credentials. A Beets-specific Bitwarden item mapping has not yet been implemented; do not invent item IDs or replace existing secrets.
 
 Validation: 28 regression tests pass; account collisions, active writers, populated destinations, snapshot selection and existing mergerfs preservation are covered. This does not replace a complete fresh-host recovery rehearsal; no live restore was attempted.
+
+
+## SnapRAID Telegram alerts
+
+SnapRAID failure/recovery hooks and the hourly missed-run watchdog are managed
+under `etc/si-snapraid-maintenance/notify.py` and `etc/systemd/system/si-snapraid-*`.
+They apply only to si; fi/li exclude these paths. The server-only apply hook
+reloads units and enables `si-snapraid-health.timer` after credentials exist. It
+does not start sync/scrub or restore secrets, and reports a skip without credentials.
+
+The root-only `/etc/si-notifications/telegram.json` is deliberately unmanaged. Its
+JSON value is saved in Bitwarden Secrets Manager, project `dotfiles`, key
+`si-snapraid-telegram`, and in encrypted `/etc` backups. Restore it with root
+ownership, directory mode 0700 and file mode 0600 before enabling alerts. On a
+fresh recovery, `restore.py install --include /etc/si-notifications` is allowlisted
+and retains the same empty-destination and stopped-service checks; never overwrite
+a populated directory. Do not put bot tokens or chat configuration in Git.
+
+Alerts use the existing starprowlarr bot/chat independently of Prowlarr and array
+mounts. Failures and safeguard stops alert immediately; unchanged incidents remind
+at most daily, and recovery alerts once. Hourly health checks consider sync stale
+after 36 hours and scrub after nine days; running jobs get the same runtime limits.
+Notification delivery retries every five minutes, independently of parity jobs.
+Routine successful runs stay quiet. The labelled live failure/recovery test passed
+on October 22; no real parity operation ran.

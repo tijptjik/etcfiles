@@ -1,6 +1,8 @@
 [Unit]
 Description=Guarded SnapRAID sync
 ConditionHost=si
+OnFailure=si-snapraid-alert@%n.service
+OnSuccess=si-snapraid-recovered@%n.service
 Requires=docker.service si-snapraid-resume.service
 After=docker.service si-snapraid-resume.service
 [Service]

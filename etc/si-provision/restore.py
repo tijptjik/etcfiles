@@ -5,7 +5,7 @@ import argparse, fcntl, hashlib, json, os, pathlib, re, sqlite3, subprocess
 from storage import CONFIG, check_mounts
 P=pathlib.Path
 DEFAULTS=['/mnt/storage/meta/appData','/mnt/storage/meta/appCache/audiobookshelf','/mnt/storage/meta/opt/plexmediaserver','/appData/mariadb/config','/home/m/.ssh','/home/m/.keys']
-EXTRA=['/home/m/.config','/home/m/dockers','/home/m/.local/bin','/etc/nginx','/etc/pki/tls/private','/etc/pki/tls/certs']
+EXTRA=['/home/m/.config','/home/m/dockers','/home/m/.local/bin','/etc/nginx','/etc/pki/tls/private','/etc/pki/tls/certs','/etc/si-notifications']
 
 def run(args,**kwargs):return subprocess.run(args,check=True,**kwargs)
 

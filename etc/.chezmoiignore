@@ -6,6 +6,7 @@ ssh/ssh_host*
 nginx
 si-app-backup
 si-snapraid-maintenance
+si-notifications
 si-media-guard
 si-provision
 docker/daemon.json
@@ -23,6 +24,7 @@ dconf/db/gdm.d/locks/90-si-always-on
 {{ if .isServer -}}
 si-provision/services-ready
 si-app-backup/password
+si-notifications/telegram.json
 
 # Preserve installer-owned root/home/boot entries. Use si-provision/storage.py.
 fstab

@@ -1,6 +1,8 @@
 [Unit]
 Description=Resume only containers paused by interrupted SnapRAID maintenance
 ConditionHost=si
+OnFailure=si-snapraid-alert@%n.service
+OnSuccess=si-snapraid-recovered@%n.service
 Requires=docker.service
 After=docker.service
 Before=si-snapraid-sync.service si-snapraid-scrub.service
