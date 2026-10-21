@@ -1,0 +1,7 @@
+{
+  "version": "2.42.0",
+  "fedora": "43",
+  "arch": "x86_64",
+  "url": "https://github.com/trapexit/mergerfs/releases/download/2.42.0/mergerfs-2.42.0-1.fc43.x86_64.rpm",
+  "sha256": "ebdcfb57f41f84b312685ab41960d15a0d2030b10db3b26fd47fbcd60189fcbc"
+}
