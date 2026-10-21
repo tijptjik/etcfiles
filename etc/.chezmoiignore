@@ -15,6 +15,9 @@ systemd/system/si-snapraid-*
 systemd/system/si-app-backup*
 systemd/system/dockers.service
 systemd/system/plexmediaserver.service.d
+systemd/sleep.conf.d/si-always-on.conf
+dconf/db/gdm.d/90-si-always-on
+dconf/db/gdm.d/locks/90-si-always-on
 {{ end -}}
 {{ if .isServer -}}
 si-provision/services-ready
