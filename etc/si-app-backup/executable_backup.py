@@ -57,12 +57,23 @@ def stage(checksum=False):
 stage()
 started=datetime.datetime.now(datetime.timezone.utc).isoformat()
 sqlite_results=[]
+historical_sqlite=[]
+def is_historical_plex_database(source):
+ return source.parent==pathlib.Path(plex)/'Plug-in Support/Databases' and source.name.endswith('.db.bak')
 for staged in [p for source_root,_ in sources for p in (STAGE/source_root.lstrip('/')).rglob('*')]:
  if not staged.is_file() or staged.is_symlink():continue
  with staged.open('rb') as f:header=f.read(16)
  if header!=b'SQLite format 3\x00':continue
  source=pathlib.Path('/')/staged.relative_to(STAGE)
  if not source.is_file():raise RuntimeError('Database disappeared: '+str(source))
+ # Plex keeps pre-migration .db.bak files here. Preserve their original bytes,
+ # but do not present historical artifacts as validated live restore databases.
+ if is_historical_plex_database(source):
+  check=subprocess.run(['/usr/lib/plexmediaserver/Plex SQLite','-readonly',str(staged),'PRAGMA quick_check;'],text=True,capture_output=True,check=True)
+  checks=check.stdout.strip().splitlines()
+  historical_sqlite.append({'path':str(source),'quickCheck':checks,'bytes':staged.stat().st_size,'role':'historical Plex database backup; not a live restore database'})
+  print('Historical Plex database preserved:',source,'quick_check:',checks,flush=True)
+  continue
  tmp=staged.with_name(staged.name+'.backup-tmp')
  if tmp.exists():tmp.unlink()
  before=source.stat();deadline=time.monotonic()+180
@@ -109,7 +120,7 @@ with tmp.open('wb') as f:
 if tmp.stat().st_size<1000:raise RuntimeError('Unexpectedly empty MariaDB dump')
 os.replace(tmp,dumps/'mariadb.sql')
 containers=output(['docker','ps','--format','{{.Names}}']).splitlines()
-save(STAGE/'backup-manifest.json',{'capturedAt':started,'sources':sources,'runningContainers':containers,'consistency':'SQLite online backup API with quick_check; MariaDB locked logical dump; application configuration copied with rsync','sqlite':sqlite_results,'mariadbDump':'database-dumps/mariadb.sql','mariadbRestore':'Import with compatible MariaDB; raw databases directory intentionally excluded'})
+save(STAGE/'backup-manifest.json',{'capturedAt':started,'sources':sources,'runningContainers':containers,'consistency':'SQLite online backup API with quick_check; MariaDB locked logical dump; application configuration copied with rsync','sqlite':sqlite_results,'historicalSqlite':historical_sqlite,'mariadbDump':'database-dumps/mariadb.sql','mariadbRestore':'Import with compatible MariaDB; raw databases directory intentionally excluded'})
 run(['restic','--retry-lock','15m','backup',str(STAGE),'--host','si','--tag','app-state'])
 run(['restic','--retry-lock','15m','forget','--host','si','--tag','app-state','--keep-daily','7','--keep-weekly','4','--prune'])
 run(['restic','--retry-lock','15m','check'])
