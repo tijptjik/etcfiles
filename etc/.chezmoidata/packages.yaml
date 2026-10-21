@@ -133,6 +133,7 @@ packages:
     - 'python3-devel'
     - 'qemu-guest-agent'
     - 'rclone'
+    - 'restic'
     - 'rpmfusion-free-appstream-data'
     - 'rpmfusion-free-release'
     - 'rpmfusion-nonfree-appstream-data'
@@ -259,6 +260,13 @@ packages:
       - 'rocks.koreader.KOReader'
   server:
     rpm:
+    - 'snapraid'
+    - 'plexmediaserver'
+    - 'rsync'
+    - 'sqlite'
+    - 'python3-pyyaml'
+    - 'smartmontools'
+    - 'ffmpeg'
     - 'x265-libs'
     - 'nginx'
     - 'nginx-mod-stream'

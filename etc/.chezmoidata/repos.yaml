@@ -40,3 +40,6 @@ repos:
       url: "https://repository.mullvad.net/rpm/stable/mullvad.repo"
 
   server:
+    docker:
+      name: "Docker CE"
+      url: "https://download.docker.com/linux/fedora/docker-ce.repo"
