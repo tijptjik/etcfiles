@@ -67,6 +67,7 @@
   "writers": [
     "sonarr",
     "seerr",
+    "profilarr",
     "radarr",
     "lidarr",
     "bookshelf",

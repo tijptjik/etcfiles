@@ -59,6 +59,11 @@
     "mode": "0o775",
     "uid": 1000
   },
+  "/mnt/storage/meta/appData/profilarr": {
+    "gid": 950,
+    "mode": "0o750",
+    "uid": 1000
+  },
   "/mnt/storage/meta/appData/prowlarr": {
     "gid": 950,
     "mode": "0o775",
