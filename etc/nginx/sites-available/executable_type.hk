@@ -2,32 +2,16 @@
 ###  TYPE.HK - NGINX CONFIG  ###
 ################################
 
+# The public site is hosted on Cloudflare. Unknown hosts must not serve
+# retired local site assets or fall through to another service.
 server {
-    listen 8443 ssl;
+    listen 8443 ssl default_server;
     http2 on;
     include /etc/nginx/conf.d/ssl_type.hk.conf;
 
-    server_name  _ type.hk www.type.hk;
-    root   /var/www/html/type.hk/public;
-    index  index.html;
-
-    client_max_body_size 100M;
-    autoindex off;
-
-    #################
-    ###  HUGO     ###
-    ###  type.hk  ###
-    #################
-
-    location / {
-        if ($request_method = 'OPTIONS') {
-            include /etc/nginx/snippets/cors_options_type.hk.conf;
-            return 204;
-        }
-        try_files $uri $uri/ /index.html?$args;
-    }
+    server_name _ type.hk www.type.hk;
+    return 301 https://type.hk$request_uri;
 }
-
 # Public dashboards; unauthenticated access explicitly approved.
 server {
     include /etc/nginx/snippets/server_template.conf;
