@@ -159,6 +159,16 @@
     "mode": "0o777",
     "uid": 1000
   },
+  "/mnt/storage/meta/downloads/radarr": {
+    "gid": 950,
+    "mode": "0o2775",
+    "uid": 1000
+  },
+  "/mnt/storage/meta/downloads/sonarr": {
+    "gid": 950,
+    "mode": "0o2775",
+    "uid": 1000
+  },
   "/mnt/storage/public/audiobooks": {
     "gid": 950,
     "mode": "0o770",
@@ -177,6 +187,11 @@
   "/mnt/storage/public/library/stars": {
     "gid": 950,
     "mode": "0o755",
+    "uid": 1000
+  },
+  "/mnt/storage/public/movies": {
+    "gid": 950,
+    "mode": "0o2775",
     "uid": 1000
   },
   "/mnt/storage/public/music": {
@@ -208,5 +223,10 @@
     "gid": 950,
     "mode": "0o770",
     "uid": 954
+  },
+  "/mnt/storage/public/shows": {
+    "gid": 950,
+    "mode": "0o2775",
+    "uid": 1000
   }
 }

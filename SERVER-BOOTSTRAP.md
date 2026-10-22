@@ -6,7 +6,13 @@ Implemented 2026-10-21. These are explicit commands, not apply hooks. **Do not r
 
 `tjikup` pulls/pushes source and applies chezmoi and chezetc. Package upgrades, Docker enable/start and nginx module rebuilds retain their normal behavior. Storage guards protect service startup. Provisioning and restore tools are never invoked by these hooks. Review diffs before applying substantial changes; ordinary maintenance can still update packages and managed files.
 
-Neither provisioning nor restoration is an apply hook. Transmission's mutable settings.json is ignored on the server. Application databases and passwords are not template targets. Existing mergerfs is not replaced, existing accounts are not renumbered, existing directory ownership/modes are not recursively changed, and existing Beets files are not overwritten. Auto-m4b remains opt-in.
+Neither provisioning nor restoration is an apply hook. Transmission's mutable settings.json is ignored on the server. Application databases and passwords are not template targets. Existing mergerfs is not replaced, existing accounts are not renumbered, the directory provisioner preserves existing ownership/modes, and existing Beets files are not overwritten. Auto-m4b remains opt-in.
+
+Directory provisioning itself preserves existing directories. A separate,
+server-only [video permission policy](etc/si-media-permissions/README.md) maintains
+media-group access within the four explicit movie/TV/Arr download trees. Its
+guarded service runs before Docker and every 15 minutes; private storage and
+application configuration are outside its scope.
 
 ## Always-on server power policy
 
