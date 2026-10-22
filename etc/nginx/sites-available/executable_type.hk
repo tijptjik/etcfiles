@@ -28,6 +28,27 @@ server {
     }
 }
 
+# Public dashboards; unauthenticated access explicitly approved.
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name home.type.hk;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
+server {
+    include /etc/nginx/snippets/server_template.conf;
+    server_name storage.type.hk;
+
+    location / {
+        proxy_pass http://127.0.0.1:8085;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+    }
+}
+
 #########################
 ###  MEDIA REQUESTS   ###
 ###  request.type.hk  ###
