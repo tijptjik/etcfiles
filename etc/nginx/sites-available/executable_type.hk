@@ -33,6 +33,14 @@ server {
     include /etc/nginx/snippets/server_template.conf;
     server_name home.type.hk;
 
+    # Runtime configuration assets must not be cached as immutable/static CSS.
+    location ^~ /api/config/ {
+        proxy_pass http://127.0.0.1:3000;
+        include /etc/nginx/snippets/reverse_proxy.conf;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "no-store" always;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:3000;
         include /etc/nginx/snippets/reverse_proxy.conf;
