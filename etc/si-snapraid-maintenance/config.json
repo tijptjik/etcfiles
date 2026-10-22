@@ -66,6 +66,7 @@
   "max_removed": 200,
   "writers": [
     "sonarr",
+    "seerr",
     "radarr",
     "lidarr",
     "bookshelf",

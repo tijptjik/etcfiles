@@ -30,6 +30,7 @@ if not (BASE/'repository/config').exists():run(['restic','--retry-lock','15m','i
 app_excludes=['/docker/','/flatpak/','/booklore.bak/','*.fq.gz','*/Backups/','*/backups/',
  '/radarr/MediaCover/','/sonarr/MediaCover/','/lidarr/MediaCover/','/bookshelf/MediaCover/',
  '/radarr/logs/','/sonarr/logs/','/lidarr/logs/','/bookshelf/logs/','/prowlarr/logs/',
+ '/seerr/logs/','/seerr/cache/',
  '/tautulli/logs/','/tautulli/cache/','/lazylibrarian/log/','/lazylibrarian/cache/',
  '/navidrome/artwork/','/navidrome/cache/','/grimmory/cbx_cache/',
  '/beets/genres/.venv/','**/.git/','**/__pycache__/']

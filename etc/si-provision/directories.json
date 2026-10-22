@@ -69,6 +69,11 @@
     "mode": "0o775",
     "uid": 1000
   },
+  "/mnt/storage/meta/appData/seerr": {
+    "gid": 950,
+    "mode": "0o750",
+    "uid": 1000
+  },
   "/mnt/storage/meta/appData/shelfmark": {
     "gid": 950,
     "mode": "0o770",
