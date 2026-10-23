@@ -17,7 +17,7 @@ import urllib.request
 
 LABELS = {'sonarr', 'radarr', 'sonarred', 'radarred'}
 IPT_HOSTS = {'localhost.stackoverflow.tech', 'routing.bgp.technology', 'ssl.empirehost.me'}
-MIN_SEED_SECONDS = 14 * 24 * 60 * 60
+MIN_SEED_SECONDS = 15 * 24 * 60 * 60
 STATE = Path('/var/lib/si-transmission-cleanup')
 DOWNLOADS = Path('/mnt/storage/meta/downloads')
 FIELDS = ['hashString', 'name', 'labels', 'metadataPercentComplete', 'percentDone',
