@@ -74,12 +74,7 @@ step_run "Install TOML extensions" uv pip install --python python3 --user tomli 
 
 # CHEZETC
 
-if [ ! -d "$HOME/.tools/chezetc" ]; then
-    step_run "Clone chezetc" git clone https://github.com/SilverRainZ/chezetc.git "$HOME/.tools/chezetc"
-    step_run "Make chezetc executable" chmod +x "$HOME/.tools/chezetc/chezetc"
-else
-    step_skip "Chezetc already installed"
-fi
+step_run "Install Chezetc in /opt" bash "$(dirname "$0")/scripts/install-chezetc-wrapper.sh"
 
 # CHEZETC CONFIG
 

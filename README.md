@@ -47,7 +47,7 @@ Now you can manage your `/etc` files with `chezetc`.
 ```sh
 # chezetc is added to the path in the dotfiles, so it is not 
 # available before you've set them up with chezmoi.
-$HOME/.tools/chezetc/chezetc apply
+/opt/chezetc/chezetc apply
 ```
 ## Validation
 

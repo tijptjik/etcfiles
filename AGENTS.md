@@ -19,7 +19,7 @@ There is no application build step. Run commands from the repository root:
 - `chezetc diff`: inspect pending changes to managed system files.
 - `chezetc apply`: apply system configuration and execute applicable hooks, which can update packages, build software, and change services. Inspect the target host and pending changes first.
 
-If the wrapper is not on PATH, use `$HOME/.tools/chezetc/chezetc`. Use the Chezetc wrapper for system changes so the intended source, configuration, and destination are selected.
+If the wrapper is not on PATH, use `/opt/chezetc/chezetc`. Use the Chezetc wrapper for system changes so the intended source, configuration, and destination are selected.
 
 ## Coding Style & Naming Conventions
 

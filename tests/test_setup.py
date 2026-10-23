@@ -22,12 +22,16 @@ class SetupTests(unittest.TestCase):
         for status in (0, 1):
             with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
-                (root / ".tools/chezetc").mkdir(parents=True)
+                setup = root / "setup.sh"
+                setup.write_text(SETUP.read_text())
+                (root / "scripts").mkdir()
+                (root / "scripts/install-chezetc-wrapper.sh").write_text("exit 0\n")
+                (root / "chezetc.toml").write_text("template\n")
                 config = root / ".config/chezetc/chezetc.toml"
                 config.parent.mkdir(parents=True)
                 config.write_text("existing configuration\n")
                 result = subprocess.run(
-                    ["bash", "-c", HARNESS, "test-setup", str(SETUP)],
+                    ["bash", "-c", HARNESS, "test-setup", str(setup)],
                     env={**os.environ, "HOME": str(root), "RENDER_STATUS": str(status)},
                     text=True, capture_output=True, timeout=10,
                 )
