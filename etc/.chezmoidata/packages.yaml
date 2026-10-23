@@ -234,6 +234,7 @@ packages:
     - 'waypipe'
     - 'gpu-screen-recorder'
     - 'slurp'
+    - 'yt-dlp'
     - 'wireplumber-devel'
     - 'wl-clipboard'
     - 'words'
