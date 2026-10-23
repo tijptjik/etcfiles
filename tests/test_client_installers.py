@@ -40,6 +40,42 @@ class DesktopUserTests(unittest.TestCase):
             self.assertIn('Cannot identify',result.stderr)
 
 
+class CoprTests(unittest.TestCase):
+    def test_fallback_is_selected_before_install_and_has_no_false_failure(self):
+        text=(REPO/'etc/.chezmoiscripts/run_10-install-copr-repos.fish.tmpl').read_text()
+        function=text[text.index('function enable_copr'):text.index('# Migrate si')]
+        for available in (True,False):
+            harness='''
+function is_copr_configured; return 1; end
+function copr_fallback_chroot; %s; end
+function rpm; echo 44; end
+function uname; echo x86_64; end
+function status_msg; printf 'ROW %%s\\n' (string join '|' -- $argv); end
+function step_run_note_quiet; printf 'RUN %%s\\n' (string join '|' -- $argv); end
+''' % ('echo fedora-43-x86_64' if available else 'return 1')
+            result=subprocess.run(['fish','--no-config','-c',harness+function+'\nenable_copr purian23/material-symbols-fonts'],capture_output=True,text=True)
+            if available:
+                self.assertEqual(result.returncode,0,result.stderr)
+                self.assertNotIn('FAILED',result.stdout)
+                self.assertIn('|fedora-43-x86_64',result.stdout)
+                self.assertEqual(result.stdout.count('RUN '),1)
+            else:
+                self.assertNotEqual(result.returncode,0)
+                self.assertNotIn('RUN ',result.stdout)
+
+    def test_quiet_success_hides_command_output_but_failure_reveals_it(self):
+        status=(REPO/'etc/.chezmoihelpers/status.fish').read_text()
+        logging=(REPO/'etc/.chezmoitemplates/fish_logging.fish').read_text()
+        for code in (0,7):
+            script=status+'\n'+logging+"\nsetup_logging test\nstep_run_note_quiet 'COPR test' 'using fedora-43-x86_64' sh -c 'echo noisy-output; exit "+str(code)+"'"
+            result=subprocess.run(['fish','--no-config','-c',script],env={**os.environ,'TJIKUP_NO_SPIN':'1','TJIKUP_COLOR':'0'},capture_output=True,text=True)
+            self.assertEqual(result.returncode,code,result.stderr)
+            if code:
+                self.assertIn('noisy-output',result.stdout)
+                self.assertIn('FAILED',result.stdout)
+            else:
+                self.assertNotIn('noisy-output',result.stdout)
+                self.assertIn('using fedora-43-x86_64',result.stdout)
 
 
 

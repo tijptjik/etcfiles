@@ -56,20 +56,20 @@ function enable_copr
         return 0
     end
 
-    if step_run "$copr_repo" sudo dnf copr enable -y $copr_repo
-        return 0
-    else
-        set fallback_chroot (copr_fallback_chroot $copr_repo)
-
-        if test -z "$fallback_chroot"
-            step_fail "$copr_repo"
-            return 1
-        end
-
-        step_note "$copr_repo current Fedora chroot unavailable; trying $fallback_chroot"
-        step_run "$copr_repo [$fallback_chroot]" sudo dnf copr enable -y $copr_repo $fallback_chroot
-        or return 1
+    # Select a supported chroot before emitting an INSTALL result. A successful
+    # compatibility fallback must not leave a false FAILED event in the report.
+    set selected_chroot (copr_fallback_chroot $copr_repo)
+    if test -z "$selected_chroot"
+        status_msg FAILED "✗" "$copr_repo" "no supported chroot or metadata unavailable"
+        return 1
     end
+    set -l result_note enabled
+    set current_chroot "fedora-"(rpm -E %fedora)"-"(uname -m)
+    if test "$selected_chroot" != "$current_chroot"
+        set result_note "using $selected_chroot"
+    end
+    step_run_note_quiet "$copr_repo" "$result_note" sudo dnf copr enable -y $copr_repo $selected_chroot
+    or return 1
 end
 
 # Migrate si away from the desktop COPR formerly enabled for every host.
