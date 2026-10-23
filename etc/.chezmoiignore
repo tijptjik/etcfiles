@@ -31,3 +31,8 @@ si-notifications/telegram.json
 # Preserve installer-owned root/home/boot entries. Use si-provision/storage.py.
 fstab
 {{ end -}}
+
+{{ if not .isServer -}}
+si-transmission-cleanup
+systemd/system/si-transmission-cleanup*
+{{ end -}}
