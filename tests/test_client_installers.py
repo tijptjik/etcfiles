@@ -103,3 +103,24 @@ class WaybarLauncherTests(unittest.TestCase):
             self.assertNotEqual(run().returncode,0)
             self.assertTrue(launcher.is_dir())
             self.assertEqual(list(root.glob('waybar.*')),[])
+
+
+class WaybarCompatibilityTests(unittest.TestCase):
+    def test_launcher_falls_back_when_custom_binary_cannot_load(self):
+        text=(REPO/'etc/.chezmoiscripts/run_51-build-waybar-lua.fish.tmpl').read_text()
+        function=text[text.index('function write_waybar_launcher'):text.index('function stable_version')]
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            launcher=root/'waybar'
+            custom=root/'.local/lib/chezetc/waybar/bin/waybar'
+            custom.parent.mkdir(parents=True)
+            fallback=root/'system-waybar'
+            fallback.write_text('#!/bin/sh\necho fallback\n')
+            fallback.chmod(0o755)
+            function=function.replace('/usr/bin/waybar',str(fallback))
+            subprocess.run(['fish','--no-config','-c','set waybar_launcher $argv[1]\n'+function+'\nwrite_waybar_launcher','--',str(launcher)],check=True)
+            for code,expected in ((127,'fallback'),(0,'custom')):
+                custom.write_text('#!/bin/sh\nif [ "$1" = --version ]; then exit '+str(code)+'; fi\necho custom\n')
+                custom.chmod(0o755)
+                result=subprocess.run([str(launcher)],env={**os.environ,'HOME':tmp},capture_output=True,text=True,check=True)
+                self.assertEqual(result.stdout.strip(),expected)

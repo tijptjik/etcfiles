@@ -40,7 +40,7 @@ function write_waybar_launcher
         '#!/usr/bin/env sh' \
         'set -eu' \
         'local_binary="$HOME/.local/lib/chezetc/waybar/bin/waybar"' \
-        'if [ -x "$local_binary" ]; then' \
+        'if [ -x "$local_binary" ] && "$local_binary" --version >/dev/null 2>&1; then' \
         '    exec "$local_binary" "$@"' \
         'fi' \
         'exec /usr/bin/waybar "$@"' > "$launcher_tmp"
@@ -126,15 +126,18 @@ function build_waybar
     or return 1
     set patch_revision (sha256sum "$waybar_patch_file" | string split -f1 " ")
     or return 1
-    set build_revision "$source_revision:$patch_revision"
+    # Source identity alone cannot detect a distro/library ABI change.
+    set platform_revision (rpm -q fedora-release-common fmt spdlog glibc libstdc++ gtk3 gtk-layer-shell | sha256sum | string split -f1 " ")
+    or return 1
+    set build_revision "$source_revision:$patch_revision:$platform_revision"
     set waybar_build_source "$waybar_build_root/$source_revision-$patch_revision"
-    set waybar_build_dir "$waybar_build_source/build"
+    set waybar_build_dir "$waybar_build_source/build-$platform_revision"
     set built_revision
     if test -f "$waybar_revision_file"
         set built_revision (string trim < "$waybar_revision_file")
     end
 
-    if test -x "$waybar_binary"; and test "$build_revision" = "$built_revision"
+    if test -x "$waybar_binary"; and test "$build_revision" = "$built_revision"; and "$waybar_binary" --version >/dev/null 2>&1
         step_skip_ok "Waybar Lua build" "no changes"
         return 0
     end
