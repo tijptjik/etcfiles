@@ -1,0 +1,37 @@
+#!/usr/bin/env fish
+{{ if and (eq .chezmoi.os "linux") .isClient -}}
+{{ include ".chezmoihelpers/desktop-user.fish" }}
+{{ include ".chezmoihelpers/status.fish" }}
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-launcher-tools
+function install_launcher_tools
+    if test (uname -m) != x86_64
+        echo "Hamr release is pinned for x86_64" >&2
+        return 1
+    end
+    set -l missing
+    for package in gtk4 gtk4-layer-shell python3-pip
+        rpm -q $package >/dev/null 2>&1; or set -a missing $package
+    end
+    if test (count $missing) -gt 0
+        sudo -n dnf install -y $missing; or return $status
+    end
+    set -l installer (mktemp)
+    printf '%s\n' {{ include ".chezmoitemplates/install-launcher-tools.py" | quote }} > "$installer"
+    sudo -n python3 "$installer"
+    set -l result $status
+    rm -f "$installer"
+    test $result -eq 0; or return $result
+    set -l backup "$HOME/.local/state/chezetc/launcher-tools/"(date +%Y%m%dT%H%M%S%N)
+    mkdir -p "$HOME/.local/bin" "$backup"; or return 1
+    for name in gitfetch hamr hamr-daemon hamr-gtk hamr-tui
+        set -l path "$HOME/.local/bin/$name"
+        if test -e "$path"; and not test -L "$path"
+            cp -p "$path" "$backup/$name"; or return 1
+        end
+        ln -sfn /usr/local/bin/$name "$path"; or return 1
+    end
+end
+step_run_quiet "Gitfetch and Hamr (/opt)" install_launcher_tools
+or exit $status
+{{ end -}}
