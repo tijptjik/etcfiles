@@ -82,3 +82,14 @@ and `~/.local/bin/tailscale-lock` exist. Apply the GDM file narrowly with
 next boot/login; do not restart GDM inside a working desktop session.
 
 The server retains its existing automatic login as `m`.
+
+### Hyprvoice (clients)
+
+Chezetc installs the pinned upstream v1.0.2 x86_64 release into
+`/opt/hyprvoice/v1.0.2/hyprvoice`, verifying its SHA-256 before installation.
+`/usr/local/bin/hyprvoice` and the desktop user's `~/.local/bin/hyprvoice`
+point to that binary. Existing unmanaged user binaries are preserved under
+`~/.local/state/chezetc/hyprvoice/`. User configuration, shortcuts and the user
+service remain managed by the home Chezmoi repository. The installer does not
+restart a running dictation session. Update the release version and checksum
+together when upgrading. The source checkout in `~/.tools` is not required.
