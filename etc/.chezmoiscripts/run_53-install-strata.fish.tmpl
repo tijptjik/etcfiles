@@ -2,6 +2,8 @@
 # Keep Strata beside the custom application installs, including ChatGPT Desktop.
 {{ if and (eq .chezmoi.os "linux") .isClient -}}
 
+{{ include ".chezmoihelpers/desktop-user.fish" }}
+
 {{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-strata
@@ -58,7 +60,7 @@ step_run_quiet "Strata dependencies" install_strata_dependencies
 or exit $status
 
 # Check if strata binary is available, install if not
-if not command -v strata >/dev/null 2>&1
+if not test -x "$HOME/.local/bin/strata"
     step_run_quiet "Strata" install_strata
     or exit $status
 else
