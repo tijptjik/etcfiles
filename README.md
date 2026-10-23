@@ -93,3 +93,13 @@ point to that binary. Existing unmanaged user binaries are preserved under
 service remain managed by the home Chezmoi repository. The installer does not
 restart a running dictation session. Update the release version and checksum
 together when upgrading. The source checkout in `~/.tools` is not required.
+
+### Tippecanoe (clients)
+
+Every Tjikup apply checks the latest stable `felt/tippecanoe` GitHub release.
+Chezetc builds a new release in temporary storage, runs upstream unit tests and
+creates a sample MBTiles archive before installing into `/opt/tippecanoe/<tag>`.
+The six tools are exposed through `/usr/local/bin`; existing unmanaged executables
+are never overwritten. Matching installations are reused. Previous release
+directories remain available for rollback. A network or build failure is reported
+and leaves the active installation in place. No `.tools` source checkout is needed.

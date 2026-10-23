@@ -1,0 +1,14 @@
+#!/usr/bin/env fish
+{{ if and (eq .chezmoi.os "linux") .isClient -}}
+{{ include ".chezmoihelpers/desktop-user.fish" }}
+{{ include ".chezmoihelpers/status.fish" }}
+{{ include ".chezmoitemplates/fish_logging.fish" }}
+setup_logging linux-install-tippecanoe
+set installer (mktemp)
+or exit 1
+printf '%s\n' '{{ include ".chezmoitemplates/install-tippecanoe.py" }}' > "$installer"
+step_run_quiet "Tippecanoe [stable release]" /usr/bin/python3 "$installer"
+set install_result $status
+rm -f "$installer"
+exit $install_result
+{{ end -}}
