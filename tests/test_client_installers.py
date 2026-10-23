@@ -38,3 +38,32 @@ class DesktopUserTests(unittest.TestCase):
                 env={**os.environ,'PATH':f'{root}:/usr/bin:/bin','SUDO_USER':'root'},capture_output=True,text=True)
             self.assertEqual(result.returncode,1)
             self.assertIn('Cannot identify',result.stderr)
+
+
+
+
+
+class WaybarLauncherTests(unittest.TestCase):
+    def test_replace_existing_symlink_and_repeat_without_rewriting(self):
+        text=(REPO/'etc/.chezmoiscripts/run_51-build-waybar-lua.fish.tmpl').read_text()
+        function=text[text.index('function write_waybar_launcher'):text.index('function stable_version')]
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); launcher=root/'waybar'; other=root/'existing'
+            other.write_text('untouched')
+            launcher.symlink_to(other)
+            # A shell wrapper must not change replacement semantics.
+            script='function mv; return 99; end\nset waybar_launcher $argv[1]\n'+function+'\nwrite_waybar_launcher'
+            def run():
+                return subprocess.run(['fish','--no-config','-c',script,'--',str(launcher)],capture_output=True,text=True)
+            result=run();self.assertEqual(result.returncode,0,result.stderr)
+            self.assertFalse(launcher.is_symlink())
+            self.assertEqual(other.read_text(),'untouched')
+            self.assertEqual(launcher.stat().st_mode & 0o777,0o755)
+            before=launcher.stat().st_mtime_ns
+            self.assertEqual(run().returncode,0)
+            self.assertEqual(launcher.stat().st_mtime_ns,before)
+            self.assertEqual(list(root.glob('waybar.*')),[])
+            launcher.unlink();launcher.mkdir()
+            self.assertNotEqual(run().returncode,0)
+            self.assertTrue(launcher.is_dir())
+            self.assertEqual(list(root.glob('waybar.*')),[])

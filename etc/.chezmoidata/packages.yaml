@@ -208,6 +208,8 @@ packages:
     - 'inotify-tools'
     - 'jsoncpp-devel'
     - 'libdbusmenu-gtk3-devel'
+    - 'libnl3-devel'
+    - 'systemd-devel'
     - 'meson'
     - 'material-symbols-fonts'
     - 'mediawriter'
