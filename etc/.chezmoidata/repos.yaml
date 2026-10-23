@@ -18,12 +18,6 @@ repos:
       url: "https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo"
 
   client:
-    # Beekeeper Studio
-    beekeeper:
-      name: "Beekeeper Studio"
-      url: "https://rpm.beekeeperstudio.io/beekeeper-studio.repo"
-      gpg_key: "https://rpm.beekeeperstudio.io/beekeeper.key"
-
     # Brave Browser
     brave-browser:
       name: "Brave Browser"

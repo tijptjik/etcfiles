@@ -8,6 +8,7 @@ packages:
     - 'sneexy/zen-browser'
     rpm:
     - '7zip'
+    - 'zstd'
     - 'abrt-cli'
     - 'abrt-desktop'
     - 'age'
@@ -170,7 +171,6 @@ packages:
     - 'rafatosta/zapzap'
     - 'zeno/scrcpy'
     rpm:
-    - 'beekeeper-studio'
     - 'blueman'
     - 'blueman-manager'
     - 'bluez'
@@ -215,10 +215,7 @@ packages:
     - 'pavucontrol'
     - 'pulseaudio-libs-devel'
     - 'python3-gobject-devel'
-    - 'python3-qgis'
     - 'qalculate'
-    - 'qgis-grass'
-    - 'qgis-server'
     - 'quickshell'
     - 'scrcpy'
     - 'simplescreenrecorder'
