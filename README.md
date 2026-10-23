@@ -64,3 +64,21 @@ use a different configuration. Skipped rendering is reported explicitly.
 ## Server recovery and reproducibility
 
 See [SERVER-REBUILD.md](SERVER-REBUILD.md) for the service inventory, version-control boundaries, storage guards, restore order, and remaining work toward unattended provisioning. Do not use a blanket apply as a fresh-server recovery procedure yet.
+
+
+## Client login and screen locking
+
+Chezetc manages `/etc/gdm/custom.conf`: fi and li automatically log in as `io`.
+Their home configuration enables `hyprlock-login.service` with the graphical
+session, after Hyprland exports its Wayland display. The service launches
+`~/.local/bin/tailscale-lock`, which starts Hyprlock. Install and verify that
+home configuration before relying on autologin; GDM does not itself wait for
+Hyprlock to acquire the session lock.
+
+Select **Hyprland (uwsm-managed)** for the account's saved GDM session. Confirm
+`systemctl --user is-enabled hyprlock-login.service` and that `/usr/bin/hyprlock`
+and `~/.local/bin/tailscale-lock` exist. Apply the GDM file narrowly with
+`chezetc apply --exclude scripts /etc/gdm/custom.conf`. It takes effect on the
+next boot/login; do not restart GDM inside a working desktop session.
+
+The server retains its existing automatic login as `m`.
