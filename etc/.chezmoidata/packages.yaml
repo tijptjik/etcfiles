@@ -235,6 +235,7 @@ packages:
     - 'gpu-screen-recorder'
     - 'slurp'
     - 'yt-dlp'
+    - 'libnotify'
     - 'wireplumber-devel'
     - 'wl-clipboard'
     - 'words'
