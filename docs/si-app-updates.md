@@ -29,9 +29,14 @@ already running in that Compose project. It pulls their configured image tags
 and rebuilds local build services (currently Lidarr) with `--pull`. Up to three
 image preparation jobs run concurrently, and status rows appear as each finishes.
 Container recreation starts only after preparation finishes and stays sequential.
-Digest-pinned
-images remain pinned. A failed pull/build leaves the current container in place
-and reports a warning. There is no automatic image pruning.
+Digest-pinned images remain pinned. Ephemera is a frozen final release: its running container
+is retained and the updater never pulls, builds, or recreates it. A failed pull/build leaves the current
+container in place and reports a warning. There is no automatic image pruning.
+
+Successful update rows show `service (old version)` and the new version, as RPM
+updates do. Image versions come from OCI/label-schema metadata or LinuxServer
+build labels. Missing or unchanged version labels fall back to short image IDs,
+so rebuilt images remain distinguishable. Plex also reports old/new RPM versions.
 
 Only services whose image ID changed are recreated. The chosen image IDs are
 pinned in a temporary Compose override for the update, and services are updated

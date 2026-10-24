@@ -8,6 +8,7 @@ import fcntl
 import http.client
 import json
 import os
+import re
 from pathlib import Path
 import socket
 import subprocess
@@ -22,6 +23,7 @@ BACKUP_RECEIPT = Path("/var/lib/si-app-backup/last-success.json")
 STATE = Path("/var/lib/si-app-updates")
 MAX_BACKUP_AGE = dt.timedelta(hours=24)
 IMAGE_WORKERS = 3
+FROZEN_SERVICES = {"ephemera": "final release"}
 
 
 def report(stage: str, subject: str, note: str) -> None:
@@ -117,6 +119,7 @@ class Updater:
         if installed.returncode:
             report("SKIP", "Plex", "not installed")
             return
+        old_version = self.command(["rpm", "-q", "--qf", "%{VERSION}", "plexmediaserver"]).stdout.strip()
         if not self.plex_idle():
             return
         available = self.command(["dnf", "-q", "check-upgrade", "plexmediaserver"], accepted=(0, 100))
@@ -134,7 +137,7 @@ class Updater:
         self.command(["dnf", "-y", "--cacheonly", "upgrade", "plexmediaserver"], timeout=300)
         self.command(["systemctl", "is-active", "--quiet", "plexmediaserver"])
         version = self.command(["rpm", "-q", "--qf", "%{VERSION}", "plexmediaserver"]).stdout.strip()
-        report("UPDATE", "Plex", version)
+        report("UPDATE", f"Plex ({old_version})", version)
 
     def containers(self) -> dict[str, list[dict]]:
         ids = self.command(COMPOSE + ["ps", "--status", "running", "--quiet"]).stdout.split()
@@ -154,8 +157,39 @@ class Updater:
                 })
         return services
 
+    def image_version(self, image_id: str) -> str:
+        """Prefer publisher version metadata; never infer a version from latest."""
+        short_id = image_id.removeprefix("sha256:")[:12]
+        try:
+            raw = self.command(["docker", "image", "inspect", "--format", "{{json .Config.Labels}}", image_id]).stdout
+            labels = json.loads(raw) or {}
+            version = labels.get("org.opencontainers.image.version") or labels.get("org.label-schema.version")
+            if not version:
+                match = re.search(r"version:-\s+(\S+)", labels.get("build_version", ""))
+                version = match.group(1) if match else None
+            if isinstance(version, str) and version.lower() not in {"latest", "main", "master", "develop", "unknown"}:
+                version = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", version).strip()
+                if version and len(version) <= 40:
+                    return version
+        except (UpdateFailure, OSError, ValueError, TypeError, AttributeError):
+            pass
+        return short_id
+
+    def version_change(self, containers: list[dict], image_id: str) -> tuple[str, str]:
+        old_ids = sorted({row["image"] for row in containers})
+        old_versions = [self.image_version(old_id) for old_id in old_ids]
+        new_version = self.image_version(image_id)
+        # Rebuilt releases sometimes reuse their version label. Show identities
+        # in that case so an update never appears to be version X -> version X.
+        if new_version in old_versions:
+            old_versions = [old_id.removeprefix("sha256:")[:12] for old_id in old_ids]
+            new_version = image_id.removeprefix("sha256:")[:12]
+        return ", ".join(dict.fromkeys(old_versions)), new_version
+
     def prepare_image(self, name: str, spec: dict, containers: list[dict], project: str) -> tuple[str | None, str]:
         """Pull/build without touching containers; only the caller prints status."""
+        if name in FROZEN_SERVICES:
+            return None, FROZEN_SERVICES[name]
         image = spec.get("image") or f"{project}-{name}"
         if "@sha256:" in image:
             return None, "digest pinned"
@@ -220,12 +254,13 @@ class Updater:
                 if {row["id"] for row in current} != {row["id"] for row in before[name]}:
                     self.problem(name, UpdateFailure("container state changed; deferred"))
                     continue
-                report("UPDATE", name, "recreating")
+                old_version, new_version = self.version_change(before[name], image_id)
+                report("UPDATE", f"{name} ({old_version})", "recreating")
                 self.command(compose + ["up", "-d", "--no-deps", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "180", name], timeout=210)
                 after = self.containers().get(name, [])
                 if len(after) != len(before[name]) or any(row["image"] != image_id for row in after):
                     raise UpdateFailure("running image does not match update")
-                report("UPDATE", name, "updated")
+                report("UPDATE", f"{name} ({old_version})", new_version)
             except UpdateFailure as error:
                 self.problem(name, error)
                 # A failed migration/health check needs review, not a blind
