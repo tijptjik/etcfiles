@@ -36,3 +36,11 @@ fstab
 si-transmission-cleanup
 systemd/system/si-transmission-cleanup*
 {{ end -}}
+
+# Fedora 45 moved package-owned repo definitions into /usr/share/dnf5/repos.d.
+{{ if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "fedora") (ge (atoi .chezmoi.osRelease.versionID) 45) -}}
+yum.repos.d/fedora.repo
+yum.repos.d/fedora-updates.repo
+yum.repos.d/fedora-cisco-openh264.repo
+yum.repos.d/google-chrome.repo
+{{ end -}}

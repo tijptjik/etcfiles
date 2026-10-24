@@ -207,8 +207,11 @@ end
 
 step_header "Zed editor"
 
+# Servers use Preview, matching the dotrc and sysrc shortcuts.
+{{ if not .isServer -}}
 install_zed_channel stable "" required
 or exit 1
+{{ end -}}
 
 install_zed_channel preview "-preview" required
 or exit 1

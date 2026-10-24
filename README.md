@@ -27,6 +27,23 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
     the stream module; rebuilding requires matching Fedora header macros.
 - `fstab`
 
+## Fedora repository ownership
+
+On Fedora 45 and later, Fedora and Chrome repo definitions are supplied under
+`/usr/share/dnf5/repos.d`. Chezetc ignores its legacy copies of `fedora.repo`,
+`fedora-updates.repo`, `fedora-cisco-openh264.repo`, and `google-chrome.repo` in
+`/etc/yum.repos.d`, so applies do not recreate obsolete overrides. Si and Li's
+package-owned definitions were identical when reconciled; Chrome is disabled.
+The existing Docker package exclusions are retained in
+`/etc/dnf/repos.override.d/60-chezetc-docker.repo` for the six Fedora/updates
+repositories that previously carried them. Fedora 44 continues to use the
+existing managed repo files until upgraded.
+
+When reviewing future repo prompts, compare both `/etc/yum.repos.d` and
+`/usr/share/dnf5/repos.d`; do not restore `.rpmsave` files over vendor definitions.
+The ignore rules leave any existing `/etc` overrides untouched. Si and Li had
+none of these four overrides when this policy was added.
+
 ## Supported Hosts
 
 - `fi` : Desktop
