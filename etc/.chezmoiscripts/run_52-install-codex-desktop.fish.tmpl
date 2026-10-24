@@ -23,15 +23,24 @@ if rpm -q chatgpt >/dev/null 2>&1
             status_msg SKIP "✓" "ChatGPT Desktop" "no changes"
         case 100
             set available_version (sudo dnf repoquery -q --available --latest-limit 1 --qf '%{EVR}' --disablerepo='*' --enablerepo=openai-chatgpt chatgpt)
-            step_run_as UPDATE "Update ChatGPT Desktop ($installed_version → $available_version)" sudo dnf upgrade -y --refresh --disablerepo='*' --enablerepo=openai-chatgpt chatgpt
-            or exit 1
+            set update_title "Update ChatGPT Desktop ($installed_version → $available_version)"
+            set previous_stage $chezetc_stage
+            set chezetc_stage UPDATE
+            step_run_quiet "$update_title" sudo dnf upgrade -y --refresh --disablerepo='*' --enablerepo=openai-chatgpt chatgpt
+            set update_status $status
+            if test $update_status -eq 0
+                step_ok "$update_title"
+            end
+            set chezetc_stage $previous_stage
+            test $update_status -eq 0; or exit $update_status
         case '*'
             step_fail "Check for ChatGPT Desktop updates"
             exit $update_status
     end
 else
-    step_run "Install ChatGPT Desktop" sudo dnf install -y "$chatgpt_rpm"
+    step_run_quiet "Install ChatGPT Desktop" sudo dnf install -y "$chatgpt_rpm"
     or exit 1
+    step_ok "Install ChatGPT Desktop"
 end
 
 if not chatgpt_desktop_is_available

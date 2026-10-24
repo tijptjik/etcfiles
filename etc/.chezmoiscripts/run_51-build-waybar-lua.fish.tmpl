@@ -96,8 +96,10 @@ function ensure_waybar_source
     or return 1
 
     if not test -d "$waybar_source_dir/.git"
-        step_run "Waybar source" git clone https://github.com/Alexays/Waybar.git "$waybar_source_dir"
-        return $status
+        step_run_quiet "Waybar source" git clone --quiet https://github.com/Alexays/Waybar.git "$waybar_source_dir"
+        or return $status
+        step_ok "Waybar source"
+        return 0
     end
 
     set shallow_repository (git -C "$waybar_source_dir" rev-parse --is-shallow-repository 2>/dev/null)
@@ -146,8 +148,9 @@ function build_waybar
     if not test -d "$waybar_build_source"
         mkdir -p "$waybar_build_root"
         or return 1
-        git -C "$waybar_source_dir" worktree add --detach "$waybar_build_source" "$source_revision"
-        or return 1
+        step_run_quiet "Waybar build worktree" git -C "$waybar_source_dir" worktree add --quiet --detach "$waybar_build_source" "$source_revision"
+        or return $status
+        step_ok "Waybar build worktree"
     end
     if git -C "$waybar_build_source" apply --check "$waybar_patch_file" 2>/dev/null
         git -C "$waybar_build_source" apply "$waybar_patch_file"
