@@ -64,7 +64,7 @@ function nginx_packages_changed_since_prepare
 end
 
 function converge_nginx_after_package_update
-    step_run_note_as CHECK "Nginx configuration" valid sudo nginx -t
+    step_run_note_as CHECK "Nginx configuration" valid sudo nginx -t -q
     or return 1
 
     set -l upgrade_required false
