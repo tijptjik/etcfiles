@@ -25,6 +25,8 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
     interrupted update cannot produce a combined version string. A current
     module is accepted only when the full `nginx -t` check passes, including
     the stream module; rebuilding requires matching Fedora header macros.
+- Si application updates: changed Docker images and session-aware Plex RPM
+  updates, with a recent-backup requirement. See [Si app updates](docs/si-app-updates.md).
 - `fstab`
 
 ## Fedora repository ownership

@@ -1,0 +1,25 @@
+#!/usr/bin/env fish
+{{ if and (eq .chezmoi.os "linux") .isServer -}}
+{{ include ".chezmoihelpers/status.fish" }}
+section_header "Server app updates"
+
+sudo python3 /etc/si-provision/update_apps.py | while read -l event
+    set -l fields (string split \t -- "$event")
+    if test (count $fields) -ne 3
+        printf '%s\n' "$event"
+        continue
+    end
+    set -l icon '✓'
+    if test "$fields[1]" = WARN
+        set icon '!'
+    else if contains -- "$fields[3]" "checking image" "downloading update" "no sessions; installing" "recreating"
+        set icon '...'
+    end
+    status_msg "$fields[1]" "$icon" "$fields[2]" "$fields[3]"
+end
+set -l update_status $pipestatus
+if test "$update_status[1]" -ne 0
+    status_msg FAILED '✗' "Server app updates" "see diagnostics above"
+    exit "$update_status[1]"
+end
+{{ end -}}
