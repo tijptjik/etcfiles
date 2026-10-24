@@ -13,6 +13,8 @@ sudo python3 /etc/si-provision/update_apps.py | while read -l event
     set -l icon '✓'
     if test "$fields[1]" = WARN
         set icon '!'
+    else if string match -q "checking images; *" -- "$fields[3]"
+        set icon '...'
     else if contains -- "$fields[3]" "checking image" "downloading update" "no sessions; installing" "recreating"
         set icon '...'
     end

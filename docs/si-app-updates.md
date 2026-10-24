@@ -26,7 +26,10 @@ commands and explicitly requested Fedora release upgrades are outside this guard
 
 The updater targets `/home/m/dockers/docker-compose.yaml` and only services
 already running in that Compose project. It pulls their configured image tags
-and rebuilds local build services (currently Lidarr) with `--pull`. Digest-pinned
+and rebuilds local build services (currently Lidarr) with `--pull`. Up to three
+image preparation jobs run concurrently, and status rows appear as each finishes.
+Container recreation starts only after preparation finishes and stays sequential.
+Digest-pinned
 images remain pinned. A failed pull/build leaves the current container in place
 and reports a warning. There is no automatic image pruning.
 

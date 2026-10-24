@@ -2,6 +2,7 @@
 """Update Si's running Compose services and idle Plex, with bounded operations."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime as dt
 import fcntl
 import http.client
@@ -12,6 +13,7 @@ import socket
 import subprocess
 import sys
 import time
+from threading import Lock
 import xml.etree.ElementTree as ET
 
 COMPOSE = ["docker", "compose", "--project-directory", "/home/m/dockers", "-f", "/home/m/dockers/docker-compose.yaml"]
@@ -19,6 +21,7 @@ PREFERENCES = Path("/var/lib/plexmediaserver/Library/Application Support/Plex Me
 BACKUP_RECEIPT = Path("/var/lib/si-app-backup/last-success.json")
 STATE = Path("/var/lib/si-app-updates")
 MAX_BACKUP_AGE = dt.timedelta(hours=24)
+IMAGE_WORKERS = 3
 
 
 def report(stage: str, subject: str, note: str) -> None:
@@ -38,6 +41,7 @@ class Updater:
         self.record = STATE / dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
         self.record.mkdir(mode=0o700)
         self.sequence = 0
+        self.log_lock = Lock()
 
     def command(self, args: list[str], *, timeout: int = 120, accepted: tuple[int, ...] = (0,)) -> subprocess.CompletedProcess:
         remaining = int(self.deadline - time.monotonic())
@@ -50,8 +54,9 @@ class Updater:
             # Do not dump command arguments, config/environment output, or tokens.
             raise UpdateFailure(f"{args[0]} failed or timed out") from error
         if result.returncode not in accepted:
-            self.sequence += 1
-            log = self.record / f"error-{self.sequence}.log"
+            with self.log_lock:
+                self.sequence += 1
+                log = self.record / f"error-{self.sequence}.log"
             log.write_text(result.stdout + result.stderr)
             raise UpdateFailure(f"{args[0]} exited {result.returncode}; {log}")
         return result
@@ -149,6 +154,22 @@ class Updater:
                 })
         return services
 
+    def prepare_image(self, name: str, spec: dict, containers: list[dict], project: str) -> tuple[str | None, str]:
+        """Pull/build without touching containers; only the caller prints status."""
+        image = spec.get("image") or f"{project}-{name}"
+        if "@sha256:" in image:
+            return None, "digest pinned"
+        if "build" in spec:
+            self.command(COMPOSE + ["build", "--pull", name], timeout=300)
+        else:
+            self.command(COMPOSE + ["pull", "--policy", "always", name])
+        image_id = self.command(["docker", "image", "inspect", "--format", "{{.Id}}", image]).stdout.strip()
+        if not image_id:
+            raise UpdateFailure("image identity unavailable")
+        if all(row["image"] == image_id for row in containers):
+            return None, "no changes"
+        return image_id, "new image available"
+
     def update_docker(self) -> None:
         config = json.loads(self.command(COMPOSE + ["config", "--format", "json"]).stdout)
         if config.get("name") != "dockers":
@@ -161,31 +182,26 @@ class Updater:
             report("SKIP", "Docker images", "no running services")
             return
         changed: dict[str, str] = {}
-        for name, containers in sorted(before.items()):
-            if time.monotonic() >= self.deadline:
-                raise UpdateFailure("update time budget exhausted; retry next run")
-            spec = services.get(name)
-            if spec is None:
-                continue
-            image = spec.get("image") or f"{config['name']}-{name}"
-            if "@sha256:" in image:
-                report("SKIP", name, "digest pinned")
-                continue
-            try:
-                report("SYNC", name, "checking image")
-                if "build" in spec:
-                    self.command(COMPOSE + ["build", "--pull", name], timeout=300)
-                else:
-                    self.command(COMPOSE + ["pull", "--policy", "always", name])
-                image_id = self.command(["docker", "image", "inspect", "--format", "{{.Id}}", image]).stdout.strip()
-                if not image_id:
-                    raise UpdateFailure("image identity unavailable")
-                if all(row["image"] == image_id for row in containers):
-                    report("SKIP", name, "no changes")
+        report("SYNC", "Docker images", f"checking images; {IMAGE_WORKERS} workers")
+        # Registry I/O and local builds are independent. Keep all output and
+        # container changes on this thread, reporting workers as they finish.
+        with ThreadPoolExecutor(max_workers=IMAGE_WORKERS) as pool:
+            futures = {
+                pool.submit(self.prepare_image, name, services[name], containers, config["name"]): name
+                for name, containers in before.items() if name in services
+            }
+            for future in as_completed(futures):
+                name = futures[future]
+                try:
+                    image_id, note = future.result()
+                except (UpdateFailure, OSError, ValueError, KeyError, TypeError) as error:
+                    report("WARN", name, f"keeping current image; {error}")
+                    continue
+                if image_id is None:
+                    report("SKIP", name, note)
                 else:
                     changed[name] = image_id
-            except UpdateFailure as error:
-                report("WARN", name, f"keeping current image; {error}")
+                    report("CHECK", name, note)
         if not changed or not self.backup_ready():
             return
         self.command(["python3", "/etc/si-provision/storage.py", "--check-docker"])
@@ -194,7 +210,7 @@ class Updater:
         override = self.record / "images.json"
         override.write_text(json.dumps({"services": {name: {"image": image} for name, image in changed.items()}}, indent=2))
         compose = COMPOSE + ["-f", str(override)]
-        for name, image_id in changed.items():
+        for name, image_id in sorted(changed.items()):
             try:
                 # Leave enough time for the full readiness check before starting
                 # another recreation near the end of this pass.
