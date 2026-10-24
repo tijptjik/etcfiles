@@ -154,6 +154,15 @@ function __stage_print_row --argument-names icon row
     printf '%s\n' "$row"
 end
 
+function __stage_clear_pending
+    if set -q __stage_pending_row
+        if isatty stdout; or test "$TJIKUP_COLOR" = 1
+            printf '\r\033[2K'
+        end
+        set -e __stage_pending_row
+    end
+end
+
 function __stage_label
     set -l row (__stage_render_label $argv)
     __stage_print_row "$argv[2]" "$row"
@@ -230,7 +239,9 @@ function status_msg
 
     if test (count $argv) -ge 4
         set -l note $argv[4]
-        if test (count $argv) -ge 5
+        if test "$icon" = "✓"; and contains -- "$note" "no changes" "no updates"
+            __stage_label_note SKIP "$icon" "$subject" "$note"
+        else if test (count $argv) -ge 5
             __stage_label_note "$stage_name" "$icon" "$subject" "$note" "$argv[5]"
         else
             __stage_label_note "$stage_name" "$icon" "$subject" "$note"
@@ -288,18 +299,24 @@ function __stage_run
     set -l code (command cat $status_file)
 
     if test "$code" -eq 0
-        if test "$note" = "__silent_success__"; or test "$note" = "__silent_failure__"; or string match -q -r '^__silent_failure__:' -- "$note"
-            true
-        else if test -n "$note"
-            set result_color_stage $stage_name
-            if test "$note" = "no changes"
-                if test "$stage_name" = SYNC
-                    set result_color_stage SKIP
-                else
-                    set result_color_stage CHECK
-                end
+        if test "$note" = "__silent_success__"
+            set -l result (command grep -E '^CHEZETC_RESULT=(changed|unchanged)$' "$log_file" | command tail -n 1)
+            switch "$result"
+                case CHEZETC_RESULT=unchanged
+                    __stage_label_note SKIP "✓" "$subject" "no changes"
+                case CHEZETC_RESULT=changed
+                    __stage_result "$stage_name" "$subject"
+                case '*'
+                    __stage_clear_pending
             end
-            __stage_label_note "$stage_name" "✓" "$subject" "$note" "$result_color_stage"
+        else if test "$note" = "__silent_failure__"; or string match -q -r '^__silent_failure__:' -- "$note"
+            __stage_clear_pending
+        else if test -n "$note"
+            if contains -- "$note" "no changes" "no updates"
+                status_msg "$stage_name" "✓" "$subject" "$note"
+            else
+                __stage_label_note "$stage_name" "✓" "$subject" "$note" "$stage_name"
+            end
         else
             __stage_result "$stage_name" "$subject"
         end

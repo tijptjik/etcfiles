@@ -57,6 +57,7 @@ def main():
         run(str(prefix / "bin/tippecanoe"), "--version")
         activate(prefix)
         print(f"Tippecanoe {tag}: already current")
+        print("CHEZETC_RESULT=unchanged")
         return
     packages = ("git", "make", "gcc-c++", "sqlite-devel", "zlib-devel")
     missing = [p for p in packages if subprocess.run(
@@ -85,6 +86,7 @@ def main():
         run(str(prefix / "bin/tippecanoe"), "--version")
         activate(prefix)
         print(f"Installed Tippecanoe {tag} ({revision.strip()})")
+    print("CHEZETC_RESULT=changed")
 
 
 if __name__ == "__main__":

@@ -5,49 +5,15 @@
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-install-terminal-tools
 
-function install_terminal_tool --argument-names tool release_tag url digest
-    if test (uname -m) != x86_64
-        echo "Terminal tool releases are pinned for x86_64" >&2
-        return 1
-    end
-    set -l target /opt/$tool/$release_tag/$tool
-    if test -e /usr/local/bin/$tool; and not test -L /usr/local/bin/$tool
-        echo "Refusing to replace unmanaged /usr/local/bin/$tool" >&2
-        return 1
-    end
-    if not test -x "$target"
-        set -l tmp (mktemp -d); or return 1
-        curl --fail --silent --show-error --location --retry 3 "$url" -o "$tmp/release.tar.gz"
-        and echo "$digest  $tmp/release.tar.gz" | sha256sum --check --status
-        and tar -xzf "$tmp/release.tar.gz" -C "$tmp"
-        or begin
-            rm -rf "$tmp"
-            return 1
-        end
-        set -l binary (find "$tmp" -type f -name "$tool")
-        if test (count $binary) -ne 1
-            rm -rf "$tmp"
-            return 1
-        end
-        "$binary" --version >/dev/null
-        and sudo -n install -d -m 755 /opt/$tool/$release_tag
-        and sudo -n install -m 755 "$binary" "$target.new"
-        and sudo -n mv -f "$target.new" "$target"
-        set -l result $status
-        rm -rf "$tmp"
-        test $result -eq 0; or return $result
-    end
-    sudo -n install -d -m 755 /usr/local/bin; or return 1
-    sudo -n ln -sfn "$target" /usr/local/bin/$tool; or return 1
-    "$target" --version >/dev/null
+function install_terminal_tools
+    set -l installer (mktemp); or return 1
+    printf '%s\n' {{ include ".chezmoitemplates/update-client-cli-releases.py" | quote }} > "$installer"
+    python3 "$installer" terminal
+    set -l result $status
+    rm -f "$installer"
+    return $result
 end
 
-step_run_quiet "Tennis (/opt)" install_terminal_tool tennis 0.6.0 \
-    https://github.com/gurgeous/tennis/releases/download/v0.6.0/tennis_0.6.0_linux_amd64.tar.gz \
-    d4377113fece9a535d49737ba8e1ffb469bbb702abe7d9962bd6a045669d6e53
-or exit $status
-step_run_quiet "Tinty (/opt)" install_terminal_tool tinty 0.30.0 \
-    https://github.com/tinted-theming/tinty/releases/download/v0.30.0/tinty-x86_64-unknown-linux-musl.tar.gz \
-    dde01c6ec254161e4cffb330b3476494dd842ed869406aafb91b7acbbd3aab5c
+step_run_quiet "Tennis and Tinty" install_terminal_tools
 or exit $status
 {{ end -}}

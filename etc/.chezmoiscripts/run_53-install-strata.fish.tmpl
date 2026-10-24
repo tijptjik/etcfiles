@@ -11,7 +11,7 @@ setup_logging linux-install-strata
 function install_strata_dependencies
     set -l packages gtk4 gtksourceview5 poppler-glib fontconfig bubblewrap \
         ffmpegthumbnailer gstreamer1-plugins-base gstreamer1-plugins-good \
-        gstreamer1-plugin-libav gvfs desktop-file-utils xdg-utils curl tar coreutils sed
+        gstreamer1-plugin-libav gvfs desktop-file-utils xdg-utils curl tar coreutils sed python3
 
     # Keep either installed FFmpeg variant; Fedora provides ffmpeg-free.
     if not rpm -q ffmpeg >/dev/null 2>&1
@@ -26,39 +26,96 @@ function install_strata_dependencies
     end
     if test (count $missing) -gt 0
         sudo -n dnf install -y $missing; or return $status
+        echo CHEZETC_RESULT=changed
+    else
+        echo CHEZETC_RESULT=unchanged
     end
     rpm -q $packages >/dev/null
 end
 
 function install_strata
-    set -l release_version 1.0.0
-    set -l target /opt/strata/$release_version
-    set -l archive strata-$release_version-x86_64-unknown-linux-gnu
-    set -l expected e15095a201165132a88032df15ecbeab795a13d6cacc4ebb943e276c35ff492e
     if test (uname -m) != x86_64
-        echo "Strata release is pinned for x86_64" >&2
+        echo "Strata releases are currently available for x86_64 only" >&2
         return 1
     end
     if test -e /usr/local/bin/strata; and not test -L /usr/local/bin/strata
         echo "Refusing to replace unmanaged /usr/local/bin/strata" >&2
         return 1
     end
-    if not test -f "$target/.installed"
-        set -l tmp (mktemp -d); or return 1
-        curl --fail --silent --show-error --location --retry 3 \
-            "https://github.com/lgse/strata/releases/download/v$release_version/$archive.tar.gz" -o "$tmp/release.tar.gz"
-        and echo "$expected  $tmp/release.tar.gz" | sha256sum --check --status
-        and tar -xzf "$tmp/release.tar.gz" -C "$tmp"
-        and "$tmp/$archive/strata" --version >/dev/null
-        and sudo -n install -d -m 755 "$target"
-        and sudo -n cp -r "$tmp/$archive/." "$target/"
-        and sudo -n chown -R root:root "$target"
-        and sudo -n chmod -R go-w "$target"
-        and sudo -n touch "$target/.installed"
-        set -l result $status
-        rm -rf "$tmp"
-        test $result -eq 0; or return $result
+
+    set -l release_data (curl --fail --silent --show-error --location --retry 3 \
+        --header "Accept: application/vnd.github+json" \
+        --header "X-GitHub-Api-Version: 2022-11-28" \
+        https://api.github.com/repos/lgse/strata/releases/latest | python3 -c '
+import json
+import re
+import sys
+
+release = json.load(sys.stdin)
+tag = release.get("tag_name", "")
+match = re.fullmatch(r"v?(\d+\.\d+\.\d+)", tag)
+if not match:
+    raise SystemExit("Latest Strata release has an unsupported version tag")
+version = match.group(1)
+archive = f"strata-{version}-x86_64-unknown-linux-gnu.tar.gz"
+asset = next((item for item in release.get("assets", []) if item.get("name") == archive), None)
+if asset is None:
+    raise SystemExit(f"Latest Strata release is missing {archive}")
+digest = asset.get("digest", "")
+if not re.fullmatch(r"sha256:[0-9a-fA-F]{64}", digest):
+    raise SystemExit(f"Latest Strata release has no valid SHA-256 digest for {archive}")
+print(version + "|" + digest.removeprefix("sha256:").lower())
+'); or return $status
+    set -l release_fields (string split "|" -- "$release_data")
+    set -l latest_version $release_fields[1]
+    set -l expected $release_fields[2]
+    set -l current_target (readlink -f /usr/local/bin/strata 2>/dev/null)
+    set -l current_version ""
+    if string match -qr '^/opt/strata/[0-9]+\.[0-9]+\.[0-9]+/strata$' -- "$current_target"
+        set current_version (path basename (path dirname "$current_target"))
     end
+    set -l update_available (python3 -c '
+import re
+import sys
+
+latest, current = sys.argv[1:]
+def version(value):
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", value)
+    return tuple(map(int, match.groups())) if match else None
+latest_version = version(latest)
+current_version = version(current) if current else None
+if latest_version is None:
+    raise SystemExit("Cannot compare Strata release versions")
+print("yes" if current_version is None or latest_version > current_version else "no")
+' "$latest_version" "$current_version"); or return $status
+    if test "$update_available" = yes
+        set -l target /opt/strata/$latest_version
+        set -l archive strata-$latest_version-x86_64-unknown-linux-gnu
+        if not test -f "$target/.installed"
+            set -l tmp (mktemp -d); or return 1
+            curl --fail --silent --show-error --location --retry 3 \
+                "https://github.com/lgse/strata/releases/download/v$latest_version/$archive.tar.gz" -o "$tmp/release.tar.gz"
+            and echo "$expected  $tmp/release.tar.gz" | sha256sum --check --status
+            and tar -xzf "$tmp/release.tar.gz" -C "$tmp"
+            and set -l version_output ("$tmp/$archive/strata" --version)
+            and test (string match -r '[0-9]+\.[0-9]+\.[0-9]+' -- "$version_output") = "$latest_version"
+            and sudo -n install -d -m 755 "$target"
+            and sudo -n cp -r "$tmp/$archive/." "$target/"
+            and sudo -n chown -R root:root "$target"
+            and sudo -n chmod -R go-w "$target"
+            and sudo -n touch "$target/.installed"
+            set -l result $status
+            rm -rf "$tmp"
+            test $result -eq 0; or return $result
+        end
+        set current_version $latest_version
+    end
+    if test -z "$current_version"
+        echo "No installed Strata version is available to activate" >&2
+        return 1
+    end
+    set -l target /opt/strata/$current_version
+    test -x "$target/strata"; or return 1
     mkdir -p "$HOME/.local/bin" "$HOME/.local/state/chezetc/strata"; or return 1
     if test -e "$HOME/.local/bin/strata"; and not test -L "$HOME/.local/bin/strata"
         cp -p "$HOME/.local/bin/strata" "$HOME/.local/state/chezetc/strata/strata-"(date +%Y%m%dT%H%M%S%N); or return 1
@@ -66,7 +123,13 @@ function install_strata
     sudo -n install -d -m 755 /usr/local/bin; or return 1
     sudo -n ln -sfn "$target/strata" /usr/local/bin/strata; or return 1
     ln -sfn /usr/local/bin/strata "$HOME/.local/bin/strata"; or return 1
-    "$HOME/.local/bin/strata" --version >/dev/null
+    set -l active_version ("$HOME/.local/bin/strata" --version | string match -r '[0-9]+\.[0-9]+\.[0-9]+')
+    test "$active_version" = "$current_version"; or return 1
+    if test "$update_available" = yes
+        echo CHEZETC_RESULT=changed
+    else
+        echo CHEZETC_RESULT=unchanged
+    end
 end
 
 # Fedora dependencies must also be checked when the binary already exists.
@@ -77,7 +140,7 @@ end
 step_run_quiet "Strata dependencies" install_strata_dependencies
 or exit $status
 
-step_run_quiet "Strata (/opt)" install_strata
+step_run_quiet "Strata" install_strata
 or exit $status
 
 exit 0

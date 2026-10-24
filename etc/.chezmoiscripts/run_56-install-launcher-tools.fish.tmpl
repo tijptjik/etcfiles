@@ -32,6 +32,6 @@ function install_launcher_tools
         ln -sfn /usr/local/bin/$name "$path"; or return 1
     end
 end
-step_run_quiet "Gitfetch and Hamr (/opt)" install_launcher_tools
+step_run_quiet "Gitfetch and Hamr" install_launcher_tools
 or exit $status
 {{ end -}}

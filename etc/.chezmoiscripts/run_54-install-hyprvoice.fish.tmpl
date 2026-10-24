@@ -6,51 +6,14 @@
 setup_logging linux-install-hyprvoice
 
 function install_hyprvoice
-    set -l release_tag v1.0.2
-    set -l expected d055b01352b0cb4e50ac2e729e0e1baac259468559bb86a792b2f20f30bb6cc4
-    set -l target /opt/hyprvoice/$release_tag/hyprvoice
-    if test (uname -m) != x86_64
-        echo "Hyprvoice upstream currently publishes only an x86_64 binary." >&2
-        return 1
-    end
-    set -l missing
-    for package in pipewire-utils wl-clipboard wtype
-        rpm -q $package >/dev/null 2>&1; or set -a missing $package
-    end
-    if test (count $missing) -gt 0
-        sudo -n dnf install -y $missing; or return $status
-    end
-    if not test -f "$target"; or not echo "$expected  $target" | sha256sum --check --status
-        set -l tmp (mktemp -d); or return 1
-        curl --fail --silent --show-error --location --retry 3 \
-            "https://github.com/LeonardoTrapani/hyprvoice/releases/download/$release_tag/hyprvoice-linux-x86_64" \
-            --output "$tmp/hyprvoice"
-        and echo "$expected  $tmp/hyprvoice" | sha256sum --check --status
-        and chmod 755 "$tmp/hyprvoice"
-        and "$tmp/hyprvoice" --help >/dev/null
-        or begin
-            rm -rf "$tmp"
-            echo "Hyprvoice download or verification failed; existing binary retained." >&2
-            return 1
-        end
-        sudo -n install -d -m 755 /opt/hyprvoice/$release_tag
-        and sudo -n install -m 755 "$tmp/hyprvoice" "$target.new"
-        and sudo -n mv -f "$target.new" "$target"
-        set -l result $status
-        rm -rf "$tmp"
-        test $result -eq 0; or return $result
-    end
-    mkdir -p "$HOME/.local/bin" "$HOME/.local/state/chezetc/hyprvoice"; or return 1
-    if test -e "$HOME/.local/bin/hyprvoice"; and not test -L "$HOME/.local/bin/hyprvoice"
-        set -l backup "$HOME/.local/state/chezetc/hyprvoice/"(date +%Y%m%dT%H%M%S%N)
-        cp -p "$HOME/.local/bin/hyprvoice" "$backup"; or return 1
-    end
-    sudo -n install -d -m 755 /usr/local/bin; or return 1
-    sudo -n ln -sfn "$target" /usr/local/bin/hyprvoice; or return 1
-    ln -sfn "$target" "$HOME/.local/bin/hyprvoice"; or return 1
-    "$HOME/.local/bin/hyprvoice" --help >/dev/null
+    set -l installer (mktemp); or return 1
+    printf '%s\n' {{ include ".chezmoitemplates/update-client-cli-releases.py" | quote }} > "$installer"
+    python3 "$installer" hyprvoice
+    set -l result $status
+    rm -f "$installer"
+    return $result
 end
 
-step_run_quiet "Hyprvoice v1.0.2" install_hyprvoice
+step_run_quiet "Hyprvoice" install_hyprvoice
 or exit $status
 {{ end -}}

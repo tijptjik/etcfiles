@@ -7,7 +7,7 @@ setup_logging linux-install-tippecanoe
 set installer (mktemp)
 or exit 1
 printf '%s\n' '{{ include ".chezmoitemplates/install-tippecanoe.py" }}' > "$installer"
-step_run_quiet "Tippecanoe [stable release]" /usr/bin/python3 "$installer"
+step_run_quiet "Tippecanoe" /usr/bin/python3 "$installer"
 set install_result $status
 rm -f "$installer"
 exit $install_result
