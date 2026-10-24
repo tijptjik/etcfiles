@@ -1,7 +1,9 @@
 # Si application updates
 
-`tjikup` runs the Si-only `run_95-si-app-updates.fish` hook through Chezetc.
+`tjikup` runs the Si-only `run_after_95-si-app-updates.fish` hook through Chezetc.
 A direct `chezetc apply` also runs it. Clients do not run this hook.
+The `run_after_` phase installs `/etc/si-provision/update_apps.py` and the other
+managed files before invoking the updater, including on the first apply.
 
 ## Plex
 

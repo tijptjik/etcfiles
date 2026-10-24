@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+# Run after managed files so the updater exists on its first apply.
 {{ if and (eq .chezmoi.os "linux") .isServer -}}
 {{ include ".chezmoihelpers/status.fish" }}
 section_header "Server app updates"
