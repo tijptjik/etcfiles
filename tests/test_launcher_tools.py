@@ -1,5 +1,6 @@
 """Verify installer refuses corrupt downloads and unmanaged command replacement."""
 import hashlib
+import io
 import importlib.util
 from pathlib import Path
 import tempfile
@@ -16,9 +17,8 @@ class LauncherToolsTests(unittest.TestCase):
     def test_download_rejects_mismatched_digest(self):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / 'archive'
-            def retrieve(url, dest):
-                dest.write_bytes(b'wrong download')
-            with patch.object(installer.urllib.request, 'urlretrieve', side_effect=retrieve):
+            with patch.object(installer.urllib.request, 'urlopen',
+                              side_effect=lambda *args, **kwargs: io.BytesIO(b'wrong download')):
                 with self.assertRaisesRegex(RuntimeError, 'Checksum mismatch'):
                     installer.download('https://example.invalid/tool', '0' * 64, target)
                 installer.download('https://example.invalid/tool', hashlib.sha256(b'wrong download').hexdigest(), target)
@@ -38,6 +38,19 @@ class LauncherToolsTests(unittest.TestCase):
             root = Path(directory)
             command = root / 'hamr'
             command.symlink_to(root / 'old/hamr')
-            with patch.object(installer, 'Path', return_value=root):
-                installer.activate('hamr', root / 'new/hamr')
+            def run(*args):
+                self.assertEqual(args[:2], ('sudo', '-n'))
+                if args[2:4] == ('ln', '-sfn'):
+                    Path(args[5]).unlink(missing_ok=True)
+                    Path(args[5]).symlink_to(args[4])
+                elif args[2:4] == ('mv', '-Tf'):
+                    Path(args[4]).replace(args[5])
+                else:
+                    self.fail(f'Unexpected system command: {args}')
+            with patch.object(installer, 'Path', side_effect=lambda p: root if p == '/usr/local/bin' else Path(p)), \
+                 patch.object(installer, 'run', side_effect=run) as commands:
+                self.assertTrue(installer.activate('hamr', root / 'new/hamr'))
+                self.assertEqual(commands.call_count, 2)
+                self.assertFalse(installer.activate('hamr', root / 'new/hamr'))
+                self.assertEqual(commands.call_count, 2)
             self.assertEqual(command.readlink(), root / 'new/hamr')

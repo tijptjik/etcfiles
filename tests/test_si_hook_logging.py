@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[1]
@@ -25,24 +26,32 @@ function sudo
     if string match -q '*--check*' -- "$argv"; or test "$argv[1]" = test
         return $TEST_MISSING
     end
+    printf '%s\\n' "$argv" >> "$TEST_CALL_LOG"
     echo STUB_SYSTEM_COMMAND
     return $TEST_FAILURE
 end
 '''
-        return subprocess.run(
-            ['fish', '--no-config', '-c', harness + script],
-            env={**os.environ, 'TJIKUP_NO_SPIN': '1', 'TJIKUP_COLOR': '0',
-                 'TEST_FAILURE': '7' if failure else '0',
-                 'TEST_MISSING': '1' if missing else '0'},
-            text=True, capture_output=True,
-        )
+        with tempfile.TemporaryDirectory() as directory:
+            calls = Path(directory) / 'calls'
+            result = subprocess.run(
+                ['fish', '--no-config', '-c', harness + script],
+                env={**os.environ, 'TJIKUP_NO_SPIN': '1', 'TJIKUP_COLOR': '0',
+                     'TEST_FAILURE': '7' if failure else '0',
+                     'TEST_MISSING': '1' if missing else '0',
+                     'TEST_CALL_LOG': str(calls)},
+                text=True, capture_output=True,
+            )
+            result.calls = calls.read_text().splitlines() if calls.exists() else []
+            return result
 
     def test_configured_server_hooks_execute_with_real_helpers(self):
         for name in HOOKS:
             with self.subTest(hook=name):
                 result = self.run_hook(name)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertIn('STUB_SYSTEM_COMMAND', result.stdout)
+                self.assertTrue(result.calls, 'No system command was exercised')
+                if name == '35-si-nss-systemd':
+                    self.assertNotIn('STUB_SYSTEM_COMMAND', result.stdout)
                 self.assertNotIn('Unknown command', result.stderr)
 
     def test_command_failure_stops_each_hook(self):
