@@ -180,7 +180,6 @@ packages:
     - 'cairo-gobject-devel'
     - 'ddcutil'
     - 'duckdb'
-    - 'dunst'
     - 'fd-find'
     # Local Waybar build for Hyprland's Lua workspace IPC. The build script
     # retires itself once Fedora packages an upstream release with the fix.
