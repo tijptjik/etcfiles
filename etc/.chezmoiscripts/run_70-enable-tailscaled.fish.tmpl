@@ -20,6 +20,12 @@ else
     or exit 1
 end
 
+{{ if .isClient -}}
+# Keep enrolled client devices current independently of the next Tjikup run.
+step_run_note "Tailscale auto-update" enabled sudo tailscale set --auto-update
+or exit 1
+{{ end -}}
+
 # Permit the interactive user and user services (including Collie) to manage
 # Serve without giving them general sudo access.  A Chezetc system apply may
 # itself run under sudo, so preserve the account that invoked sudo rather than
