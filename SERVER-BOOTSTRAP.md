@@ -205,3 +205,16 @@ after 36 hours and scrub after nine days; running jobs get the same runtime limi
 Notification delivery retries every five minutes, independently of parity jobs.
 Routine successful runs stay quiet. The labelled live failure/recovery test passed
 on October 22; no real parity operation ran.
+
+## Application update presentation
+
+The safe Si application updater emits three-field events with separate
+`Docker services` and `Native applications` sections. The Fish hook presents
+these headings directly, or forwards them to the fleet scheduler using
+`__tjikup_section__:` when `TJIKUP_STATUS_SECTIONS=1`. The system plan opts only
+the server application hook into detailed status sections. Each service keeps
+its own result and icon; the scheduler owns report recording for these rows.
+Docker is checked before native Plex. Backup/restore locks, fresh-backup gates,
+Plex session checks, pinned image recreation and rollback records retain their
+existing protections. Rendering or testing this presentation does not require
+running the updater or restarting any container.

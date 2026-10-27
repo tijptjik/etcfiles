@@ -273,7 +273,8 @@
       "storage",
       "system-systemd"
     ],
-    "label": "Applications (server)"
+    "label": "Applications (server)",
+    "status_sections": true
   },
   {
     "id": "tailscale",

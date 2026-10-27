@@ -275,7 +275,10 @@ class Updater:
             except BlockingIOError:
                 report("SKIP", "App updates", "backup or restore in progress")
                 return 0
-            for subject, operation in (("Plex", self.update_plex), ("Docker images", self.update_docker)):
+            for section, subject, operation in (
+                    ("Docker services", "Docker images", self.update_docker),
+                    ("Native applications", "Plex", self.update_plex)):
+                report("SECTION", section, "begin")
                 try:
                     operation()
                 except (UpdateFailure, OSError, ValueError, KeyError, TypeError) as error:

@@ -13,6 +13,14 @@ sudo python3 /etc/si-provision/update_apps.py | while read -l event
         printf '%s\n' "$event"
         continue
     end
+    if test "$fields[1]" = SECTION
+        if test "$TJIKUP_STATUS_SECTIONS" = 1
+            printf '__tjikup_section__:%s\n' "$fields[2]"
+        else
+            section_header "$fields[2]"
+        end
+        continue
+    end
     set -l icon '✓'
     if test "$fields[1]" = WARN
         set icon '!'
