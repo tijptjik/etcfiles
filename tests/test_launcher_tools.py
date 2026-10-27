@@ -2,6 +2,7 @@
 import hashlib
 import io
 import importlib.util
+import sys
 from pathlib import Path
 import tempfile
 import shutil
@@ -11,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 SOURCE = Path(__file__).resolve().parents[1] / 'etc/.chezmoitemplates/install-launcher-tools.py'
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'etc/.chezmoitemplates'))
 spec = importlib.util.spec_from_file_location('launcher_tools', SOURCE)
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)

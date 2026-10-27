@@ -7,9 +7,12 @@ import re
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import urllib.request
+
+from github_api import github_json
 
 HAMR_REPO = "Stewart86/hamr"
 GITFETCH_REPO = "Matars/gitfetch"
@@ -17,16 +20,6 @@ GITFETCH_REPO = "Matars/gitfetch"
 
 def run(*args, **kwargs):
     subprocess.run(args, check=True, **kwargs)
-
-
-def github_json(url):
-    request = urllib.request.Request(url, headers={
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "chezetc-launcher-tools",
-        "X-GitHub-Api-Version": "2022-11-28",
-    })
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
 
 
 def latest_release(repo):
@@ -157,4 +150,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as error:
+        sys.exit(str(error))

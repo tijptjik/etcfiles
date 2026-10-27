@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
-import urllib.request
+
+from github_api import github_json
 
 TOOLS = ("tippecanoe", "tippecanoe-enumerate", "tippecanoe-decode", "tile-join",
          "tippecanoe-json-tool", "tippecanoe-overzoom")
@@ -48,10 +50,7 @@ def activate(prefix, bin_dir=Path("/usr/local/bin")):
 
 
 def main():
-    request = urllib.request.Request("https://api.github.com/repos/felt/tippecanoe/releases/latest",
-                                     headers={"User-Agent": "chezetc-tippecanoe"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        tag = release_tag(json.load(response))
+    tag = release_tag(github_json("https://api.github.com/repos/felt/tippecanoe/releases/latest"))
     prefix = Path("/opt/tippecanoe") / tag
     if current_install(prefix):
         run(str(prefix / "bin/tippecanoe"), "--version")
@@ -90,4 +89,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as error:
+        sys.exit(str(error))

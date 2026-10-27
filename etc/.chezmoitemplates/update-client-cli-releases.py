@@ -13,6 +13,8 @@ import tempfile
 import urllib.request
 import zipfile
 
+from github_api import github_json
+
 SPECS = {
     "hyprvoice": ("LeonardoTrapani/hyprvoice", r"v(?P<version>\d+\.\d+\.\d+)",
                   "hyprvoice-linux-x86_64", "raw"),
@@ -27,14 +29,21 @@ def run(*args, **kwargs):
     subprocess.run(args, check=True, **kwargs)
 
 
-def github_json(url):
-    request = urllib.request.Request(url, headers={
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "chezetc-client-updater",
-        "X-GitHub-Api-Version": "2022-11-28",
-    })
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
+def strata_release_metadata():
+    """Resolve Strata metadata; its Fish installer retains the complete bundle."""
+    release = github_json("https://api.github.com/repos/lgse/strata/releases/latest")
+    match = re.fullmatch(r"v?(\d+\.\d+\.\d+)", release.get("tag_name", ""))
+    if not match or release.get("draft") or release.get("prerelease"):
+        raise RuntimeError("Latest Strata release has an unsupported version tag or is not stable")
+    version = match.group(1)
+    archive = f"strata-{version}-x86_64-unknown-linux-gnu.tar.gz"
+    asset = next((item for item in release.get("assets", []) if item.get("name") == archive), None)
+    if asset is None:
+        raise RuntimeError(f"Latest Strata release is missing {archive}")
+    digest = asset.get("digest") or ""
+    if not re.fullmatch(r"sha256:[0-9a-fA-F]{64}", digest):
+        raise RuntimeError(f"Latest Strata release has no valid SHA-256 digest for {archive}")
+    return version + "|" + digest.removeprefix("sha256:").lower()
 
 
 def resolve_release(repo, tag_pattern, asset_pattern):
@@ -178,6 +187,9 @@ def main():
     if os.uname().machine != "x86_64":
         raise RuntimeError("These client CLI releases currently support x86_64 only")
     selected = sys.argv[1:]
+    if selected == ["strata-metadata"]:
+        print(strata_release_metadata())
+        return
     if selected == ["hyprvoice"]:
         changed = install("hyprvoice", *SPECS["hyprvoice"])
     elif selected == ["terminal"]:
@@ -185,9 +197,12 @@ def main():
         for tool in ("tennis", "tinty"):
             changed = install(tool, *SPECS[tool]) or changed
     else:
-        raise RuntimeError("Expected tool selector: hyprvoice or terminal")
+        raise RuntimeError("Expected tool selector: hyprvoice, terminal or strata-metadata")
     print("CHEZETC_RESULT=changed" if changed else "CHEZETC_RESULT=unchanged")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as error:
+        sys.exit(str(error))

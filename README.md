@@ -132,6 +132,22 @@ service remain managed by the home Chezmoi repository. The installer does not
 restart a running dictation session. Update the release version and checksum
 together when upgrading. The source checkout in `~/.tools` is not required.
 
+All GitHub API lookups for Strata, Tippecanoe, Hyprvoice, Tennis, Tinty, Hamr,
+Gitfetch (including commit lookup), and the home repository's Bitwarden CLIs
+use the shared `github_api.py` helper, bundled beside each temporary installer.
+Keep the helper copies in both repositories identical. It authenticates metadata
+requests using `GH_TOKEN`, then `GITHUB_TOKEN`, when available in the installer
+environment, otherwise the desktop user's `gh auth token --hostname github.com`.
+For normal Tjikup/Chezetc runs, use `gh auth login --hostname github.com` as the
+desktop user: the system hook returns to that user's account before the lookup.
+Installers that run under sudo retrieve the invoking user's GitHub CLI login
+instead of root's. Tokens are not logged, persisted by the updater, or sent with
+asset downloads. Authenticated requests and redirects stay on `api.github.com`.
+Without credentials, public release lookups remain available subject to GitHub's
+anonymous rate limit. Authentication and rate-limit failures remain errors and
+leave the affected tool's active installation in place; rerun after fixing login
+or waiting for the limit to reset.
+
 ### Tippecanoe (clients)
 
 Every Tjikup apply checks the latest stable `felt/tippecanoe` GitHub release.

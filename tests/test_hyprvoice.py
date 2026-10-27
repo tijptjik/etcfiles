@@ -1,13 +1,16 @@
 """Exercise the current Python updater without network or privileged writes."""
 import importlib.util
+import sys
 import io
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 SOURCE = Path(__file__).resolve().parents[1] / 'etc/.chezmoitemplates/update-client-cli-releases.py'
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'etc/.chezmoitemplates'))
 spec = importlib.util.spec_from_file_location('hyprvoice_updater', SOURCE)
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
@@ -43,6 +46,8 @@ class HyprvoiceInstallerTests(unittest.TestCase):
                     installer.install('hyprvoice', *installer.SPECS['hyprvoice'])
                 privileged.assert_not_called()
                 execute.assert_not_called()
+                request = installer.urllib.request.urlopen.call_args.args[0]
+                self.assertIsNone(request.get_header('Authorization'))
             self.assertEqual(link.readlink(), old)
             self.assertEqual(old.read_bytes(), b'existing executable')
             self.assertFalse((root / 'opt/hyprvoice/2.0.0').exists())

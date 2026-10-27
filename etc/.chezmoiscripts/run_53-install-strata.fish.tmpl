@@ -46,29 +46,19 @@ function install_strata
         return 1
     end
 
-    set -l release_data (curl --fail --silent --show-error --location --retry 3 \
-        --header "Accept: application/vnd.github+json" \
-        --header "X-GitHub-Api-Version: 2022-11-28" \
-        https://api.github.com/repos/lgse/strata/releases/latest | python3 -c '
-import json
-import re
-import sys
-
-release = json.load(sys.stdin)
-tag = release.get("tag_name", "")
-match = re.fullmatch(r"v?(\d+\.\d+\.\d+)", tag)
-if not match:
-    raise SystemExit("Latest Strata release has an unsupported version tag")
-version = match.group(1)
-archive = f"strata-{version}-x86_64-unknown-linux-gnu.tar.gz"
-asset = next((item for item in release.get("assets", []) if item.get("name") == archive), None)
-if asset is None:
-    raise SystemExit(f"Latest Strata release is missing {archive}")
-digest = asset.get("digest", "")
-if not re.fullmatch(r"sha256:[0-9a-fA-F]{64}", digest):
-    raise SystemExit(f"Latest Strata release has no valid SHA-256 digest for {archive}")
-print(version + "|" + digest.removeprefix("sha256:").lower())
-'); or return $status
+    set -l installer_dir (mktemp -d); or return 1
+    set -l metadata_helper "$installer_dir/installer.py"
+    printf '%s' {{ include ".chezmoitemplates/github_api.py" | b64enc | quote }} | base64 --decode > "$installer_dir/github_api.py"
+    and printf '%s' {{ include ".chezmoitemplates/update-client-cli-releases.py" | b64enc | quote }} | base64 --decode > "$metadata_helper"
+    set -l result $status
+    if test $result -ne 0
+        rm -rf "$installer_dir"
+        return $result
+    end
+    set -l release_data (python3 -B "$metadata_helper" strata-metadata)
+    set result $status
+    rm -rf "$installer_dir"
+    test $result -eq 0; or return $result
     set -l release_fields (string split "|" -- "$release_data")
     set -l latest_version $release_fields[1]
     set -l expected $release_fields[2]
