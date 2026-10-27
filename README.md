@@ -1,4 +1,8 @@
-# Managed /etc with chezetc
+# Systjik
+
+System configuration managed by Chezetc. Use `systjik` as the command name
+after installing Dotjik; `chezetc` continues to work. The GitHub repository
+remains `etcfiles` and the checkout remains `~/.local/share/chezetc`.
 
 Setup the system environment before running the [dotfiles](https://github.com/tijptjik/dotfiles) setup with chezmoi.
 
