@@ -43,3 +43,34 @@ Use an independent connection when testing a different VPN route, identity,
 or host-key policy for the same endpoint. OpenSSH may fall back to a fresh
 connection if simultaneous first requests race to create a master; later
 requests reuse the winner.
+
+## Terminal environment
+
+The managed SSH client exports `COLORTERM`, `TERM_PROGRAM`, and `HERDR_ENV`
+when they exist in the originating environment. The managed server accepts the
+same variables. Herdr sets `TERM_PROGRAM=herdr` and `HERDR_ENV=1` itself; do not
+set those globally in Fish, since other terminals need their own identity.
+OpenSSH forwards `TERM` separately when allocating a PTY.
+
+This lets remote Tjikup select Herdr colour icons instead of its compact glyph
+fallback. Both the client `SendEnv` and server `AcceptEnv` policies must be
+installed. The server policy is managed on Si; Fi and Li exclude server SSH
+configuration from Chezetc.
+
+Apply only the affected files, without unrelated hooks:
+
+```sh
+# On the originating machine:
+chezetc apply --exclude=scripts /etc/ssh/ssh_config.d/50-redhat.conf
+ssh -G m@ssh.type.hk | rg '^sendenv '
+
+# On Si:
+chezetc apply --exclude=scripts /etc/ssh/sshd_config.d/50-redhat.conf
+sudo sshd -t && sudo systemctl reload sshd
+```
+
+Start a new SSH session after applying the policy. Existing remote shells keep
+their original environment. If a reused connection retains the old policy, use
+`ssh -o ControlPath=none` for a fresh transport. In the remote shell, verify
+`printenv TERM TERM_PROGRAM HERDR_ENV`; from Herdr it should include
+`xterm-256color`, `herdr`, and `1`.
