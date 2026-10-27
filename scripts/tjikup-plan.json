@@ -145,6 +145,17 @@
     "label": "Telegram"
   },
   {
+    "id": "zoom",
+    "file": "run_51-install-zoom.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "dnf"
+    ],
+    "label": "Zoom Workplace"
+  },
+  {
     "id": "codex-desktop",
     "file": "run_52-install-codex-desktop.fish.tmpl",
     "needs": [
@@ -276,7 +287,8 @@
       "terminal",
       "zed",
       "nginx",
-      "apps"
+      "apps",
+      "zoom"
     ],
     "resources": [
       "tailscale",

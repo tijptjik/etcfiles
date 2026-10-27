@@ -31,6 +31,18 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
   updates, with a recent-backup requirement. See [Si app updates](docs/si-app-updates.md).
 - `fstab`
 
+## Client desktop applications
+
+The client list provisions Font Manager (with its COPR), Qt6 Settings, and
+native VLC (including its Qt GUI). Readest uses Flatpak. Zoom is installed from
+its official RPM by a client-only hook because it has no DNF repository;
+existing Zoom installs are retained and updates remain manual/in-app. Obsidian uses the official AppImage
+installed by the home Chezmoi hook; Sublime Text is also installed by a home
+client hook using the official RPM repository managed here. Do not restore the
+Obsidian or VLC Flatpak entries: their native launchers are managed in the home
+checkout. Removing an entry does not uninstall existing copies; migrate profiles
+and remove redundant installations explicitly.
+
 ## Fedora repository ownership
 
 On Fedora 45 and later, Fedora and Chrome repo definitions are supplied under

@@ -170,6 +170,7 @@ packages:
     - 'purian23/material-symbols-fonts'
     - 'rafatosta/zapzap'
     - 'zeno/scrcpy'
+    - 'jerrycasiano/FontManager'
     rpm:
     - 'blueman'
     - 'blueman-manager'
@@ -185,6 +186,7 @@ packages:
     # retires itself once Fedora packages an upstream release with the fix.
     - 'fmt-devel'
     - 'firefoxpwa'
+    - 'font-manager'
     - 'gcc-c++'
     - 'gamescope'
     - 'gimp'
@@ -217,15 +219,17 @@ packages:
     - 'pulseaudio-libs-devel'
     - 'python3-gobject-devel'
     - 'qalculate'
+    - 'qt6ct'
     - 'quickshell'
     - 'scrcpy'
     - 'simplescreenrecorder'
     - 'solaar'
     - 'spdlog-devel'
     - 'steam'
-    # - 'sublime-text'
+    # Sublime Text is installed by the home Chezmoi client hook.
     - 'sushi'
     - 'vlc-cli'
+    - 'vlc-gui-qt'
     - 'vlc-plugins-freeworld'
     - 'wayland-devel'
     - 'wayland-protocols-devel'
@@ -247,15 +251,14 @@ packages:
       fedora:
       - 'org.pulseaudio.pavucontrol'
       flathub:
+      - 'com.bilingify.readest'
       - 'com.dec05eba.gpu_screen_recorder'
       - 'com.discordapp.Discord'
       - 'com.obsproject.Studio'
       - 'com.spotify.Client'
-      - 'md.obsidian.Obsidian'
       - 'net.lutris.Lutris'
       - 'org.azahar_emu.Azahar'
       - 'org.signal.Signal'
-      - 'org.videolan.VLC'
       - 'org.yuzu_emu.yuzu'
       - 'rocks.koreader.KOReader'
   server:
