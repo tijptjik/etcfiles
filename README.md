@@ -103,6 +103,23 @@ next boot/login; do not restart GDM inside a working desktop session.
 
 The server retains its existing automatic login as `m`.
 
+
+### Persistent client tailnet
+
+Fi and Li keep their enrolled Tailscale connections available after boot,
+apply, lock, and unlock. The Tailscale hook enables `tailscaled`, sets the
+interactive user as operator, preserves Mullvad DNS/default-route ownership
+with `--accept-dns=false --accept-routes=false`, and resumes a stopped enrolled
+client. It reports missing enrollment without attempting an automatic login.
+`tailscale up` persists the running preference for the next daemon start.
+The daemon uses the managed Mullvad split-tunnel cgroup override. The home
+`tailscale-lock` compatibility command now only runs Hyprlock.
+
+Home-managed `sshfi`/`sshli` discover peers through the Tailscale API, prefer
+IPv6 tailnet addresses, and fall back to Avahi LAN discovery. They retain
+OpenSSH authentication and pinned host identities; Tailscale SSH stays disabled.
+See the dotfiles `docs/tailscale-setup.md` for route selection and diagnostics.
+
 ### Hyprvoice (clients)
 
 Chezetc installs the pinned upstream v1.0.2 x86_64 release into

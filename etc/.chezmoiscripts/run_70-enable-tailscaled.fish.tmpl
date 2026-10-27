@@ -2,7 +2,7 @@
 if test "$FLEET_DEFER_SYSTEM_HOOKS" = 1
     exit 0
 end
-# Keep Tailscale last: the preceding apps may use its temporary Serve routes.
+# Converge persistent tailnet availability after application networking.
 {{ if eq .chezmoi.os "linux" -}}
 
 {{ include ".chezmoihelpers/status.fish" }}
@@ -45,21 +45,23 @@ else
     or exit 1
 end
 
+{{ if .isClient -}}
+# Keep ordinary DNS and default routes with Mullvad. Fleet SSH discovers peers
+# through the local Tailscale API and prefers their IPv6 ULA addresses.
+step_run_note "Tailnet DNS and routes" configured sudo tailscale set --accept-dns=false --accept-routes=false
+or exit 1
 set -l tailscale_state (tailscale status --json 2>/dev/null | jq -r '.BackendState // empty' 2>/dev/null)
-
-{{ if .isDesktop -}}
-# fi is reachable from the tailnet only while its Hyprlock wrapper is active.
-# Keep the daemon enabled for boot reliability, but leave the node disconnected
-# after an ordinary desktop apply.
-if not pgrep -x hyprlock >/dev/null 2>&1
-    if test "$tailscale_state" != Stopped; and test "$tailscale_state" != NeedsLogin; and test -n "$tailscale_state"
-        if not tailscale down
-            step_fail "Tailnet connection"
-            exit 1
-        end
-    end
+switch "$tailscale_state"
+    case Running
+        step_skip_ok "Tailnet connection" available
+    case Stopped
+        step_run_note "Tailnet connection" connected sudo timeout 20s tailscale up
+        or exit 1
+    case NeedsLogin NeedsMachineAuth
+        step_warn "Tailnet enrollment required; run tailscale up as the desktop user"
+    case '*'
+        step_fail "Tailnet connection is unavailable ($tailscale_state)"
+        exit 1
 end
 {{ end -}}
-
-step_skip_ok "Tailnet connection" available
 {{ end -}}
