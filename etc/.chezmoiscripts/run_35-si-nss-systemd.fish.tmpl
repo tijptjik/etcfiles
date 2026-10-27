@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+if test "$FLEET_DEFER_SYSTEM_HOOKS" = 1
+    exit 0
+end
 {{ if and (eq .chezmoi.os "linux") .isServer -}}
 # GDM 50 greeters use transient user records, including shadow entries.
 set fedora_release (rpm -E %fedora)

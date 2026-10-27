@@ -1,0 +1,305 @@
+[
+  {
+    "id": "copr",
+    "file": "run_10-install-copr-repos.fish.tmpl",
+    "needs": [],
+    "resources": [
+      "dnf"
+    ],
+    "label": "COPR repositories"
+  },
+  {
+    "id": "repos",
+    "file": "run_20-install-repos.fish.tmpl",
+    "needs": [
+      "copr"
+    ],
+    "resources": [
+      "dnf",
+      "flatpak"
+    ],
+    "label": "Package repositories"
+  },
+  {
+    "id": "rpm",
+    "file": "run_30-system-update.fish.tmpl",
+    "needs": [
+      "repos"
+    ],
+    "resources": [
+      "dnf",
+      "system-systemd",
+      "network",
+      "tailscale",
+      "storage"
+    ],
+    "label": "System RPM packages",
+    "env": {
+      "FLEET_SYSTEM_PHASE": "rpm"
+    }
+  },
+  {
+    "id": "flatpak",
+    "file": "run_30-system-update.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "flatpak"
+    ],
+    "label": "System Flatpak packages",
+    "env": {
+      "FLEET_SYSTEM_PHASE": "flatpak"
+    }
+  },
+  {
+    "id": "nss",
+    "file": "run_35-si-nss-systemd.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd"
+    ],
+    "label": "Nss"
+  },
+  {
+    "id": "power",
+    "file": "run_36-si-power-policy.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd"
+    ],
+    "label": "Power"
+  },
+  {
+    "id": "media-permissions",
+    "file": "run_37-si-media-permissions.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd",
+      "storage"
+    ],
+    "label": "Media Permissions"
+  },
+  {
+    "id": "snapraid",
+    "file": "run_38-si-snapraid-status.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd",
+      "storage"
+    ],
+    "label": "Snapraid"
+  },
+  {
+    "id": "transmission",
+    "file": "run_38-si-transmission-cleanup.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd",
+      "storage"
+    ],
+    "label": "Transmission"
+  },
+  {
+    "id": "notifications",
+    "file": "run_39-si-notifications.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd"
+    ],
+    "label": "Notifications"
+  },
+  {
+    "id": "docker",
+    "file": "run_40-enable-docker.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd",
+      "storage"
+    ],
+    "label": "Docker"
+  },
+  {
+    "id": "telegram",
+    "file": "run_50-install-telegram.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "telegram"
+    ],
+    "label": "Telegram"
+  },
+  {
+    "id": "codex-desktop",
+    "file": "run_52-install-codex-desktop.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "dnf"
+    ],
+    "label": "Codex Desktop"
+  },
+  {
+    "id": "strata",
+    "file": "run_53-install-strata.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "dnf"
+    ],
+    "label": "Strata"
+  },
+  {
+    "id": "hyprvoice",
+    "file": "run_54-install-hyprvoice.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "client-cli"
+    ],
+    "label": "Hyprvoice"
+  },
+  {
+    "id": "tippecanoe",
+    "file": "run_55-install-tippecanoe.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "dnf"
+    ],
+    "label": "Tippecanoe"
+  },
+  {
+    "id": "launcher",
+    "file": "run_56-install-launcher-tools.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "dnf",
+      "user-systemd"
+    ],
+    "label": "Launcher"
+  },
+  {
+    "id": "terminal",
+    "file": "run_57-install-terminal-tools.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "client-cli"
+    ],
+    "label": "Terminal"
+  },
+  {
+    "id": "zed",
+    "file": "run_60-install-zed.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "zed"
+    ],
+    "label": "Zed"
+  },
+  {
+    "id": "nginx",
+    "file": "run_90-build-nginx-dav-ext.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "dnf",
+      "system-systemd"
+    ],
+    "label": "Nginx"
+  },
+  {
+    "id": "apps",
+    "file": "run_after_95-si-app-updates.fish.tmpl",
+    "needs": [
+      "docker",
+      "media-permissions",
+      "snapraid",
+      "transmission",
+      "notifications",
+      "nginx"
+    ],
+    "resources": [
+      "dnf",
+      "storage",
+      "system-systemd"
+    ],
+    "label": "Server applications"
+  },
+  {
+    "id": "tailscale",
+    "file": "run_70-enable-tailscaled.fish.tmpl",
+    "needs": [
+      "copr",
+      "repos",
+      "rpm",
+      "flatpak",
+      "nss",
+      "power",
+      "media-permissions",
+      "snapraid",
+      "transmission",
+      "notifications",
+      "docker",
+      "telegram",
+      "codex-desktop",
+      "strata",
+      "hyprvoice",
+      "tippecanoe",
+      "launcher",
+      "terminal",
+      "zed",
+      "nginx",
+      "apps"
+    ],
+    "resources": [
+      "tailscale",
+      "network",
+      "system-systemd"
+    ],
+    "label": "Tailscale",
+    "barrier": "network-final"
+  },
+  {
+    "id": "release",
+    "file": "run_30-system-update.fish.tmpl",
+    "needs": [
+      "tailscale"
+    ],
+    "resources": [
+      "dnf"
+    ],
+    "label": "Fedora release",
+    "env": {
+      "FLEET_SYSTEM_PHASE": "release"
+    },
+    "exclusive": true,
+    "barrier": "final"
+  }
+]

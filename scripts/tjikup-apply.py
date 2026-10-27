@@ -25,13 +25,15 @@ def conflict_input(command, skip):
             answers.wait()
 
 
-def apply(repo, wrapper, config, *, skip_conflicts=False):
+def apply(repo, wrapper, config, *, skip_conflicts=False, defer_hooks=False):
     environment = {
         **os.environ,
         "CHEZMOI_SKIP_SPLASH": "1",
         "TJIKUP_SKIP_PREFLIGHT": "1",
         "TJIKUP_QUIET_CONFIG": "1",
     }
+    if defer_hooks:
+        environment["FLEET_DEFER_SYSTEM_HOOKS"] = "1"
     before = config.read_bytes() if config.is_file() else None
 
     def once():

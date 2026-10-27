@@ -17,7 +17,7 @@ if test (id -u) -eq 0
     set -l rendered_hook (status filename)
     cd "$desktop_home"; or exit 1
     exec sudo -H -u "$SUDO_USER" \
-        --preserve-env=TJIKUP_COLOR,TJIKUP_NO_SPIN,TJIKUP_REPORT_FILE,TJIKUP_COLUMNS \
+        --preserve-env=TJIKUP_COLOR,TJIKUP_NO_SPIN,TJIKUP_REPORT_FILE,TJIKUP_COLUMNS,TJIKUP_NO_SECTIONS,TJIKUP_STATUS_LINES \
         -- env "PATH=$desktop_home/.local/bin:/usr/local/bin:/usr/bin:/bin" \
         "XDG_CONFIG_HOME=$desktop_home/.config" "XDG_DATA_HOME=$desktop_home/.local/share" \
         "XDG_CACHE_HOME=$desktop_home/.cache" "XDG_STATE_HOME=$desktop_home/.local/state" \

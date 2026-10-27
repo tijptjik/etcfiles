@@ -24,7 +24,7 @@ if len(matches) != 1:
     raise SystemExit('Unrecognized Chezetc sudo allowlist')
 m = matches[0]
 names = m.group(1).split(',')
-for name in ('TJIKUP_COLOR', 'TJIKUP_NO_SPIN', 'TJIKUP_REPORT_FILE', 'TJIKUP_SKIP_PREFLIGHT', 'TJIKUP_COLUMNS'):
+for name in ('TJIKUP_COLOR', 'TJIKUP_NO_SPIN', 'TJIKUP_REPORT_FILE', 'TJIKUP_SKIP_PREFLIGHT', 'TJIKUP_COLUMNS', 'FLEET_DEFER_SYSTEM_HOOKS', 'TJIKUP_NO_SECTIONS', 'TJIKUP_STATUS_LINES'):
     if name not in names:
         names.append(name)
 p.write_text(s[:m.start(1)] + ','.join(names) + s[m.end(1):])

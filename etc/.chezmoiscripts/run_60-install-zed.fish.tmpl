@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+if test "$FLEET_DEFER_SYSTEM_HOOKS" = 1
+    exit 0
+end
 # Run on every apply so Zed release status follows application checks.
 {{ if eq .chezmoi.os "linux" -}}
 

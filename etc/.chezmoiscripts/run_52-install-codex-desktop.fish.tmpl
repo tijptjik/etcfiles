@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+if test "$FLEET_DEFER_SYSTEM_HOOKS" = 1
+    exit 0
+end
 # Keep ChatGPT Desktop availability beside the other application status lines.
 {{ if and (eq .chezmoi.os "linux") .isClient -}}
 

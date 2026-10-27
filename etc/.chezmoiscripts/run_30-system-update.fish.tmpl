@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+if test "$FLEET_DEFER_SYSTEM_HOOKS" = 1
+    exit 0
+end
 # Run on every apply so package maintenance has one consolidated report.
 
 {{ include ".chezmoihelpers/status.fish" }}
@@ -11,7 +14,20 @@ setup_logging linux-dnf-update
 
 step_header "System Update"
 
-if not command -q gum
+# Standalone Chezetc retains the complete original sequence. The fleet runs
+# these phases as separate tasks, sharing one global set of resource locks.
+set fleet_phase all
+if set -q FLEET_SYSTEM_PHASE
+    set fleet_phase "$FLEET_SYSTEM_PHASE"
+end
+if not contains -- "$fleet_phase" all rpm flatpak release
+    echo "Unknown system update phase: $fleet_phase" >&2
+    exit 1
+end
+set dnf_status 0
+set flatpak_status 0
+
+if contains -- "$fleet_phase" all rpm; and not command -q gum
     step_run_as INSTALL "Install gum CLI runner" sudo dnf install -y -q gum
     or exit 1
 end
@@ -99,6 +115,7 @@ function defer_fedora_upgrade --argument-names target_release
     return 1
 end
 
+if contains -- "$fleet_phase" all rpm flatpak
 set tracked_rpm_packages
 {{ range .packages.common.rpm -}}
 set -a tracked_rpm_packages '{{ . }}'
@@ -143,6 +160,7 @@ set flatpak_versions_after (mktemp)
 snapshot_rpm_versions $rpm_versions_before $tracked_rpm_packages
 snapshot_flatpak_versions $flatpak_versions_before $tracked_flatpak_packages
 
+if contains -- "$fleet_phase" all rpm
 {{ if .isServer -}}
 # Fedora's Nginx RPM immediately replaces a running master after changing the
 # daemon or a dynamic module.  Hold that trigger until the ABI-dependent DAV
@@ -174,6 +192,9 @@ if test $dnf_status -eq 0
     report_package_updates $rpm_versions_before $rpm_versions_after
 end
 
+end
+
+if contains -- "$fleet_phase" all flatpak
 if test (count $tracked_flatpak_packages) -gt 0
     set installed_flatpak_packages
     for installed in (command cat $flatpak_versions_before)
@@ -208,6 +229,8 @@ if test (count $tracked_flatpak_packages) -gt 0
 else
     step_skip_ok "No Flatpak packages configured"
     set flatpak_status 0
+end
+
 end
 
 if test $dnf_status -ne 0; or test $flatpak_status -ne 0
@@ -323,8 +346,11 @@ set -a flathub_flatpak_packages '{{ . }}'
 {{ end }}
 {{ end }}
 
-install_dnf_packages $rpm_packages
-or exit 1
+if contains -- "$fleet_phase" all rpm
+    install_dnf_packages $rpm_packages
+    or exit 1
+end
+if contains -- "$fleet_phase" all flatpak
 install_flatpak_packages fedora $fedora_flatpak_packages
 or exit 1
 install_flatpak_packages flathub $flathub_flatpak_packages
@@ -352,8 +378,13 @@ rm -f $flatpak_refs_before $flatpak_refs_after
 test $remove_status -eq 0
 or exit 1
 
+end
+
 rm -f $rpm_versions_before $rpm_versions_after $flatpak_versions_before $flatpak_versions_after
 
+end
+
+if contains -- "$fleet_phase" all release
 set installed_fedora_release (rpm -E %fedora 2>/dev/null)
 status_msg CHECK "..." "Fedora release check" "checking"
 set available_fedora_release (available_fedora_release)
@@ -383,4 +414,6 @@ if string match -qr '^[0-9]+$' -- "$installed_fedora_release"; and string match 
     end
 else
     step_skip_ok "Fedora upgrade" "check unavailable"
+end
+
 end
