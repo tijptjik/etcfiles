@@ -34,3 +34,9 @@ tools or aliases. Fish's `done` plugin detects tmux only when it is installed.
 Li uses the Lutris Flatpak with its original native config/data directories
 symlinked into the Flatpak paths. Its Wine runner remains accessible. Cemu was
 present on Fi only; no Cemu runner was found on Li.
+
+Azahar is retired from the client Flatpak policy. A stale declaration previously
+reinstalled it during routine maintenance after its manual removal. Keep it out
+of `packages.client.flatpak.flathub`; remove any reintroduced installation with
+`sudo flatpak uninstall --system org.azahar_emu.Azahar` while retaining the app's
+profile and save data (do not use `--delete-data`).

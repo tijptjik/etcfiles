@@ -283,7 +283,6 @@ packages:
       - 'com.spotify.Client'
       # Lutris owns downloaded runners such as Cemu; preserve their data.
       - 'net.lutris.Lutris'
-      - 'org.azahar_emu.Azahar'
       - 'org.signal.Signal'
       - 'org.yuzu_emu.yuzu'
       - 'rocks.koreader.KOReader'

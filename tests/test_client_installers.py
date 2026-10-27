@@ -76,3 +76,9 @@ function step_run_note_quiet; printf 'RUN %%s\\n' (string join '|' -- $argv); en
             else:
                 self.assertNotIn('noisy-output',result.stdout)
                 self.assertIn('using fedora-43-x86_64',result.stdout)
+
+
+class ClientPackagePolicyTests(unittest.TestCase):
+    def test_retired_azahar_is_not_requested_for_reinstallation(self):
+        policy = (REPO / 'etc/.chezmoidata/packages.yaml').read_text()
+        self.assertNotIn("'org.azahar_emu.Azahar'", policy)
