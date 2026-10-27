@@ -97,7 +97,10 @@ def install_hamr():
                 if "not found" in libraries.stdout:
                     raise RuntimeError(f"Missing libraries for {name}: {libraries.stdout}")
             run("sudo", "-n", "install", "-d", "-m", "755", str(target))
-            run("sudo", "-n", "cp", "-r", str(source) + "/.", str(target) + "/")
+            # A repair can target the version currently running. Unlink destination
+            # files before copying so Linux never opens an executing inode for write.
+            # Existing processes retain their old inode until they exit.
+            run("sudo", "-n", "cp", "-r", "--remove-destination", str(source) + "/.", str(target) + "/")
             run("sudo", "-n", "chown", "-R", "root:root", str(target))
             run("sudo", "-n", "chmod", "-R", "go-w", str(target))
             marker_file = temp / ".installed"
