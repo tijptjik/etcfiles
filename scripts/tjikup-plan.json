@@ -21,10 +21,22 @@
     "label": "Fedora (repositories)"
   },
   {
+    "id": "chrome",
+    "file": "run_21-install-chrome.fish.tmpl",
+    "needs": [
+      "repos"
+    ],
+    "resources": [
+      "dnf"
+    ],
+    "label": "Google Chrome stable"
+  },
+  {
     "id": "rpm",
     "file": "run_30-system-update.fish.tmpl",
     "needs": [
-      "repos"
+      "repos",
+      "chrome"
     ],
     "resources": [
       "dnf",
@@ -288,7 +300,8 @@
       "zed",
       "nginx",
       "apps",
-      "zoom"
+      "zoom",
+      "chrome"
     ],
     "resources": [
       "tailscale",

@@ -190,6 +190,7 @@ packages:
     - 'gcc-c++'
     - 'gamescope'
     - 'gimp'
+    - 'google-chrome-stable'
     - 'gthumb'
     - 'gtk-layer-shell-devel'
     - 'gtkmm3.0-devel'
