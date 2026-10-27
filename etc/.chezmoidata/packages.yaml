@@ -124,6 +124,8 @@ packages:
     - 'openssh-server'
     - 'openssl-devel'
     - 'orca'
+    # Used by the shared Fish PAGER setting.
+    - 'ov'
     - 'pam_afs_session'
     - 'papers'
     - 'papers-nautilus'
@@ -215,6 +217,8 @@ packages:
     - 'meson'
     - 'material-symbols-fonts'
     - 'mediawriter'
+    # Alternate playback engine alongside VLC.
+    - 'mpv'
     - 'mullvad-vpn'
     - 'pavucontrol'
     - 'pulseaudio-libs-devel'
@@ -248,6 +252,26 @@ packages:
     - 'zapzap'
     - 'zen-browser'
     - 'zram-generator-defaults'
+    # Retained Fedora GNOME applications, explicit rather than image defaults.
+    - 'decibels'
+    - 'eog'
+    - 'gnome-calendar'
+    - 'gnome-characters'
+    - 'gnome-clocks'
+    - 'gnome-connections'
+    - 'gnome-contacts'
+    - 'gnome-control-center'
+    - 'gnome-maps'
+    - 'gnome-terminal'
+    - 'gnome-text-editor'
+    - 'gnome-weather'
+    - 'loupe'
+    - 'nautilus'
+    - 'ptyxis'
+    - 'showtime'
+    - 'simple-scan'
+    - 'snapshot'
+    - 'yelp'
     flatpak:
       fedora:
       - 'org.pulseaudio.pavucontrol'
@@ -257,11 +281,13 @@ packages:
       - 'com.discordapp.Discord'
       - 'com.obsproject.Studio'
       - 'com.spotify.Client'
+      # Lutris owns downloaded runners such as Cemu; preserve their data.
       - 'net.lutris.Lutris'
       - 'org.azahar_emu.Azahar'
       - 'org.signal.Signal'
       - 'org.yuzu_emu.yuzu'
       - 'rocks.koreader.KOReader'
+      - 'tv.plex.PlexDesktop'
   server:
     rpm:
     - 'snapraid'
