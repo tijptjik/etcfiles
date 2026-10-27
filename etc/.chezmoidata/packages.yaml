@@ -227,7 +227,6 @@ packages:
     - 'sushi'
     - 'vlc-cli'
     - 'vlc-plugins-freeworld'
-    - 'waybar'
     - 'wayland-devel'
     - 'wayland-protocols-devel'
     - 'waypipe'

@@ -17,11 +17,19 @@ function install_launcher_tools
         sudo -n dnf install -y $missing; or return $status
     end
     set -l installer (mktemp)
-    printf '%s\n' {{ include ".chezmoitemplates/install-launcher-tools.py" | quote }} > "$installer"
+    printf '%s' {{ include ".chezmoitemplates/install-launcher-tools.py" | b64enc | quote }} | base64 --decode > "$installer"
+    or return $status
     sudo -n python3 "$installer"
     set -l result $status
     rm -f "$installer"
     test $result -eq 0; or return $result
+    # Do not publish compatibility links after a no-op or incomplete install.
+    for name in gitfetch hamr hamr-daemon hamr-gtk hamr-tui
+        if not test -x /usr/local/bin/$name
+            echo "Launcher installation did not produce /usr/local/bin/$name" >&2
+            return 1
+        end
+    end
     set -l backup "$HOME/.local/state/chezetc/launcher-tools/"(date +%Y%m%dT%H%M%S%N)
     mkdir -p "$HOME/.local/bin" "$backup"; or return 1
     for name in gitfetch hamr hamr-daemon hamr-gtk hamr-tui
@@ -30,6 +38,16 @@ function install_launcher_tools
             cp -p "$path" "$backup/$name"; or return 1
         end
         ln -sfn /usr/local/bin/$name "$path"; or return 1
+    end
+    set -l desktop_runtime /run/user/(id -u)
+    if test -S "$desktop_runtime/bus"
+        set -lx XDG_RUNTIME_DIR "$desktop_runtime"
+        set -lx DBUS_SESSION_BUS_ADDRESS "unix:path=$desktop_runtime/bus"
+        systemctl --user daemon-reload; or return $status
+        systemctl --user enable hamr-daemon.service hamr-gtk.service; or return $status
+        if systemctl --user --quiet is-active graphical-session.target
+            systemctl --user start hamr-daemon.service hamr-gtk.service; or return $status
+        end
     end
 end
 step_run_quiet "Gitfetch and Hamr" install_launcher_tools
