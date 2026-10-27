@@ -123,14 +123,13 @@ See the dotfiles `docs/tailscale-setup.md` for route selection and diagnostics.
 
 ### Hyprvoice (clients)
 
-Chezetc installs the pinned upstream v1.0.2 x86_64 release into
-`/opt/hyprvoice/v1.0.2/hyprvoice`, verifying its SHA-256 before installation.
+Chezetc checks the latest stable upstream x86_64 release on each apply and installs
+it into `/opt/hyprvoice/<version>/hyprvoice`, verifying its SHA-256 before installation.
 `/usr/local/bin/hyprvoice` and the desktop user's `~/.local/bin/hyprvoice`
 point to that binary. Existing unmanaged user binaries are preserved under
 `~/.local/state/chezetc/hyprvoice/`. User configuration, shortcuts and the user
 service remain managed by the home Chezmoi repository. The installer does not
-restart a running dictation session. Update the release version and checksum
-together when upgrading. The source checkout in `~/.tools` is not required.
+restart a running dictation session. The source checkout in `~/.tools` is not required.
 
 All GitHub API lookups for Strata, Tippecanoe, Hyprvoice, Tennis, Tinty, Hamr,
 Gitfetch (including commit lookup), and the home repository's Bitwarden CLIs

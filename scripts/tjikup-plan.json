@@ -6,7 +6,7 @@
     "resources": [
       "dnf"
     ],
-    "label": "COPR repositories"
+    "label": "Fedora (COPR repositories)"
   },
   {
     "id": "repos",
@@ -18,7 +18,7 @@
       "dnf",
       "flatpak"
     ],
-    "label": "Package repositories"
+    "label": "Fedora (repositories)"
   },
   {
     "id": "rpm",
@@ -33,7 +33,7 @@
       "tailscale",
       "storage"
     ],
-    "label": "System RPM packages",
+    "label": "Fedora (RPM packages)",
     "env": {
       "FLEET_SYSTEM_PHASE": "rpm"
     }
@@ -47,7 +47,7 @@
     "resources": [
       "flatpak"
     ],
-    "label": "System Flatpak packages",
+    "label": "Flatpak (system packages)",
     "env": {
       "FLEET_SYSTEM_PHASE": "flatpak"
     }
@@ -61,7 +61,7 @@
     "resources": [
       "system-systemd"
     ],
-    "label": "Nss"
+    "label": "NSS (system integration)"
   },
   {
     "id": "power",
@@ -72,7 +72,7 @@
     "resources": [
       "system-systemd"
     ],
-    "label": "Power"
+    "label": "Power (server policy)"
   },
   {
     "id": "media-permissions",
@@ -84,7 +84,7 @@
       "system-systemd",
       "storage"
     ],
-    "label": "Media Permissions"
+    "label": "Media (permissions)"
   },
   {
     "id": "snapraid",
@@ -96,7 +96,7 @@
       "system-systemd",
       "storage"
     ],
-    "label": "Snapraid"
+    "label": "SnapRAID (status)"
   },
   {
     "id": "transmission",
@@ -119,7 +119,7 @@
     "resources": [
       "system-systemd"
     ],
-    "label": "Notifications"
+    "label": "Notifications (server)"
   },
   {
     "id": "docker",
@@ -198,7 +198,7 @@
       "dnf",
       "user-systemd"
     ],
-    "label": "Launcher"
+    "label": "Launcher (Gitfetch and Hamr)"
   },
   {
     "id": "terminal",
@@ -209,7 +209,7 @@
     "resources": [
       "client-cli"
     ],
-    "label": "Terminal"
+    "label": "Terminal (Tennis and Tinty)"
   },
   {
     "id": "zed",
@@ -250,7 +250,7 @@
       "storage",
       "system-systemd"
     ],
-    "label": "Server applications"
+    "label": "Applications (server)"
   },
   {
     "id": "tailscale",
@@ -295,7 +295,7 @@
     "resources": [
       "dnf"
     ],
-    "label": "Fedora release",
+    "label": "Fedora (release)",
     "env": {
       "FLEET_SYSTEM_PHASE": "release"
     },

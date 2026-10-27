@@ -33,20 +33,17 @@ function __stage_style_bold --argument-names color text
     set_color normal
 end
 
-function __stage_color --argument-names verb
-    switch "$verb"
-        case SKIP
-            echo 8
-        case CHECK WARN
-            echo 14
-        case COMPLETE
-            echo 10
-        case UPDATE INSTALL PULL REMOVE IMPORT ADD CONFIG BUILD RELOAD STOP FAILED ERROR LOG
-            echo 9
-        case SYNC
-            echo 6
-        case '*'
-            echo 14
+function __stage_color --argument-names verb icon
+    if contains -- "$icon" '✗' X; or contains -- "$verb" FAILED ERROR
+        echo 9
+    else if test "$icon" = '!'; or test "$verb" = WARN
+        echo 11
+    else if test "$verb" = SKIP; or test "$icon" = '-'
+        echo 8
+    else if test "$icon" = '✓'
+        echo 10
+    else
+        echo 14
     end
 end
 
@@ -190,12 +187,12 @@ end
 function __stage_render_label --argument-names stage_name icon subject
     __stage_event "$stage_name" "$icon" "$subject" ""
     set subject (string shorten --max (math (__stage_columns) - 1 - 9 - (string length --visible -- "$icon")) -- "$subject")
-    set -l color (__stage_color "$stage_name")
+    set -l color (__stage_color "$stage_name" "$icon")
     set -l padded_stage (printf "%-7s" "$stage_name")
 
     if command -v gum >/dev/null 2>&1; and __stage_use_color
         set -l styled_stage (__stage_style_bold $color "$padded_stage")
-        set -l styled_icon (__stage_style (__stage_icon_color "$icon") "$icon")
+        set -l styled_icon (__stage_style "$color" "$icon")
         printf "%s %s " "$styled_stage" "$styled_icon"
         __stage_styled_subject "$subject"
     else
@@ -204,15 +201,11 @@ function __stage_render_label --argument-names stage_name icon subject
 end
 
 function __stage_render_label_note --argument-names stage_name icon subject note
-    __stage_event "$stage_name" "$icon" "$subject" "$note"
-    set -l color (__stage_color "$stage_name")
-    if test (count $argv) -ge 5
-        set color (__stage_color "$argv[5]")
-    else if test "$stage_name" = PULL; and test "$note" = "no changes"
-        set color 14
-    else if test "$stage_name" = SYNC; and contains -- "$note" "no changes" "no updates"
-        set color 6
+    if test "$icon" = '✓'; and string match -qri '(^|; *)no (changes|updates)$' -- "$note"
+        set stage_name SKIP
     end
+    __stage_event "$stage_name" "$icon" "$subject" "$note"
+    set -l color (__stage_color "$stage_name" "$icon")
     set -l padded_stage (printf "%-7s" "$stage_name")
     set -l available (math (__stage_columns) - 1 - (string length --visible -- "$padded_stage $icon "))
     set note (string shorten --max (math "floor(($available - 2) / 2)") -- "$note")
@@ -224,7 +217,7 @@ function __stage_render_label_note --argument-names stage_name icon subject note
 
     if command -v gum >/dev/null 2>&1; and __stage_use_color
         set -l styled_stage (__stage_style_bold $color "$padded_stage")
-        set -l styled_icon (__stage_style (__stage_icon_color "$icon") "$icon")
+        set -l styled_icon (__stage_style "$color" "$icon")
         set -l styled_subject (__stage_styled_subject "$subject")
         set -l styled_note (__stage_style 8 "$note")
         printf "%s %s %s%s%s\n" "$styled_stage" "$styled_icon" "$styled_subject" (string repeat -n $padding " ") "$styled_note"
@@ -233,8 +226,8 @@ function __stage_render_label_note --argument-names stage_name icon subject note
     end
 end
 
-# Public status-row API.  The optional fifth argument selects the display
-# colour stage while retaining the recorded stage in reports.
+# Public status-row API. Colours follow the outcome; the optional legacy
+# fifth argument is accepted for compatibility.
 function status_msg
     set -l stage_name $argv[1]
     set -l icon $argv[2]
@@ -256,7 +249,7 @@ end
 
 function __stage_spin_title --argument-names stage_name subject
     set subject (string shorten --max (math (__stage_columns) - 13) -- "$subject")
-    set -l color (__stage_color "$stage_name")
+    set -l color (__stage_color "$stage_name" "...")
     set -l padded_stage (printf "%-7s" "$stage_name")
 
     if command -v gum >/dev/null 2>&1; and __stage_use_color
