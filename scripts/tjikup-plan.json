@@ -209,7 +209,7 @@
       "dnf",
       "user-systemd"
     ],
-    "label": "Launcher (Gitfetch and Hamr)"
+    "label": "Gitfetch"
   },
   {
     "id": "terminal",

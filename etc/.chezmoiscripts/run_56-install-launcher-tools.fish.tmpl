@@ -9,11 +9,11 @@ end
 setup_logging linux-install-launcher-tools
 function install_launcher_tools
     if test (uname -m) != x86_64
-        echo "Hamr release is pinned for x86_64" >&2
+        echo "Gitfetch release is pinned for x86_64" >&2
         return 1
     end
     set -l missing
-    for package in gtk4 gtk4-layer-shell python3-pip
+    for package in python3-pip
         rpm -q $package >/dev/null 2>&1; or set -a missing $package
     end
     if test (count $missing) -gt 0
@@ -33,7 +33,7 @@ function install_launcher_tools
     rm -rf "$installer_dir"
     test $result -eq 0; or return $result
     # Do not publish compatibility links after a no-op or incomplete install.
-    for name in gitfetch hamr hamr-daemon hamr-gtk hamr-tui
+    for name in gitfetch
         if not test -x /usr/local/bin/$name
             echo "Launcher installation did not produce /usr/local/bin/$name" >&2
             return 1
@@ -41,24 +41,15 @@ function install_launcher_tools
     end
     set -l backup "$HOME/.local/state/chezetc/launcher-tools/"(date +%Y%m%dT%H%M%S%N)
     mkdir -p "$HOME/.local/bin" "$backup"; or return 1
-    for name in gitfetch hamr hamr-daemon hamr-gtk hamr-tui
+    for name in gitfetch
         set -l path "$HOME/.local/bin/$name"
         if test -e "$path"; and not test -L "$path"
             cp -p "$path" "$backup/$name"; or return 1
         end
         ln -sfn /usr/local/bin/$name "$path"; or return 1
     end
-    set -l desktop_runtime /run/user/(id -u)
-    if test -S "$desktop_runtime/bus"
-        set -lx XDG_RUNTIME_DIR "$desktop_runtime"
-        set -lx DBUS_SESSION_BUS_ADDRESS "unix:path=$desktop_runtime/bus"
-        systemctl --user daemon-reload; or return $status
-        systemctl --user enable hamr-daemon.service hamr-gtk.service; or return $status
-        if systemctl --user --quiet is-active graphical-session.target
-            systemctl --user start hamr-daemon.service hamr-gtk.service; or return $status
-        end
-    end
+
 end
-step_run_quiet "Gitfetch and Hamr" install_launcher_tools
+step_run_quiet "Gitfetch" install_launcher_tools
 or exit $status
 {{ end -}}

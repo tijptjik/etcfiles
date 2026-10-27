@@ -143,7 +143,7 @@ point to that binary. Existing unmanaged user binaries are preserved under
 service remain managed by the home Chezmoi repository. The installer does not
 restart a running dictation session. The source checkout in `~/.tools` is not required.
 
-All GitHub API lookups for Strata, Tippecanoe, Hyprvoice, Tennis, Tinty, Hamr,
+All GitHub API lookups for Strata, Tippecanoe, Hyprvoice, Tennis, Tinty,
 Gitfetch (including commit lookup), and the home repository's Bitwarden CLIs
 use the shared `github_api.py` helper, bundled beside each temporary installer.
 Keep the helper copies in both repositories identical. It authenticates metadata
@@ -168,12 +168,3 @@ The six tools are exposed through `/usr/local/bin`; existing unmanaged executabl
 are never overwritten. Matching installations are reused. Previous release
 directories remain available for rollback. A network or build failure is reported
 and leaves the active installation in place. No `.tools` source checkout is needed.
-
-## Launcher installation repairs
-
-The client launcher hook can repair the active Hamr version without stopping its
-daemon or GTK UI. It replaces destination files instead of writing into running
-executables, avoiding Linux `Text file busy` errors. Existing processes keep their
-old executable inode until they exit; new launches use the repaired files. The
-`.installed` receipt is written only after the payload copy and permissions succeed.
-A failed copy remains eligible for retry.

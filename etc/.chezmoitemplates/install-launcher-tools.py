@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
-"""Install current stable Hamr and Gitfetch releases in versioned directories."""
-import hashlib
-import json
+"""Install current stable Gitfetch releases in versioned directories."""
 import os
-import re
 from pathlib import Path
-import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
-import urllib.request
 
 from github_api import github_json
 
-HAMR_REPO = "Stewart86/hamr"
 GITFETCH_REPO = "Matars/gitfetch"
 
 
@@ -35,25 +28,6 @@ def latest_release(repo):
     raise RuntimeError(f"No stable semantic-version release found for {repo}")
 
 
-def release_asset(release, filename):
-    asset = next((item for item in release.get("assets", [])
-                  if item.get("name") == filename), None)
-    if asset is None:
-        raise RuntimeError(f"Release is missing {filename}")
-    digest = asset.get("digest", "")
-    if not re.fullmatch(r"sha256:[0-9a-fA-F]{64}", digest or ""):
-        raise RuntimeError(f"Release asset {filename} has no SHA-256 digest")
-    return asset["browser_download_url"], digest.split(":", 1)[1].lower()
-
-
-def download(url, digest, dest):
-    request = urllib.request.Request(url, headers={"User-Agent": "chezetc-launcher-tools"})
-    with urllib.request.urlopen(request, timeout=60) as response, dest.open("wb") as output:
-        shutil.copyfileobj(response, output)
-    if hashlib.sha256(dest.read_bytes()).hexdigest() != digest:
-        raise RuntimeError(f"Checksum mismatch: {url}")
-
-
 def activate(name, target):
     link = Path("/usr/local/bin") / name
     if link.exists() and not link.is_symlink():
@@ -64,46 +38,6 @@ def activate(name, target):
     run("sudo", "-n", "ln", "-sfn", str(target), str(temporary))
     run("sudo", "-n", "mv", "-Tf", str(temporary), str(link))
     return True
-
-
-def install_hamr():
-    version, tag, release = latest_release(HAMR_REPO)
-    archive_name = "hamr-linux-x86_64.tar.gz"
-    url, digest = release_asset(release, archive_name)
-    target = Path("/opt/hamr") / version
-    changed = False
-    marker = target / ".installed"
-    if (not marker.is_file() or marker.read_text().strip() != digest
-            or any(not (target / name).is_file() for name in ("hamr", "hamr-daemon", "hamr-gtk", "hamr-tui"))):
-        with tempfile.TemporaryDirectory(prefix="chezetc-hamr-") as directory:
-            temp = Path(directory)
-            archive = temp / "hamr.tar.gz"
-            download(url, digest, archive)
-            extracted = temp / "hamr"
-            extracted.mkdir()
-            with tarfile.open(archive, "r:gz") as tar:
-                tar.extractall(extracted, filter="data")
-            source = next(extracted.rglob("hamr-daemon")).parent
-            subprocess.run([str(source / "hamr"), "--version"], check=True, stdout=subprocess.DEVNULL)
-            for name in ("hamr", "hamr-daemon", "hamr-gtk", "hamr-tui"):
-                libraries = subprocess.run(["ldd", str(source / name)], capture_output=True, text=True)
-                if "not found" in libraries.stdout:
-                    raise RuntimeError(f"Missing libraries for {name}: {libraries.stdout}")
-            run("sudo", "-n", "install", "-d", "-m", "755", str(target))
-            # A repair can target the version currently running. Unlink destination
-            # files before copying so Linux never opens an executing inode for write.
-            # Existing processes retain their old inode until they exit.
-            run("sudo", "-n", "cp", "-r", "--remove-destination", str(source) + "/.", str(target) + "/")
-            run("sudo", "-n", "chown", "-R", "root:root", str(target))
-            run("sudo", "-n", "chmod", "-R", "go-w", str(target))
-            marker_file = temp / ".installed"
-            marker_file.write_text(digest + "\n")
-            run("sudo", "-n", "install", "-m", "644", str(marker_file), str(marker))
-        changed = True
-    for name in ("hamr", "hamr-daemon", "hamr-gtk", "hamr-tui"):
-        changed = activate(name, target / name) or changed
-    print(f"Hamr {version}: installed or already current")
-    return changed
 
 
 def install_gitfetch():
@@ -142,10 +76,9 @@ def install_gitfetch():
 
 def main():
     if os.uname().machine != "x86_64":
-        raise RuntimeError("Hamr and Gitfetch releases are currently available for x86_64 only")
+        raise RuntimeError("Gitfetch releases are currently available for x86_64 only")
     Path("/usr/local/bin").mkdir(parents=True, exist_ok=True)
-    changed = install_hamr()
-    changed = install_gitfetch() or changed
+    changed = install_gitfetch()
     print("CHEZETC_RESULT=changed" if changed else "CHEZETC_RESULT=unchanged")
 
 
