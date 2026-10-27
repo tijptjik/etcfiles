@@ -10,6 +10,7 @@ Setup the system environment before running the [dotfiles](https://github.com/ti
 
 - DNF Repositories
 - Tailscale package and daemon lifecycle
+- [SSH connection reuse](docs/ssh-connections.md) for Git and fleet access
 - Packages
   - RPM
   - Flatpak
