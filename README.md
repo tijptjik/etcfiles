@@ -65,10 +65,11 @@ $HOME/.local/share/chezetc/setup.sh
 Now you can manage your `/etc` files with `chezetc`.
 
 ```sh
-# chezetc is added to the path in the dotfiles, so it is not 
+# chezetc is added to the path in the dotfiles, so it is not
 # available before you've set them up with chezmoi.
 /opt/chezetc/chezetc apply
 ```
+
 ## Validation
 
 Run `bash scripts/validate.sh` with Bash, Fish, and Python 3 installed. It checks
@@ -84,7 +85,6 @@ use a different configuration. Skipped rendering is reported explicitly.
 ## Server recovery and reproducibility
 
 See [SERVER-REBUILD.md](SERVER-REBUILD.md) for the service inventory, version-control boundaries, storage guards, restore order, and remaining work toward unattended provisioning. Do not use a blanket apply as a fresh-server recovery procedure yet.
-
 
 ## Client login and screen locking
 
