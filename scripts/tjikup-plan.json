@@ -235,6 +235,17 @@
     "label": "Terminal (Tennis and Tinty)"
   },
   {
+    "id": "gdm-session",
+    "file": "run_58-hyprland-gdm-session.fish.tmpl",
+    "needs": [
+      "rpm"
+    ],
+    "resources": [
+      "system-systemd"
+    ],
+    "label": "GDM (Hyprland login)"
+  },
+  {
     "id": "zed",
     "file": "run_60-install-zed.fish.tmpl",
     "needs": [

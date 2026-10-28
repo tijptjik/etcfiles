@@ -1,0 +1,18 @@
+#!/usr/bin/env fish
+if test "$FLEET_DEFER_SYSTEM_HOOKS" = 1
+    exit 0
+end
+{{ if and (eq .chezmoi.os "linux") .isClient -}}
+# Keep the saved GDM session ID and the package-owned entry intact. GDM searches
+# /usr/local/share before /usr/share. Do not restart GDM or the current session.
+set -l session_dir (mktemp -d); or exit 1
+set -l session_file "$session_dir/hyprland-uwsm.desktop"
+printf '%s' {{ include ".chezmoitemplates/hyprland-uwsm.desktop" | b64enc | quote }} | base64 --decode > "$session_file"
+# DesktopNames is GDM session metadata, outside the application desktop spec.
+and sed '/^DesktopNames=/d' "$session_file" > "$session_dir/validate.desktop"
+and desktop-file-validate "$session_dir/validate.desktop"
+and sudo -n install -D -C -m 644 "$session_file" /usr/local/share/wayland-sessions/hyprland-uwsm.desktop
+set -l result $status
+rm -rf -- "$session_dir"
+exit $result
+{{ end -}}

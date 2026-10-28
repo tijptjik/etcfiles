@@ -114,6 +114,19 @@ and `~/.local/bin/tailscale-lock` exist. Apply the GDM file narrowly with
 `chezetc apply --exclude scripts /etc/gdm/custom.conf`. It takes effect on the
 next boot/login; do not restart GDM inside a working desktop session.
 
+On fi and li, `run_58-hyprland-gdm-session.fish.tmpl` installs a local override at
+`/usr/local/share/wayland-sessions/hyprland-uwsm.desktop`. It preserves the saved
+session ID and the package-owned entry, but starts UWSM with `-g -1` so it does
+not wait for `graphical.target`. During GDM autologin, that target can be held
+by `plymouth-quit-wait.service`; waiting lets the greeter take over before
+Hyprland acquires its seat. The hook validates the desktop entry, installs it
+only when changed, and never restarts GDM. Apply only this hook with:
+`chezetc apply --source-path ~/.local/share/chezetc/etc/.chezmoiscripts/run_58-hyprland-gdm-session.fish.tmpl`.
+Verify the next boot reaches Hyprlock without a GDM password prompt. To roll
+back, remove the local override with `sudo rm /usr/local/share/wayland-sessions/hyprland-uwsm.desktop`
+and disable the hook before the next Chezetc apply. si does not install
+this override.
+
 The server retains its existing automatic login as `m`.
 
 
