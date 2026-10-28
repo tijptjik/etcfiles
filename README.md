@@ -119,8 +119,10 @@ On fi and li, `run_58-hyprland-gdm-session.fish.tmpl` installs a local override 
 session ID and the package-owned entry, but starts UWSM with `-g -1` so it does
 not wait for `graphical.target`. During GDM autologin, that target can be held
 by `plymouth-quit-wait.service`; waiting lets the greeter take over before
-Hyprland acquires its seat. The hook validates the desktop entry, installs it
-only when changed, and never restarts GDM. Apply only this hook with:
+Hyprland acquires its seat. The hook first compares the installed entry with
+the desired content and checks its root ownership and 0644 permissions. It
+reports SKIP when already configured; otherwise it validates and repairs the
+entry, reports CONFIG, and never restarts GDM. Apply only this hook with:
 `chezetc --source ~/.local/share/chezetc/etc apply --source-path ~/.local/share/chezetc/etc/.chezmoiscripts/run_58-hyprland-gdm-session.fish.tmpl`.
 Verify the next boot reaches Hyprlock without a GDM password prompt. To roll
 back, remove the local override with `sudo rm /usr/local/share/wayland-sessions/hyprland-uwsm.desktop`
