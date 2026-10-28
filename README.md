@@ -121,7 +121,7 @@ not wait for `graphical.target`. During GDM autologin, that target can be held
 by `plymouth-quit-wait.service`; waiting lets the greeter take over before
 Hyprland acquires its seat. The hook validates the desktop entry, installs it
 only when changed, and never restarts GDM. Apply only this hook with:
-`chezetc apply --source-path ~/.local/share/chezetc/etc/.chezmoiscripts/run_58-hyprland-gdm-session.fish.tmpl`.
+`chezetc --source ~/.local/share/chezetc/etc apply --source-path ~/.local/share/chezetc/etc/.chezmoiscripts/run_58-hyprland-gdm-session.fish.tmpl`.
 Verify the next boot reaches Hyprlock without a GDM password prompt. To roll
 back, remove the local override with `sudo rm /usr/local/share/wayland-sessions/hyprland-uwsm.desktop`
 and disable the hook before the next Chezetc apply. si does not install
