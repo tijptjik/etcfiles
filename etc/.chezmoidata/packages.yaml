@@ -171,7 +171,6 @@ packages:
     - 'lionheartp/Hyprland'
     - 'errornointernet/quickshell'
     - 'iucar/duckdb'
-    - 'purian23/material-symbols-fonts'
     - 'rafatosta/zapzap'
     - 'zeno/scrcpy'
     - 'jerrycasiano/FontManager'
@@ -217,7 +216,6 @@ packages:
     - 'libnl3-devel'
     - 'systemd-devel'
     - 'meson'
-    - 'material-symbols-fonts'
     - 'mediawriter'
     # Alternate playback engine alongside VLC.
     - 'mpv'

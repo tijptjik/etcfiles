@@ -1,4 +1,5 @@
 """Test user-context dispatch and COPR selection without package changes."""
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -41,27 +42,58 @@ class DesktopUserTests(unittest.TestCase):
 
 
 class CoprTests(unittest.TestCase):
-    def test_fallback_is_selected_before_install_and_has_no_false_failure(self):
+    def test_native_target_is_required_before_install(self):
         text=(REPO/'etc/.chezmoiscripts/run_10-install-copr-repos.fish.tmpl').read_text()
-        function=text[text.index('function enable_copr'):text.index('# Migrate si')]
+        function=text[text.index('function enable_copr'):text.index('# Retire the font COPR')]
         for available in (True,False):
             harness='''
 function is_copr_configured; return 1; end
-function copr_fallback_chroot; %s; end
-function rpm; echo 44; end
+function copr_native_chroot; %s; end
+function rpm; echo 45; end
 function uname; echo x86_64; end
 function status_msg; printf 'ROW %%s\\n' (string join '|' -- $argv); end
 function step_run_note_quiet; printf 'RUN %%s\\n' (string join '|' -- $argv); end
-''' % ('echo fedora-43-x86_64' if available else 'return 1')
+''' % ('echo fedora-45-x86_64' if available else 'return 1')
             result=subprocess.run(['fish','--no-config','-c',harness+function+'\nenable_copr purian23/material-symbols-fonts'],capture_output=True,text=True)
             if available:
                 self.assertEqual(result.returncode,0,result.stderr)
                 self.assertNotIn('FAILED',result.stdout)
-                self.assertIn('|fedora-43-x86_64',result.stdout)
+                self.assertIn('|fedora-45-x86_64',result.stdout)
                 self.assertEqual(result.stdout.count('RUN '),1)
             else:
                 self.assertNotEqual(result.returncode,0)
                 self.assertNotIn('RUN ',result.stdout)
+
+    def test_only_native_release_can_be_selected(self):
+        text = (REPO/'etc/.chezmoiscripts/run_10-install-copr-repos.fish.tmpl').read_text()
+        function = text[text.index('function copr_native_chroot'):text.index('# Enable only')]
+        for targets, expected in [(['fedora-43-x86_64'], None),
+                                  (['fedora-43-x86_64', 'fedora-45-x86_64'], 'fedora-45-x86_64'),
+                                  (['fedora-45-aarch64'], None)]:
+            with self.subTest(targets=targets):
+                payload = json.dumps({'chroot_repos': dict.fromkeys(targets, {})})
+                harness = "function rpm; echo 45; end\nfunction uname; echo x86_64; end\n"
+                harness += "function curl; printf '%s' '" + payload + "'; end\n"
+                result = subprocess.run(['fish', '--no-config', '-c',
+                    harness + function + '\ncopr_native_chroot example/project'],
+                    capture_output=True, text=True)
+                if expected:
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout.strip(), expected)
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(result.stdout, '')
+
+    def test_disabled_configured_repo_is_recognized_exactly(self):
+        text = (REPO/'etc/.chezmoiscripts/run_10-install-copr-repos.fish.tmpl').read_text()
+        function = text[text.index('function is_copr_configured'):text.index('function copr_native_chroot')]
+        for suffix, found in [('', True), (' (disabled)', True), ('-other', False)]:
+            with self.subTest(suffix=suffix):
+                harness = "function dnf; echo 'copr.fedorainfracloud.org/example/project" + suffix + "'; end\n"
+                result = subprocess.run(['fish', '--no-config', '-c',
+                    harness + function + '\nis_copr_configured example/project'],
+                    capture_output=True, text=True)
+                self.assertEqual(result.returncode == 0, found, result.stderr)
 
     def test_quiet_success_hides_command_output_but_failure_reveals_it(self):
         status=(REPO/'etc/.chezmoihelpers/status.fish').read_text()
@@ -79,6 +111,11 @@ function step_run_note_quiet; printf 'RUN %%s\\n' (string join '|' -- $argv); en
 
 
 class ClientPackagePolicyTests(unittest.TestCase):
+    def test_bartjik_font_has_no_system_package_or_copr_dependency(self):
+        policy = (REPO / 'etc/.chezmoidata/packages.yaml').read_text()
+        self.assertNotIn("'material-symbols-fonts'", policy)
+        self.assertNotIn("'purian23/material-symbols-fonts'", policy)
+
     def test_retired_azahar_is_not_requested_for_reinstallation(self):
         policy = (REPO / 'etc/.chezmoidata/packages.yaml').read_text()
         self.assertNotIn("'org.azahar_emu.Azahar'", policy)

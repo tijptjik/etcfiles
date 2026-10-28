@@ -43,6 +43,14 @@ Obsidian or VLC Flatpak entries: their native launchers are managed in the home
 checkout. Removing an entry does not uninstall existing copies; migrate profiles
 and remove redundant installations explicitly.
 
+Material Symbols Rounded is bundled with Bartjik in tjikOS and loaded directly
+by Qt. It no longer needs the `material-symbols-fonts` RPM or
+`purian23/material-symbols-fonts` COPR. The COPR hook retires that repository and
+its enabled-state override, while leaving the old RPM installed until the
+bundled font has been verified on the host. COPR setup accepts only the host's
+native Fedora release; it never chooses an older release as a fallback.
+Already configured disabled COPRs stay disabled.
+
 ## Fedora repository ownership
 
 On Fedora 45 and later, Fedora and Chrome repo definitions are supplied under
