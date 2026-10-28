@@ -8,6 +8,7 @@ end
 {{ include ".chezmoihelpers/status.fish" }}
 {{ include ".chezmoitemplates/fish_logging.fish" }}
 setup_logging linux-enable-tailscale
+set -g chezetc_stage CONFIG
 
 step_header "Tailscale"
 
@@ -23,10 +24,25 @@ else
     or exit 1
 end
 
+set -l tailscale_prefs (sudo tailscale debug prefs 2>/dev/null)
+or begin
+    step_fail "Tailscale preferences unavailable"
+    exit 1
+end
+
+if not printf '%s\n' $tailscale_prefs | jq -e 'type == "object"' >/dev/null 2>&1
+    step_fail "Invalid Tailscale preferences"
+    exit 1
+end
+
 {{ if .isClient -}}
 # Keep enrolled client devices current independently of the next Tjikup run.
-step_run_note "Tailscale auto-update" enabled sudo tailscale set --auto-update
-or exit 1
+if printf '%s\n' $tailscale_prefs | jq -e '.AutoUpdate.Apply == true' >/dev/null
+    step_skip_ok "Tailscale auto-update" enabled
+else
+    step_run_note "Tailscale auto-update" enabled sudo tailscale set --auto-update
+    or exit 1
+end
 {{ end -}}
 
 # Permit the interactive user and user services (including Collie) to manage
@@ -37,7 +53,7 @@ set -l tailscale_operator "$SUDO_USER"
 if test -z "$tailscale_operator"
     set tailscale_operator (id -un)
 end
-set -l configured_tailscale_operator (sudo tailscale debug prefs 2>/dev/null | jq -r '.OperatorUser // empty' 2>/dev/null)
+set -l configured_tailscale_operator (printf '%s\n' $tailscale_prefs | jq -r '.OperatorUser // empty' 2>/dev/null)
 if test "$configured_tailscale_operator" = "$tailscale_operator"
     step_skip_ok "Tailscale operator for $tailscale_operator" available
 else
@@ -48,8 +64,12 @@ end
 {{ if .isClient -}}
 # Keep ordinary DNS and default routes with Mullvad. Fleet SSH discovers peers
 # through the local Tailscale API and prefers their IPv6 ULA addresses.
-step_run_note "Tailnet DNS and routes" configured sudo tailscale set --accept-dns=false --accept-routes=false
-or exit 1
+if printf '%s\n' $tailscale_prefs | jq -e '.CorpDNS == false and .RouteAll == false' >/dev/null
+    step_skip_ok "Tailnet DNS and routes" configured
+else
+    step_run_note "Tailnet DNS and routes" configured sudo tailscale set --accept-dns=false --accept-routes=false
+    or exit 1
+end
 set -l tailscale_state (tailscale status --json 2>/dev/null | jq -r '.BackendState // empty' 2>/dev/null)
 switch "$tailscale_state"
     case Running
