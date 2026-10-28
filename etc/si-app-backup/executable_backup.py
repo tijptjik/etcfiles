@@ -43,7 +43,7 @@ sources=[
  ('/mnt/storage/meta/appCache/audiobookshelf',['/cache/','/logs/','/backups/']),
  ('/appData/mariadb/config',['/log/','/databases/']),
  ('/home/m/dockers',[]),('/home/m/.config',['/BraveSoftware/','/bun/bin/','/fnm/','/gcloud/logs/','/flatpak/']),
- ('/home/m/.local/bin',[]),('/home/m/.local/share/chezmoi',['/.git/']),('/home/m/.local/share/chezetc',['/.git/']),('/home/m/.ssh',[]),('/home/m/.keys',[]),
+ ('/home/m/.local/bin',[]),('/home/m/.local/share/dotjik',['/.git/']),('/home/m/.local/share/systjik',['/.git/']),('/home/m/.ssh',[]),('/home/m/.keys',[]),
  ('/etc',['/si-app-backup/password','/nginx/.git/','/lvm/cache/','/httpd/logs/','**/__pycache__/'])]
 for src,_ in sources:
  if not pathlib.Path(src).is_dir():raise RuntimeError('Required source missing: '+src)

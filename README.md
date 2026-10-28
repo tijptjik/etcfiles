@@ -2,7 +2,7 @@
 
 System configuration managed by Chezetc. Use `systjik` as the command name
 after installing Dotjik; `chezetc` continues to work. The GitHub repository
-is `systjik` and the checkout remains `~/.local/share/chezetc`.
+is `systjik` and the checkout lives at `~/.local/share/systjik`.
 
 Setup the system environment before running the [dotfiles](https://github.com/tijptjik/dotfiles) setup with chezmoi.
 
@@ -71,8 +71,8 @@ none of these four overrides when this policy was added.
 This script will (1) install required dependencies, (2) clone the `chezetc` repo to `$HOME/.tools/chezetc`, (3) install the configuration to `$HOME/.config/chezetc/chezetc.toml`.
 
 ```sh
-git clone git@github.com:tijptjik/systjik.git $HOME/.local/share/chezetc
-$HOME/.local/share/chezetc/setup.sh
+git clone git@github.com:tijptjik/systjik.git $HOME/.local/share/systjik
+$HOME/.local/share/systjik/setup.sh
 ```
 
 Now you can manage your `/etc` files with `chezetc`.

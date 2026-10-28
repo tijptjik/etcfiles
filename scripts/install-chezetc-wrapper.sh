@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 # Install the wrapper separately from the per-user system configuration checkout.
 set -euo pipefail
+launcher="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/chezetc-launcher.sh"
 if [[ -x /opt/chezetc/chezetc ]]; then
+    if cmp -s "$launcher" /usr/local/bin/chezetc; then
+        exit 0
+    fi
+    if [[ -e /usr/local/bin/chezetc || -L /usr/local/bin/chezetc ]]; then
+        if [[ -L /usr/local/bin/chezetc ]] || ! grep -Fxq 'exec /opt/chezetc/chezetc "$@"' /usr/local/bin/chezetc; then
+            echo 'Refusing to replace an unrecognized /usr/local/bin/chezetc' >&2
+            exit 1
+        fi
+    fi
+    sudo install -o root -g root -m 755 "$launcher" /usr/local/bin/chezetc
     exit 0
 fi
 staging=$(mktemp -d)
@@ -30,7 +41,7 @@ for name in ('TJIKUP_COLOR', 'TJIKUP_NO_SPIN', 'TJIKUP_REPORT_FILE', 'TJIKUP_SKI
 p.write_text(s[:m.start(1)] + ','.join(names) + s[m.end(1):])
 PY
 # A launcher (not a symlink) preserves upstream's dirname-based resource lookup.
-printf '#!/bin/sh\nexec /opt/chezetc/chezetc "$@"\n' > "$staging/launcher"
+cp -- "$launcher" "$staging/launcher"
 sudo test ! -e /opt/chezetc
 if [[ -e /usr/local/bin/chezetc || -L /usr/local/bin/chezetc ]]; then
     echo 'Refusing to replace existing /usr/local/bin/chezetc' >&2
