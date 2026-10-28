@@ -34,7 +34,7 @@ def conflict_input(command, skip):
             answers.wait()
 
 
-def apply(repo, wrapper, config, *, skip_conflicts=False, defer_hooks=False):
+def apply(repo, wrapper, config, *, skip_conflicts=False, defer_hooks=False, report=None):
     environment = {
         **os.environ,
         "CHEZMOI_SKIP_SPLASH": "1",
@@ -54,7 +54,7 @@ def apply(repo, wrapper, config, *, skip_conflicts=False, defer_hooks=False):
     once()
     after = config.read_bytes() if config.is_file() else None
     if before != after:
-        stage_result("CONFIG", "Chezetc", "configuration refreshed")
+        (report or stage_result)("CONFIG", "Chezetc", "configuration refreshed")
         once()
 
 

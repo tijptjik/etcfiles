@@ -39,12 +39,12 @@ def paths(adapter=None):
     return wrapper, config
 
 
-def apply_files(repo):
+def apply_files(repo, *, report=None):
     # Use the existing adapter's conflict policy and configuration-refresh retry.
     adapter = apply_adapter(repo)
     wrapper, config = paths(adapter)
     adapter.apply(repo, wrapper, config, skip_conflicts=os.environ.get("FLEET_SKIP_CONFLICTS") == "1",
-                  defer_hooks=True)
+                  defer_hooks=True, report=report)
 
 
 def render_hooks(repo, plan, env):
