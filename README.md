@@ -77,6 +77,11 @@ $HOME/.local/share/systjik/setup.sh
 
 Now you can manage your `/etc` files with `chezetc`.
 
+Fleet preparation and hook rendering prefer the managed `/usr/local/bin/chezetc`
+launcher (or `/opt/chezetc/chezetc` directly) over older wrappers in PATH. The
+managed wrapper preserves the fleet's system-hook deferral flag through sudo,
+so file preparation cannot accidentally execute the later update hooks.
+
 ```sh
 # chezetc is added to the path in the dotfiles, so it is not
 # available before you've set them up with chezmoi.

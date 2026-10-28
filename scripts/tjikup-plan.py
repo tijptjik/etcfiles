@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import subprocess
 
 from tjikup.runtime import UpdateError
@@ -26,19 +25,24 @@ def load_plan(repo):
     return plan
 
 
-def paths():
-    managed = Path("/opt/chezetc/chezetc")
-    wrapper = shutil.which("chezetc") or str(managed if managed.is_file() else Path.home() / ".tools/chezetc/chezetc")
+def apply_adapter(repo):
+    spec = importlib.util.spec_from_file_location("fleet_system_apply", repo / "scripts/tjikup-apply.py")
+    adapter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(adapter)
+    return adapter
+
+
+def paths(adapter=None):
+    adapter = adapter or apply_adapter(Path(__file__).resolve().parents[1])
+    wrapper = adapter.wrapper_path()
     config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "chezmoi/chezetc/chezmoi.toml"
     return wrapper, config
 
 
 def apply_files(repo):
     # Use the existing adapter's conflict policy and configuration-refresh retry.
-    spec = importlib.util.spec_from_file_location("fleet_system_apply", repo / "scripts/tjikup-apply.py")
-    adapter = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(adapter)
-    wrapper, config = paths()
+    adapter = apply_adapter(repo)
+    wrapper, config = paths(adapter)
     adapter.apply(repo, wrapper, config, skip_conflicts=os.environ.get("FLEET_SKIP_CONFLICTS") == "1",
                   defer_hooks=True)
 

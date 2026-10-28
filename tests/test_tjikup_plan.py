@@ -29,6 +29,13 @@ def render(hook, host, temporary):
 
 
 class SystemPlanTests(unittest.TestCase):
+    def test_preparation_and_rendering_select_managed_wrapper(self):
+        existing = {"/opt/chezetc/chezetc", "/usr/local/bin/chezetc"}
+        with patch.object(Path, "is_file", lambda path: str(path) in existing), \
+                patch("shutil.which", return_value="/home/io/.tools/chezetc/chezetc"):
+            wrapper, _ = policy.paths()
+        self.assertEqual(wrapper, "/usr/local/bin/chezetc")
+
     def test_inventory_fails_closed_when_a_hook_is_added_or_removed(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

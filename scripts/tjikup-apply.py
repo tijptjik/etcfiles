@@ -11,6 +11,15 @@ import sys
 from tjikup.runtime import UpdateError, run_stream, stage_result
 
 
+def wrapper_path():
+    """The managed wrapper owns the fleet's sudo environment allowlist."""
+    managed = Path("/opt/chezetc/chezetc")
+    launcher = Path("/usr/local/bin/chezetc")
+    if managed.is_file():
+        return str(launcher if launcher.is_file() else managed)
+    return shutil.which("chezetc") or str(Path.home() / ".tools/chezetc/chezetc")
+
+
 @contextmanager
 def conflict_input(command, skip):
     if not skip:
@@ -51,10 +60,7 @@ def apply(repo, wrapper, config, *, skip_conflicts=False, defer_hooks=False):
 
 def main():
     repo = Path(__file__).resolve().parents[1]
-    managed = Path("/opt/chezetc/chezetc")
-    wrapper = shutil.which("chezetc") or str(
-        managed if managed.is_file() else Path.home() / ".tools/chezetc/chezetc"
-    )
+    wrapper = wrapper_path()
     config = Path.home() / ".config/chezmoi/chezetc/chezmoi.toml"
     apply(
         repo,

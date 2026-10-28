@@ -27,6 +27,20 @@ spec.loader.exec_module(policy)
 
 
 class ApplyTests(unittest.TestCase):
+    def test_managed_wrapper_takes_precedence_over_legacy_path(self):
+        managed = "/opt/chezetc/chezetc"
+        launcher = "/usr/local/bin/chezetc"
+        legacy = str(Path.home() / ".tools/chezetc/chezetc")
+        cases = [({managed, launcher}, legacy, launcher),
+                 ({managed}, legacy, managed),
+                 (set(), "/custom/chezetc", "/custom/chezetc"),
+                 (set(), None, legacy)]
+        for existing, discovered, expected in cases:
+            with self.subTest(existing=existing, discovered=discovered), \
+                    patch.object(Path, "is_file", lambda path: str(path) in existing), \
+                    patch.object(policy.shutil, "which", return_value=discovered):
+                self.assertEqual(policy.wrapper_path(), expected)
+
     def test_refresh_is_reported_once_and_retried(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
